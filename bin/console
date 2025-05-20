@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "veri"
+
+require_relative "../spec/spec_helper.rb"
+
+require "irb"
+
+ActiveRecord::Base.logger = Logger.new(STDOUT)
+IRB.start(__FILE__)

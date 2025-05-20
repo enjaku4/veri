@@ -1,0 +1,23 @@
+source "https://rubygems.org"
+
+gemspec
+
+rails_version = ENV.fetch("RAILS_VERSION", "~> 7")
+
+gem "byebug"
+gem "database_cleaner-active_record"
+gem "grepfruit"
+gem "rails", rails_version
+gem "rake"
+gem "rspec"
+gem "rspec-rails"
+gem "rubocop"
+gem "rubocop-md"
+gem "rubocop-packaging"
+gem "rubocop-performance"
+gem "rubocop-rails"
+gem "rubocop-rake"
+gem "rubocop-rspec"
+gem "rubocop-rspec_rails"
+gem "rubocop-thread_safety"
+gem "sqlite3"

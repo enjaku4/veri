@@ -1,0 +1,19 @@
+require "rails/generators/migration"
+
+module Veri
+  class AuthenticationGenerator < Rails::Generators::Base
+    include Rails::Generators::Migration
+
+    source_root File.expand_path("templates", __dir__)
+
+    # TODO
+
+    def create_migrations
+      migration_template "add_veri_authentication.rb.erb", "db/migrate/add_veri_authentication.rb"
+    end
+
+    def self.next_migration_number(_path)
+      Time.now.utc.strftime("%Y%m%d%H%M%S")
+    end
+  end
+end
