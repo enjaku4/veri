@@ -9,6 +9,7 @@ require_relative "veri/password/scrypt"
 
 require_relative "veri/configuration"
 
+require_relative "veri/models/session"
 require_relative "veri/controllers/concerns/authentication"
 require_relative "veri/models/concerns/authenticatable"
 
