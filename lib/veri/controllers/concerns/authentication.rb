@@ -2,11 +2,7 @@ module Veri
   module Authentication
     extend ActiveSupport::Concern
 
-    # TODO: no session
-
-    included do
-      helper_method(:current_user, :logged_in?) if respond_to?(:helper_method)
-    end
+    included { helper_method(:current_user, :logged_in?) if respond_to?(:helper_method) }
 
     class_methods do
       def with_authentication(options = {})
@@ -23,22 +19,28 @@ module Veri
     end
 
     def current_user
-      @current_user ||= User.find_by(id: session[:user_id])
+      @current_user ||= current_session&.authenticatable
     end
 
-    def login(user)
-      # TODO: create token if doesn't exist, store token in cookie, store digest in db
-      session[:user_id] = user.id
+    def login(authenticatable)
+      raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name}" unless authenticatable.is_a?(Veri::Configuration.instance.user_model)
+
+      token = Veri::Session.establish(authenticatable)
+
+      cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
+
       after_login
     end
 
     def logout
-      # TODO: delete cookie
-      session[:user_id] = nil
+      current_session&.terminate
       after_logout
     end
 
-    # TODO: logout everywhere - deletes the token digest from the db
+    def logout_everywhere
+      Session.terminate_all(current_user)
+      after_logout
+    end
 
     def logged_in?
       current_user.present?
@@ -51,13 +53,17 @@ module Veri
     private
 
     def with_authentication
-      return if logged_in?
+      return if logged_in? && !current_session.expired?
 
-      # TODO: try relogin from cookie
+      current_session&.terminate
 
       session[:return_to] = request.fullpath
 
       when_unauthenticated
+    end
+
+    def current_session
+      @current_session ||= Session.find_by(hashed_token: Digest::SHA256.hexdigest(cookies.encrypted[:veri_token]))
     end
 
     def when_unauthenticated
