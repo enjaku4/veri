@@ -8,7 +8,7 @@ module Veri
 
     def initialize
       @hashing_algorithm = :argon2
-      @total_session_lifetime = nil
+      @total_session_lifetime = 30.days
       @user_model_name = "User"
     end
 
@@ -28,7 +28,7 @@ module Veri
     end
 
     def total_session_lifetime=(duration)
-      raise Veri::ConfigurationError, "Configuration `total_session_lifetime` must be an instance of ActiveSupport::Duration or nil" unless duration.nil? || duration.is_a?(ActiveSupport::Duration)
+      raise Veri::ConfigurationError, "Configuration `total_session_lifetime` must be an instance of ActiveSupport::Duration" unless duration.is_a?(ActiveSupport::Duration)
 
       @total_session_lifetime = duration
     end
