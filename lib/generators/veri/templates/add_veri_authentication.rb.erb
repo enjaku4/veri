@@ -1,7 +1,13 @@
 class AddVeriAuthentication < ActiveRecord::Migration[<%= ActiveRecord::Migration.current_version.to_s %>]
   def change
-    change_table <%= table_name.to_sym.inspect %>, bulk: true do |t|
-      t.text :hashed_password, null: <%= !options[:password_required] %>
+    add_column <%= table_name.to_sym.inspect %>, :hashed_password, :text
+
+    create_table :veri_sessions<%= ", id: :uuid" if options[:uuid] %> do |t|
+      t.string :hashed_token, null: false, index: { unique: true }
+      t.datetime :expires_at, null: false
+      t.belongs_to :authenticatable, null: false, foreign_key: { to_table: <%= table_name.to_sym.inspect %> }, index: true<%= ", type: :uuid" if options[:uuid] %>
+
+      t.timestamps
     end
   end
 end

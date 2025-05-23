@@ -8,7 +8,7 @@ module Veri
 
     argument :table_name, type: :string, required: true
 
-    class_option :password_required, type: :boolean, default: false, desc: "Add NOT NULL constraint to password column"
+    class_option :uuid, type: :boolean, default: false, desc: "Use UUIDs as primary keys"
 
     def create_migrations
       migration_template "add_veri_authentication.rb.erb", "db/migrate/add_veri_authentication.rb"
