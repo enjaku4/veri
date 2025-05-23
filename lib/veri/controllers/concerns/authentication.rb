@@ -29,16 +29,13 @@ module Veri
 
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
 
+      current_session.update_info(request)
+
       after_login
     end
 
     def logout
       current_session&.terminate
-      after_logout
-    end
-
-    def logout_everywhere
-      Session.terminate_all(current_user)
       after_logout
     end
 
@@ -53,7 +50,7 @@ module Veri
     private
 
     def with_authentication
-      return if logged_in? && !current_session.expired?
+      current_session.update_info(request) and return if logged_in? && !current_session.expired?
 
       current_session&.terminate
 
