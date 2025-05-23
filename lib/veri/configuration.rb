@@ -4,7 +4,7 @@ module Veri
   class Configuration
     include Singleton
 
-    attr_reader :hashing_algorithm, :persistent_login_duration, :user_model_name
+    attr_reader :hashing_algorithm, :total_session_lifetime, :user_model_name
 
     def initialize
       @hashing_algorithm = :argon2

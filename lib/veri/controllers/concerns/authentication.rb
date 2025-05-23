@@ -2,7 +2,11 @@ module Veri
   module Authentication
     extend ActiveSupport::Concern
 
-    included { helper_method(:current_user, :logged_in?) if respond_to?(:helper_method) }
+    included do
+      include ActionController::Cookies
+
+      helper_method(:current_user, :logged_in?) if respond_to?(:helper_method)
+    end
 
     class_methods do
       def with_authentication(options = {})
@@ -60,7 +64,8 @@ module Veri
     end
 
     def current_session
-      @current_session ||= Session.find_by(hashed_token: Digest::SHA256.hexdigest(cookies.encrypted[:veri_token]))
+      token = cookies.encrypted[:veri_token]
+      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token)) : nil
     end
 
     def when_unauthenticated
