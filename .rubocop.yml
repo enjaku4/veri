@@ -88,11 +88,17 @@ Style/ClassVars:
 Style/Documentation:
   Enabled: false
 
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
 Style/HashSyntax:
   EnforcedShorthandSyntax: always
 
 Style/Lambda:
   EnforcedStyle: literal
+
+Style/MutableConstant:
+  Enabled: false
 
 Style/RedundantFetchBlock:
   Enabled: false
