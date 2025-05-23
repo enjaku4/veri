@@ -26,7 +26,7 @@ module Veri
 
     private
 
-    delegate :hasher, to: Veri::Configuration.instance
+    def hasher = Veri::Configuration.instance.hasher
 
     def validate_password(password)
       raise Veri::InvalidArgumentError, "Password must be a string" unless password.is_a?(String)
