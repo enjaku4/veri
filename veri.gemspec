@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata["rubygems_mfa_required"] = "true"
-  # TODO
+  # TODO: sumamry
   spec.summary = "Authentication for Rails"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2", "< 3.5"
@@ -20,5 +20,8 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "argon2", "~> 2.0"
+  spec.add_dependency "bcrypt", "~> 3.0"
   spec.add_dependency "rails", ">= 7.1", "< 8.1"
+  spec.add_dependency "scrypt", "~> 3.0"
 end

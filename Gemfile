@@ -4,6 +4,8 @@ gemspec
 
 rails_version = ENV.fetch("RAILS_VERSION", "~> 7")
 
+gem "argon2"
+gem "bcrypt"
 gem "byebug"
 gem "database_cleaner-active_record"
 gem "grepfruit"
@@ -20,4 +22,5 @@ gem "rubocop-rake"
 gem "rubocop-rspec"
 gem "rubocop-rspec_rails"
 gem "rubocop-thread_safety"
+gem "scrypt"
 gem "sqlite3"
