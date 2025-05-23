@@ -21,12 +21,12 @@ module Veri
     end
 
     def info
-      user_agent = UserAgentParser.parse(last_user_agent)
+      agent = UserAgentParser.parse(user_agent)
 
       {
-        device: user_agent.device.to_s,
-        os: user_agent.os.to_s,
-        browser: user_agent.to_s,
+        device: agent.device.to_s,
+        os: agent.os.to_s,
+        browser: agent.to_s,
         ip_address:,
         last_seen_at:
       }
