@@ -6,9 +6,9 @@ class AddVeriAuthentication < ActiveRecord::Migration[<%= ActiveRecord::Migratio
       t.string :hashed_token, null: false, index: { unique: true }
       t.datetime :expires_at, null: false
       t.belongs_to :authenticatable, null: false, foreign_key: { to_table: <%= table_name.to_sym.inspect %> }, index: true<%= ", type: :uuid" if options[:uuid] %>
-      t.last_seen_at :datetime
-      t.ip_address :string
-      t.user_agent :string
+      t.datetime :last_seen_at
+      t.string :ip_address
+      t.string :user_agent
 
       t.timestamps
     end
