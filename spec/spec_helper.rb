@@ -37,6 +37,8 @@ RSpec.configure do |config|
 
     # TODO: reset config
   end
+
+  # TODO: add auth helpers
 end
 
 load "#{File.dirname(__FILE__)}/support/schema.rb"
