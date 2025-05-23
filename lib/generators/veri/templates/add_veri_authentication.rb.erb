@@ -1,5 +1,7 @@
 class AddVeriAuthentication < ActiveRecord::Migration[<%= ActiveRecord::Migration.current_version.to_s %>]
   def change
-    <!-- TODO -->
+    change_table <%= table_name.to_sym.inspect %>, bulk: true do |t|
+      t.text :hashed_password, null: <%= !options[:password_required] %>
+    end
   end
 end

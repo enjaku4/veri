@@ -6,7 +6,9 @@ module Veri
 
     source_root File.expand_path("templates", __dir__)
 
-    # TODO
+    argument :table_name, type: :string, required: true
+
+    class_option :password_required, type: :boolean, default: false, desc: "Add NOT NULL constraint to password column"
 
     def create_migrations
       migration_template "add_veri_authentication.rb.erb", "db/migrate/add_veri_authentication.rb"
