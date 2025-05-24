@@ -4,7 +4,8 @@ module Veri
   class Configuration
     include Singleton
 
-    attr_reader :hashing_algorithm, :total_session_lifetime, :user_model_name
+    attr_reader :hashing_algorithm, :total_session_lifetime
+    attr_accessor :user_model_name
 
     def initialize
       @hashing_algorithm = :argon2
@@ -33,16 +34,12 @@ module Veri
       @total_session_lifetime = duration
     end
 
-    def user_model_name=(model_name)
-      model = model_name.try(:safe_constantize)
+    def user_model
+      model = user_model_name.try(:safe_constantize)
 
       raise Veri::ConfigurationError, "Configuration `user_model_name` must be an ActiveRecord model name" unless model && model < ActiveRecord::Base
 
-      @user_model_name = model_name
-    end
-
-    def user_model
-      @user_model ||= user_model_name.constantize
+      model
     end
   end
 end
