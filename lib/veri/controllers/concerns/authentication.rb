@@ -3,7 +3,7 @@ module Veri
     extend ActiveSupport::Concern
 
     included do
-      include ActionController::Cookies
+      include ActionController::Cookies unless self < ActionController::Cookies
 
       helper_method(:current_user, :logged_in?) if respond_to?(:helper_method)
     end
