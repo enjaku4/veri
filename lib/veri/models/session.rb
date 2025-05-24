@@ -21,12 +21,12 @@ module Veri
     alias terminate delete
 
     def update_info(request)
-      raise Veri::InvalidArgumentError, "Expects an instance of ActionDispatch::Request" unless request.is_a?(ActionDispatch::Request)
+      processed_request = Veri::Inputs.process(request, as: :request)
 
       update!(
         last_seen_at: Time.current,
-        ip_address: request.remote_ip,
-        user_agent: request.user_agent
+        ip_address: processed_request.remote_ip,
+        user_agent: processed_request.user_agent
       )
     end
 
@@ -44,27 +44,28 @@ module Veri
 
     class << self
       def establish(authenticatable, request)
-        raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name}" unless authenticatable.is_a?(Veri::Configuration.instance.user_model)
-
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.instance.total_session_lifetime
 
-        session = new(hashed_token: Digest::SHA256.hexdigest(token), expires_at:, last_seen_at:, authenticatable:)
-        session.update_info(request)
+        new(
+          hashed_token: Digest::SHA256.hexdigest(token),
+          expires_at:,
+          authenticatable: Veri::Inputs.process(authenticatable, as: :authenticatable)
+        ).update_info(
+          Veri::Inputs.process(request, as: :request)
+        )
 
         token
       end
 
       def prune_expired(authenticatable = nil)
-        raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name} or nil" unless authenticatable.nil? || authenticatable.is_a?(Veri::Configuration.instance.user_model)
-
-        (authenticatable ? where(authenticatable:) : all).where(expires_at: ...Time.current).delete_all
+        processed_authenticatable = Veri::Inputs.process(authenticatable, as: :authenticatable, optional: true)
+        scope = processed_authenticatable ? where(authenticatable: processed_authenticatable) : all
+        scope.where(expires_at: ...Time.current).delete_all
       end
 
       def terminate_all(authenticatable)
-        raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name}" unless authenticatable.is_a?(Veri::Configuration.instance.user_model)
-
-        authenticatable.sessions.delete_all
+        Veri::Inputs.process(authenticatable, as: :authenticatable).sessions.delete_all
       end
     end
   end

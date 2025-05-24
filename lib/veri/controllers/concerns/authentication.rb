@@ -12,13 +12,13 @@ module Veri
       def with_authentication(options = {})
         before_action :with_authentication, **options
       rescue ArgumentError => e
-        raise Veri::Error, e.message
+        raise Veri::InvalidArgumentError, e.message
       end
 
       def skip_authentication(options = {})
         skip_before_action :with_authentication, **options
       rescue ArgumentError => e
-        raise Veri::Error, e.message
+        raise Veri::InvalidArgumentError, e.message
       end
     end
 
@@ -27,12 +27,8 @@ module Veri
     end
 
     def login(authenticatable)
-      raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name}" unless authenticatable.is_a?(Veri::Configuration.instance.user_model)
-
-      token = Veri::Session.establish(authenticatable, request)
-
+      token = Veri::Session.establish(Veri::Inputs.process(authenticatable, as: :authenticatable), request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
-
       after_login
     end
 

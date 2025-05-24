@@ -7,6 +7,7 @@ require_relative "veri/password/argon2"
 require_relative "veri/password/bcrypt"
 require_relative "veri/password/scrypt"
 
+require_relative "veri/inputs"
 require_relative "veri/configuration"
 
 require_relative "veri/models/session"
