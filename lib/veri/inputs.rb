@@ -21,7 +21,7 @@ module Veri
     def duration = self::Instance(ActiveSupport::Duration)
     def string = self::Strict::String
     def model = self::Strict::Class.constructor { _1.try(:safe_constantize) }.constrained(lt: ActiveRecord::Base)
-    def authenticatable = self::Instance(Veri::Configuration.instance.user_model)
+    def authenticatable = self::Instance(Veri::Configuration.user_model)
     def request = self::Instance(ActionDispatch::Request)
   end
 end

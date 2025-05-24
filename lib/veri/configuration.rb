@@ -1,22 +1,28 @@
-require "singleton"
+require "active_support/core_ext/numeric/time"
+require "dry-configurable"
 
 module Veri
-  class Configuration
-    include Singleton
+  module Configuration
+    extend Dry::Configurable
 
-    attr_reader :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime
-    attr_accessor :user_model_name
+    module_function
 
-    def initialize
-      @hashing_algorithm = :argon2
-      @inactive_session_lifetime = nil
-      @total_session_lifetime = 14.days
-      @user_model_name = "User"
-    end
-
-    def hashing_algorithm=(algorithm)
-      @hashing_algorithm = Veri::Inputs.process(algorithm, as: :hashing_algorithm, error: Veri::ConfigurationError)
-    end
+    setting :hashing_algorithm,
+            default: :argon2,
+            reader: true,
+            constructor: -> (value) { Veri::Inputs.process(value, as: :hashing_algorithm, error: Veri::ConfigurationError) }
+    setting :inactive_session_lifetime,
+            default: nil,
+            reader: true,
+            constructor: -> (value) { Veri::Inputs.process(value, as: :duration, optional: true, error: Veri::ConfigurationError) }
+    setting :total_session_lifetime,
+            default: 14.days,
+            reader: true,
+            constructor: -> (value) { Veri::Inputs.process(value, as: :duration, error: Veri::ConfigurationError) }
+    setting :user_model_name,
+            default: "User",
+            reader: true,
+            constructor: -> (value) { Veri::Inputs.process(value, as: :string, error: Veri::ConfigurationError) }
 
     def hasher
       case hashing_algorithm
@@ -25,14 +31,6 @@ module Veri
       when :scrypt then Veri::Password::SCrypt
       else raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}"
       end
-    end
-
-    def inactive_session_lifetime=(duration)
-      @inactive_session_lifetime = Veri::Inputs.process(duration, as: :duration, optional: true, error: Veri::ConfigurationError)
-    end
-
-    def total_session_lifetime=(duration)
-      @total_session_lifetime = Veri::Inputs.process(duration, as: :duration, error: Veri::ConfigurationError)
     end
 
     def user_model

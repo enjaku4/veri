@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "argon2", "~> 2.0"
   spec.add_dependency "bcrypt", "~> 3.0"
+  spec.add_dependency "dry-configurable", "~> 1.3"
   spec.add_dependency "dry-types", "~> 1.8"
   spec.add_dependency "rails", ">= 7.1", "< 8.1"
   spec.add_dependency "scrypt", "~> 3.0"

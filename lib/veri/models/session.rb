@@ -4,14 +4,14 @@ module Veri
   class Session < ActiveRecord::Base
     self.table_name = "veri_sessions"
 
-    belongs_to :authenticatable, class_name: Veri::Configuration.instance.user_model_name
+    belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name # rubocop:disable Rails/ReflectionClassName
 
     def expired?
       expires_at < Time.current
     end
 
     def inactive?
-      inactive_session_lifetime = Veri::Configuration.instance.inactive_session_lifetime
+      inactive_session_lifetime = Veri::Configuration.inactive_session_lifetime
 
       return false unless inactive_session_lifetime
 
@@ -45,7 +45,7 @@ module Veri
     class << self
       def establish(authenticatable, request)
         token = SecureRandom.hex(32)
-        expires_at = Time.current + Veri::Configuration.instance.total_session_lifetime
+        expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
         new(
           hashed_token: Digest::SHA256.hexdigest(token),
