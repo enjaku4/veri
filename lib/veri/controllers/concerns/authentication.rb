@@ -29,11 +29,9 @@ module Veri
     def login(authenticatable)
       raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name}" unless authenticatable.is_a?(Veri::Configuration.instance.user_model)
 
-      token = Veri::Session.establish(authenticatable)
+      token = Veri::Session.establish(authenticatable, request)
 
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
-
-      current_session.update_info(request)
 
       after_login
     end
@@ -54,7 +52,7 @@ module Veri
     private
 
     def with_authentication
-      current_session.update_info(request) and return if logged_in? && !current_session.expired?
+      current_session.update_info(request) and return if logged_in? && !current_session.expired? && !current_session.inactive?
 
       current_session&.terminate
 

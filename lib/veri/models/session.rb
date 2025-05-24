@@ -6,7 +6,17 @@ module Veri
 
     belongs_to :authenticatable, class_name: Veri::Configuration.instance.user_model_name
 
-    def expired? = expires_at < Time.current
+    def expired?
+      expires_at < Time.current
+    end
+
+    def inactive?
+      inactive_session_lifetime = Veri::Configuration.instance.inactive_session_lifetime
+
+      return false unless inactive_session_lifetime
+
+      last_seen_at < Time.current - inactive_session_lifetime
+    end
 
     alias terminate delete
 
@@ -33,13 +43,14 @@ module Veri
     end
 
     class << self
-      def establish(authenticatable)
+      def establish(authenticatable, request)
         raise Veri::InvalidArgumentError, "Expects an instance of #{Veri::Configuration.instance.user_model_name}" unless authenticatable.is_a?(Veri::Configuration.instance.user_model)
 
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.instance.total_session_lifetime
 
-        create!(hashed_token: Digest::SHA256.hexdigest(token), expires_at:, authenticatable:)
+        session = new(hashed_token: Digest::SHA256.hexdigest(token), expires_at:, last_seen_at:, authenticatable:)
+        session.update_info(request)
 
         token
       end

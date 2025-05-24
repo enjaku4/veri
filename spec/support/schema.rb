@@ -11,7 +11,7 @@ ActiveRecord::Schema.define do
     t.string "hashed_token", null: false
     t.datetime "expires_at", null: false
     t.integer "authenticatable_id", null: false
-    t.datetime "last_seen_at"
+    t.datetime "last_seen_at", null: false
     t.string "ip_address"
     t.string "user_agent"
     t.datetime "created_at", null: false

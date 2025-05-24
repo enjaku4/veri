@@ -4,11 +4,12 @@ module Veri
   class Configuration
     include Singleton
 
-    attr_reader :hashing_algorithm, :total_session_lifetime
+    attr_reader :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime
     attr_accessor :user_model_name
 
     def initialize
       @hashing_algorithm = :argon2
+      @inactive_session_lifetime = nil
       @total_session_lifetime = 30.days
       @user_model_name = "User"
     end
@@ -26,6 +27,12 @@ module Veri
                   when :scrypt then Veri::Password::SCrypt
                   else raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}"
                   end
+    end
+
+    def inactive_session_lifetime=(duration)
+      raise Veri::ConfigurationError, "Configuration `inactive_session_lifetime` must be an instance of ActiveSupport::Duration or nil" unless duration.is_a?(ActiveSupport::Duration) || duration.nil?
+
+      @inactive_session_lifetime = duration
     end
 
     def total_session_lifetime=(duration)
