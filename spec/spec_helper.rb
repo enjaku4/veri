@@ -35,7 +35,7 @@ RSpec.configure do |config|
       example.run
     end
 
-    # TODO: reset config
+    Veri::Configuration.reset_config
   end
 
   # TODO: add auth helpers
@@ -45,4 +45,5 @@ load "#{File.dirname(__FILE__)}/support/schema.rb"
 
 require "#{File.dirname(__FILE__)}/support/models"
 require "#{File.dirname(__FILE__)}/support/application"
+require "#{File.dirname(__FILE__)}/support/configuration"
 require "#{File.dirname(__FILE__)}/support/controllers"
