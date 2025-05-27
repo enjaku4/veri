@@ -1,6 +1,6 @@
 RSpec.describe Veri::Session do
   describe "#expired?" do
-    subject { described_class.new(expires_at: expires_at).expired? }
+    subject { described_class.new(expires_at:).expired? }
 
     context "when expires_at is in the past" do
       let(:expires_at) { 1.minute.ago }
