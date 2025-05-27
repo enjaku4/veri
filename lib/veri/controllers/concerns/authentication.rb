@@ -26,13 +26,13 @@ module Veri
       @current_user ||= current_session&.authenticatable
     end
 
-    def login(authenticatable)
+    def log_in(authenticatable)
       token = Veri::Session.establish(Veri::Inputs.process(authenticatable, as: :authenticatable), request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
       after_login
     end
 
-    def logout
+    def log_out
       current_session&.terminate
       after_logout
     end
