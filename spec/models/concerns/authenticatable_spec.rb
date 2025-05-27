@@ -1,0 +1,110 @@
+RSpec.describe Veri::Authenticatable do
+  describe "included" do
+    it "raises an error if included more than once" do
+      expect { Client.include(described_class) }.to raise_error(Veri::Error, "Veri::Authenticatable can only be included once")
+    end
+  end
+
+  describe "sessions" do
+    let(:user) { User.create! }
+    let!(:sessions) do
+      Array.new(3) do |i|
+        Veri::Session.create!(
+          authenticatable: user,
+          expires_at: 1.hour.ago + i.hours,
+          hashed_token: "foo#{i}",
+          last_seen_at: Time.current
+        )
+      end
+    end
+
+    it "returns all sessions for the authenticatable" do
+      expect(user.sessions).to match_array(sessions)
+    end
+  end
+
+  describe "#active_sessions" do
+    let(:user) { User.create! }
+    let!(:active_sessions) do
+      Array.new(3) do |i|
+        Veri::Session.create!(
+          authenticatable: user,
+          expires_at: 1.hour.from_now + i.hours,
+          hashed_token: "foo#{i}",
+          last_seen_at: Time.current
+        )
+      end
+    end
+
+    before do
+      Veri::Session.create!(
+        authenticatable: user,
+        expires_at: 1.hour.ago,
+        hashed_token: "expired",
+        last_seen_at: Time.current
+      )
+    end
+
+    it "returns only active sessions" do
+      expect(user.active_sessions).to match_array(active_sessions)
+    end
+  end
+
+  describe "#update_password" do
+    subject { user.update_password(password) }
+
+    let(:user) { User.create! }
+
+    context "when the password is invalid" do
+      let(:password) { nil }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+      end
+    end
+
+    context "when the password is valid" do
+      let(:password) { "new_password" }
+
+      before { allow(Veri::Configuration.hasher).to receive(:create).with(password).and_return("hashed_password") }
+
+      it "updates the hashed password" do
+        expect { subject }.to change(user, :hashed_password).from(nil).to("hashed_password")
+      end
+    end
+  end
+
+  describe "#verify_password" do
+    subject { user.verify_password(password) }
+
+    let(:user) { User.create!(hashed_password: "hashed_password") }
+
+    context "when the password is invalid" do
+      let(:password) { nil }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+      end
+    end
+
+    context "when the password is incorrect" do
+      let(:password) { "wrong_password" }
+
+      before { allow(Veri::Configuration.hasher).to receive(:verify).with(password, user.hashed_password).and_return(false) }
+
+      it "returns false" do
+        expect(subject).to be false
+      end
+    end
+
+    context "when the password is correct" do
+      let(:password) { "correct_password" }
+
+      before { allow(Veri::Configuration.hasher).to receive(:verify).with(password, user.hashed_password).and_return(true) }
+
+      it "returns true" do
+        expect(subject).to be true
+      end
+    end
+  end
+end
