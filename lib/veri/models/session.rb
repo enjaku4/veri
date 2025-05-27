@@ -21,7 +21,7 @@ module Veri
     alias terminate delete
 
     def update_info(request)
-      processed_request = Veri::Inputs.process(request, as: :request)
+      processed_request = Veri::Inputs.process(request, as: :request, error: Veri::Error)
 
       update!(
         last_seen_at: Time.current,
@@ -50,9 +50,9 @@ module Veri
         new(
           hashed_token: Digest::SHA256.hexdigest(token),
           expires_at:,
-          authenticatable: Veri::Inputs.process(authenticatable, as: :authenticatable)
+          authenticatable: Veri::Inputs.process(authenticatable, as: :authenticatable, error: Veri::Error)
         ).update_info(
-          Veri::Inputs.process(request, as: :request)
+          Veri::Inputs.process(request, as: :request, error: Veri::Error)
         )
 
         token
