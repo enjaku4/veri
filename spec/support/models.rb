@@ -3,3 +3,4 @@ class ApplicationRecord < ActiveRecord::Base
 end
 
 class User < ApplicationRecord; end
+class Client < ApplicationRecord; end

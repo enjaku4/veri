@@ -20,7 +20,7 @@ module Veri
     def hashing_algorithm = self::Strict::Symbol.enum(:argon2, :bcrypt, :scrypt)
     def duration = self::Instance(ActiveSupport::Duration)
     def string = self::Strict::String
-    def model = self::Strict::Class.constructor { _1.try(:safe_constantize) }.constrained(lt: ActiveRecord::Base)
+    def model = self::Strict::Class.constructor { _1.try(:safe_constantize) || _1 }.constrained(lt: ActiveRecord::Base)
     def authenticatable = self::Instance(Veri::Configuration.user_model)
     def request = self::Instance(ActionDispatch::Request)
   end
