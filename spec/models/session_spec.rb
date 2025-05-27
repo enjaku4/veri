@@ -176,7 +176,7 @@ RSpec.describe Veri::Session do
       end
 
       before do
-        3.times do |i|
+        Array.new(3) do |i|
           described_class.create!(
             expires_at: 1.hour.ago,
             authenticatable: User.create!,
@@ -195,7 +195,7 @@ RSpec.describe Veri::Session do
     context "when authenticatable is present" do
       let(:authenticatable) { User.create! }
       let!(:sessions) do
-        3.times do |i|
+        Array.new(3) do |i|
           described_class.create!(
             expires_at: 1.hour.ago,
             authenticatable:,
@@ -206,7 +206,7 @@ RSpec.describe Veri::Session do
       end
 
       before do
-        3.times do |i|
+        Array.new(3) do |i|
           described_class.create!(
             expires_at: 1.hour.ago,
             authenticatable: User.create!,
@@ -243,7 +243,7 @@ RSpec.describe Veri::Session do
     context "when authenticatable is valid" do
       let(:authenticatable) { User.create! }
       let!(:sessions) do
-        3.times do |i|
+        Array.new(3) do |i|
           described_class.create!(
             expires_at: 1.hour.from_now,
             authenticatable:,
