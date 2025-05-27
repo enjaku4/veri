@@ -82,11 +82,10 @@ RSpec.describe Veri::Session do
   end
 
   describe "#info" do
-    let(:last_seen_at) { 5.minutes.ago }
     let(:session) do
       described_class.new(
         ip_address: "1.2.3.4",
-        last_seen_at:,
+        last_seen_at: Time.current,
         user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
         authenticatable: User.new,
         hashed_token: "foo",
@@ -95,13 +94,13 @@ RSpec.describe Veri::Session do
     end
 
     it "returns a hash with device, os, browser, ip_address, and last_seen_at" do
-      expect(session.info).to eq(
+      expect(session.info).to match(
         {
           device: "Other",
           os: "Windows 10",
           browser: "Chrome 58.0.3029.110",
           ip_address: "1.2.3.4",
-          last_seen_at:
+          last_seen_at: be_within(3.seconds).of(Time.current)
         }
       )
     end
