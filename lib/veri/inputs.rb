@@ -11,7 +11,7 @@ module Veri
       checker = checker.optional if optional
 
       checker[value]
-    rescue Dry::Types::ConstraintError => e
+    rescue Dry::Types::CoercionError => e
       raise error, e.message
     end
 
