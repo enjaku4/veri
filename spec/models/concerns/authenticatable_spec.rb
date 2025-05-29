@@ -23,33 +23,6 @@ RSpec.describe Veri::Authenticatable do
     end
   end
 
-  describe "#active_sessions" do
-    let(:user) { User.create! }
-    let!(:active_sessions) do
-      Array.new(3) do |i|
-        Veri::Session.create!(
-          authenticatable: user,
-          expires_at: 1.hour.from_now + i.hours,
-          hashed_token: "foo#{i}",
-          last_seen_at: Time.current
-        )
-      end
-    end
-
-    before do
-      Veri::Session.create!(
-        authenticatable: user,
-        expires_at: 1.hour.ago,
-        hashed_token: "expired",
-        last_seen_at: Time.current
-      )
-    end
-
-    it "returns only active sessions" do
-      expect(user.active_sessions).to match_array(active_sessions)
-    end
-  end
-
   describe "#update_password" do
     subject { user.update_password(password) }
 

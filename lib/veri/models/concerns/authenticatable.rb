@@ -14,10 +14,6 @@ module Veri
       has_many :veri_sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :destroy
     end
 
-    def active_sessions
-      veri_sessions.where("expires_at > ?", Time.current)
-    end
-
     def update_password(password)
       update!(hashed_password: hasher.create(Veri::Inputs.process(password, as: :string)))
     end
