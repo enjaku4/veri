@@ -99,11 +99,11 @@ Include the authentication module and configure protection:
 class ApplicationController < ActionController::Base
   include Veri::Authentication
 
-  with_authentication  # Require authentication by default
+  with_authentication # Require authentication by default
 end
 
 class PicturesController < ApplicationController
-  skip_authentication only: [:index, :show]  # Allow public access to index and show actions
+  skip_authentication only: [:index, :show] # Allow public access to index and show actions
 end
 ```
 

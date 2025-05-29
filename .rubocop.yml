@@ -46,8 +46,16 @@ Rails/ApplicationController:
 Rails/ApplicationRecord:
   Enabled: false
 
+Rails/Delegate:
+  Exclude:
+    - README.md
+
 Rails/FilePath:
   Enabled: false
+
+Rails/I18nLocaleTexts:
+  Exclude:
+    - README.md
 
 Rails/RakeEnvironment:
   Enabled: false
