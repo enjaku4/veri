@@ -9,8 +9,7 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata["rubygems_mfa_required"] = "true"
-  # TODO: sumamry
-  spec.summary = "Authentication for Rails"
+  spec.summary = "Minimal cookie-based authentication library for Ruby on Rails"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2", "< 3.5"
 
