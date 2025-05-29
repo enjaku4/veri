@@ -42,7 +42,7 @@ module Veri
     end
 
     def return_path
-      session[:return_to]
+      cookies.signed[:veri_return_path]
     end
 
     private
@@ -52,7 +52,7 @@ module Veri
 
       current_session&.terminate
 
-      session[:return_to] = request.fullpath
+      cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && !request.xhr?
 
       when_unauthenticated
     end
