@@ -1,4 +1,31 @@
 RSpec.describe Veri::Session do
+  describe "active?" do
+    subject { described_class.new(expires_at:, last_seen_at:).active? }
+
+    context "when session is active" do
+      let(:expires_at) { 1.hour.from_now }
+      let(:last_seen_at) { Time.current }
+
+      it { is_expected.to be true }
+    end
+
+    context "when session is expired" do
+      let(:expires_at) { 1.minute.ago }
+      let(:last_seen_at) { Time.current }
+
+      it { is_expected.to be false }
+    end
+
+    context "when session is inactive" do
+      let(:expires_at) { 1.hour.from_now }
+      let(:last_seen_at) { 5.minutes.ago }
+
+      before { Veri::Configuration.configure { _1.inactive_session_lifetime = 4.minutes } }
+
+      it { is_expected.to be false }
+    end
+  end
+
   describe "#expired?" do
     subject { described_class.new(expires_at:).expired? }
 

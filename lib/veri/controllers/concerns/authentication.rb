@@ -54,7 +54,7 @@ module Veri
     private
 
     def with_authentication
-      current_session.update_info(request) and return if logged_in? && !current_session.expired? && !current_session.inactive?
+      current_session.update_info(request) and return if logged_in? && current_session.active?
 
       current_session&.terminate
 

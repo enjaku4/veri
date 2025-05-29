@@ -6,6 +6,10 @@ module Veri
 
     belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name # rubocop:disable Rails/ReflectionClassName
 
+    def active?
+      !expired? && !inactive?
+    end
+
     def expired?
       expires_at < Time.current
     end
