@@ -65,7 +65,7 @@ module Veri
       end
 
       def terminate_all(authenticatable)
-        Veri::Inputs.process(authenticatable, as: :authenticatable).sessions.delete_all
+        Veri::Inputs.process(authenticatable, as: :authenticatable).veri_sessions.delete_all
       end
     end
   end
