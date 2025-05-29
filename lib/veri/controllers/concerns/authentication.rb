@@ -26,6 +26,11 @@ module Veri
       @current_user ||= current_session&.authenticatable
     end
 
+    def current_session
+      token = cookies.encrypted[:veri_token]
+      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token)) : nil
+    end
+
     def log_in(authenticatable)
       token = Veri::Session.establish(Veri::Inputs.process(authenticatable, as: :authenticatable), request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
@@ -52,14 +57,9 @@ module Veri
 
       current_session&.terminate
 
-      cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && !request.xhr?
+      cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
       when_unauthenticated
-    end
-
-    def current_session
-      token = cookies.encrypted[:veri_token]
-      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token)) : nil
     end
 
     def when_unauthenticated
