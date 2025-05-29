@@ -1,7 +1,3 @@
-require "argon2"
-require "bcrypt"
-require "scrypt"
-
 module Veri
   module Authenticatable
     extend ActiveSupport::Concern
