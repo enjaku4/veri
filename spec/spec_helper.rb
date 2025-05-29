@@ -15,6 +15,8 @@ RSpec.configure do |config|
 
   config.expose_dsl_globally = true
 
+  config.include ActiveSupport::Testing::TimeHelpers
+
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end

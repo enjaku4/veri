@@ -51,6 +51,28 @@ RSpec.describe Veri::Authentication do
     end
   end
 
+  describe "#current_session" do
+    subject { controller.current_session }
+
+    let(:controller) { DummyController.new }
+
+    before { controller.request = ActionDispatch::TestRequest.create }
+
+    context "when user is logged in" do
+      let(:user) { User.create! }
+
+      before { controller.log_in(user) }
+
+      it "returns the current session" do
+        expect(subject).to eq(user.veri_sessions.take)
+      end
+    end
+
+    context "when user is not logged in" do
+      it { is_expected.to be_nil }
+    end
+  end
+
   describe "#log_in" do
     subject { controller.log_in(user) }
 

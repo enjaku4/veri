@@ -7,12 +7,14 @@ class ApplicationController < ActionController::Base
   with_authentication
 end
 
-class DummyController < ApplicationController; end
+class DummyController < ApplicationController
+  def index = head :ok
+end
 
 class ApiController < ActionController::API
   include Veri::Authentication
 
   with_authentication
 
-  def api_action = head(:ok)
+  def create = head :created
 end
