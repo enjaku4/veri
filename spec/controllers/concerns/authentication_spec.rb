@@ -136,4 +136,20 @@ RSpec.describe Veri::Authentication do
       end
     end
   end
+
+  describe "helper methods" do
+    let(:controller) { DummyController.new }
+    let(:view) { controller.view_context }
+    let(:user) { User.create! }
+
+    before { allow(controller).to receive_messages(current_user: user, logged_in?: true) }
+
+    it "provides current_user helper method" do
+      expect(view.current_user).to eq(user)
+    end
+
+    it "provides logged_in? helper method" do
+      expect(view.logged_in?).to be true
+    end
+  end
 end
