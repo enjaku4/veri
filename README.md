@@ -5,10 +5,10 @@
 
 Veri is a cookie-based authentication library for Ruby on Rails that provides essential authentication building blocks without imposing business logic. Unlike full-featured solutions, Veri gives you complete control over your authentication flow while handling the complex underlying mechanics of secure password storage and session management.
 
-Key Features:
+**Key Features:**
 
 - Cookie-based authentication with database-stored sessions
-- Supports multiple password hashing algorithms (Argon2, bcrypt, scrypt)
+- Supports multiple password hashing algorithms (argon2, bcrypt, scrypt)
 - Granular session management and control
 - Flexible authentication callbacks
 - No pre-defined business logic, no views, controllers, or mailers — just the essential methods
@@ -47,7 +47,7 @@ Install the gem:
 bundle install
 ```
 
-Generate the migration for your user model:
+Generate the migration for your user model (replace `users` with your user table name if different):
 
 ```shell
 # For standard integer IDs
@@ -70,7 +70,7 @@ If customization is required, configure Veri in an initializer:
 ```rb
 # These are the default values; you can change them as needed
 Veri.configure do |config|
-  config.hashing_algorithm = :argon2       # Password hashing algorithm (:bcrypt, :argon2, or :scrypt)
+  config.hashing_algorithm = :argon2       # Password hashing algorithm (:argon2, :bcrypt, or :scrypt)
   config.inactive_session_lifetime = nil   # Session inactivity timeout (nil means sessions never expire due to inactivity)
   config.total_session_lifetime = 14.days  # Maximum session duration regardless of activity
   config.user_model_name = "User"          # Your user model name
@@ -86,7 +86,7 @@ Your user model is automatically extended with password management methods:
 user.update_password("new_password")
 
 # Verify a password
-user.verify_password("submitted_password") # => boolean
+user.verify_password("submitted_password")
 ```
 
 ## Controller Integration
@@ -277,18 +277,34 @@ module AuthenticationHelpers
     controller.log_out
   end
 end
+
+# In your spec_helper.rb
+RSpec.configure do |config|
+  config.include AuthenticationHelpers, type: :controller
+end
 ```
 
 ## Contributing
 
 ### Getting Help
-- **Open a Discussion:** If you have a question, experience difficulties using the gem, or have a suggestion for improvements, feel free to use the Discussions section.
+Have a question or need assistance? Open a discussion in our [discussions section](https://github.com/brownboxdev/veri/discussions) for:
+- Usage questions
+- Implementation guidance
+- Feature suggestions
 
-### Reporting Bugs
-- **Create an Issue:** If you've identified a bug, please create an issue. Be sure to provide detailed information about the problem, including the steps to reproduce it.
-- **Contribute a Solution:** Found a fix for the issue? Feel free to create a pull request with your changes.
+### Reporting Issues
+Found a bug? Please [create an issue](https://github.com/brownboxdev/veri/issues) with:
+- A clear description of the problem
+- Steps to reproduce the issue
+- Your environment details (Rails version, Ruby version, etc.)
 
-Before creating an issue or a pull request, please read the [contributing guidelines](https://github.com/brownboxdev/veri/blob/master/CONTRIBUTING.md).
+### Contributing Code
+Ready to contribute? You can:
+- Fix bugs by submitting pull requests
+- Improve documentation
+- Add new features (please discuss first in our [discussions section](https://github.com/brownboxdev/veri/discussions))
+
+Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/veri/blob/master/CONTRIBUTING.md)
 
 ## License
 
