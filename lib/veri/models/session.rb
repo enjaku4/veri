@@ -62,10 +62,16 @@ module Veri
         token
       end
 
-      def prune_expired(authenticatable = nil)
+      def prune(authenticatable = nil)
         processed_authenticatable = Veri::Inputs.process(authenticatable, as: :authenticatable, optional: true)
         scope = processed_authenticatable ? where(authenticatable: processed_authenticatable) : all
-        scope.where(expires_at: ...Time.current).delete_all
+        to_be_pruned = scope.where(expires_at: ...Time.current)
+        if Veri::Configuration.inactive_session_lifetime
+          to_be_pruned = to_be_pruned.or(
+            scope.where(last_seen_at: ...(Time.current - Veri::Configuration.inactive_session_lifetime))
+          )
+        end
+        to_be_pruned.delete_all
       end
 
       def terminate_all(authenticatable)

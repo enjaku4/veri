@@ -179,14 +179,32 @@ RSpec.describe Veri::Session do
     end
   end
 
-  describe ".prune_expired" do
-    subject { described_class.prune_expired(authenticatable) }
+  describe ".prune" do
+    subject { described_class.prune(authenticatable) }
 
     context "when authenticatable is invalid" do
       let(:authenticatable) { Client.create! }
 
       it "raises an error" do
         expect { subject }.to raise_error(Veri::InvalidArgumentError)
+      end
+    end
+
+    context "when there are no sessions" do
+      context "when authenticatable is present" do
+        let(:authenticatable) { User.create! }
+
+        it "does not do anything" do
+          expect { subject }.not_to change(described_class, :count)
+        end
+      end
+
+      context "when authenticatable is nil" do
+        let(:authenticatable) { nil }
+
+        it "does not do anything" do
+          expect { subject }.not_to change(described_class, :count)
+        end
       end
     end
 
@@ -197,7 +215,7 @@ RSpec.describe Veri::Session do
           expires_at: 1.hour.from_now,
           authenticatable: User.create!,
           hashed_token: "foo",
-          last_seen_at: Time.current
+          last_seen_at: 10.minutes.ago
         )
       end
 
@@ -207,7 +225,7 @@ RSpec.describe Veri::Session do
             expires_at: 1.hour.ago,
             authenticatable: User.create!,
             hashed_token: "foo#{i}",
-            last_seen_at: Time.current
+            last_seen_at: 10.minutes.ago
           )
         end
       end
@@ -215,6 +233,14 @@ RSpec.describe Veri::Session do
       it "deletes all expired sessions" do
         expect { subject }.to change(described_class, :count).from(4).to(1)
         expect(described_class.where(id: session.id)).to all(be_persisted)
+      end
+
+      context "when inactive session lifetime is set" do
+        before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
+
+        it "deletes sessions that are both expired and inactive" do
+          expect { subject }.to change(described_class, :count).from(4).to(0)
+        end
       end
     end
 
@@ -226,7 +252,7 @@ RSpec.describe Veri::Session do
             expires_at: 1.hour.ago,
             authenticatable:,
             hashed_token: "foo#{i}",
-            last_seen_at: Time.current
+            last_seen_at: 10.minutes.ago
           )
         end
       end
@@ -237,20 +263,29 @@ RSpec.describe Veri::Session do
             expires_at: 1.hour.ago,
             authenticatable: User.create!,
             hashed_token: "bar#{i}",
-            last_seen_at: Time.current
+            last_seen_at: 10.minutes.ago
           )
         end
         described_class.create!(
           expires_at: 1.hour.from_now,
           authenticatable:,
           hashed_token: "baz",
-          last_seen_at: Time.current
+          last_seen_at: 10.minutes.ago
         )
       end
 
       it "deletes only expired sessions for the given authenticatable" do
         expect { subject }.to change(described_class, :count).from(7).to(4)
         expect(described_class.where(id: sessions)).to all(be_destroyed)
+      end
+
+      context "when inactive session lifetime is set" do
+        before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
+
+        it "deletes sessions that are both expired and inactive for the given authenticatable" do
+          expect { subject }.to change(described_class, :count).from(7).to(3)
+          expect(described_class.where(authenticatable:)).to all(be_destroyed)
+        end
       end
     end
   end
