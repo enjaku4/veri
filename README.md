@@ -137,7 +137,7 @@ end
 Available methods:
 
 - `current_user` - returns the authenticated user or `nil`
-- `logged_in?` - returns `true` if user is authenticated
+- `logged_in?` - returns `true` if the user is authenticated
 - `log_in(user)` - authenticates the user and creates a session
 - `log_out` - terminates the current session
 - `return_path` - returns the path the user was trying to access before authentication
@@ -180,7 +180,7 @@ end
 
 ## Authentication Sessions
 
-Veri stores authentication sessions in the database, enabling powerful session management:
+Veri stores authentication sessions in the database, providing session management capabilities:
 
 ### Session Access
 
