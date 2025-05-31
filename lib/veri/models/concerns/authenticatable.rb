@@ -11,7 +11,10 @@ module Veri
     end
 
     def update_password(password)
-      update!(hashed_password: hasher.create(Veri::Inputs.process(password, as: :string)))
+      update!(
+        hashed_password: hasher.create(Veri::Inputs.process(password, as: :string)),
+        password_updated_at: Time.current
+      )
     end
 
     def verify_password(password)
