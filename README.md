@@ -10,8 +10,7 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
 - Cookie-based authentication with database-stored sessions
 - Supports multiple password hashing algorithms (argon2, bcrypt, scrypt)
 - Granular session management and control
-- Flexible authentication callbacks
-- No pre-defined business logic, no views, controllers, or mailers — just the essential methods
+- Authentication callbacks
 - Built-in return path handling
 
 > ⚠️ **Development Notice**<br>
