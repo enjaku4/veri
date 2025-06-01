@@ -1,4 +1,4 @@
-<!-- TODO: shapeshift -->
+<!-- TODO: shapeshift, active, etc. -->
 
 # Veri: Minimal Authentication Framework for Rails
 
