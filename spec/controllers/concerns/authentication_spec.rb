@@ -84,11 +84,6 @@ RSpec.describe Veri::Authentication do
     it "logs in the user" do
       expect { subject }.to change(controller, :current_user).from(nil).to(user)
     end
-
-    it "runs after_login callback" do
-      allow(controller).to receive(:after_login).and_return("foo")
-      expect(subject).to eq("foo")
-    end
   end
 
   describe "#log_out" do
@@ -104,11 +99,6 @@ RSpec.describe Veri::Authentication do
 
     it "logs out the user" do
       expect { subject }.to change(user.veri_sessions, :count).from(1).to(0)
-    end
-
-    it "runs after_logout callback" do
-      allow(controller).to receive(:after_logout).and_return("foo")
-      expect(subject).to eq("foo")
     end
   end
 

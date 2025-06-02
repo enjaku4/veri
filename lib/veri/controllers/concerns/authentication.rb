@@ -34,13 +34,11 @@ module Veri
     def log_in(authenticatable)
       token = Veri::Session.establish(Veri::Inputs.process(authenticatable, as: :authenticatable), request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
-      after_login
     end
 
     def log_out
       current_session.terminate
       cookies.delete(:veri_token)
-      after_logout
     end
 
     def logged_in?
@@ -82,8 +80,5 @@ module Veri
     def when_unauthenticated
       request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
     end
-
-    def after_login = nil
-    def after_logout = nil
   end
 end
