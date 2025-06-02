@@ -133,6 +133,51 @@ RSpec.describe Veri::Session do
     end
   end
 
+  describe "#shapeshifted?" do
+    subject { session.shapeshifted? }
+
+    let(:session) { described_class.new(shapeshifted_at:) }
+
+    context "when shapeshifted_at is present" do
+      let(:shapeshifted_at) { Time.current }
+
+      it { is_expected.to be true }
+    end
+
+    context "when shapeshifted_at is nil" do
+      let(:shapeshifted_at) { nil }
+
+      it { is_expected.to be false }
+    end
+  end
+
+  describe "#original_identity" do
+    subject { session.original_identity }
+
+    let(:session) { described_class.new(original_authenticatable:, authenticatable: User.new) }
+
+    context "when original_authenticatable is present" do
+      let(:original_authenticatable) { User.new }
+
+      it { is_expected.to eq(original_authenticatable) }
+    end
+
+    context "when original_authenticatable is nil" do
+      let(:original_authenticatable) { nil }
+
+      it { is_expected.to be_nil }
+    end
+  end
+
+  describe "#identity" do
+    subject { session.identity }
+
+    let(:session) { described_class.new(authenticatable:) }
+    let(:authenticatable) { User.new }
+
+    it { is_expected.to eq(authenticatable) }
+  end
+
   describe ".establish" do
     subject { described_class.establish(authenticatable, request) }
 

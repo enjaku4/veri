@@ -4,11 +4,12 @@ module Veri
   class Session < ActiveRecord::Base
     self.table_name = "veri_sessions"
 
-    belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name # rubocop:disable Rails/ReflectionClassName
+    # rubocop:disable Rails/ReflectionClassName
+    belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
+    belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
+    # rubocop:enable Rails/ReflectionClassName
 
-    def active?
-      !expired? && !inactive?
-    end
+    def active? = !expired? && !inactive?
 
     def expired?
       expires_at < Time.current
@@ -46,17 +47,9 @@ module Veri
       }
     end
 
-    def shapeshifted?
-      # TODO
-    end
-
-    def original_identity
-      # TODO
-    end
-
-    def identity
-      # TODO
-    end
+    def shapeshifted? = shapeshifted_at.present?
+    def original_identity = original_authenticatable
+    def identity = authenticatable
 
     class << self
       def establish(authenticatable, request)
