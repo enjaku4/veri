@@ -59,13 +59,6 @@ module Veri
     end
 
     class << self
-      def active(authenticatable = nil)
-        processed_authenticatable = Veri::Inputs.process(authenticatable, as: :authenticatable, optional: true)
-        scope = processed_authenticatable ? where(authenticatable: processed_authenticatable) : all
-        # TODO: optimize, make sure ActiveRecord relation is returned
-        scope.where(id: select { |session| session.active? })
-      end
-
       def establish(authenticatable, request)
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
