@@ -47,9 +47,25 @@ module Veri
       }
     end
 
-    def shapeshifted? = shapeshifted_at.present?
-    def original_identity = original_authenticatable
     def identity = authenticatable
+    def shapeshifted? = shapeshifted_at.present?
+    def true_identity = original_authenticatable
+
+    def shapeshift(user)
+      update!(
+        shapeshifted_at: Time.current,
+        original_authenticatable: authenticatable,
+        authenticatable: Veri::Inputs.process(user, as: :authenticatable)
+      )
+    end
+
+    def revert_to_true_identity
+      update!(
+        shapeshifted_at: nil,
+        authenticatable: original_authenticatable,
+        original_authenticatable: nil
+      )
+    end
 
     class << self
       def establish(authenticatable, request)

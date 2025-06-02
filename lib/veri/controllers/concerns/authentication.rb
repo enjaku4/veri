@@ -5,7 +5,7 @@ module Veri
     included do
       include ActionController::Cookies unless self < ActionController::Cookies
 
-      helper_method(:current_user, :logged_in?, :shapeshifter?, :true_form) if respond_to?(:helper_method)
+      helper_method(:current_user, :logged_in?, :shapeshifter?) if respond_to?(:helper_method)
     end
 
     class_methods do
@@ -49,20 +49,8 @@ module Veri
       cookies.signed[:veri_return_path]
     end
 
-    def shapeshift(user)
-      # TODO
-    end
-
-    def revert
-      # TODO
-    end
-
     def shapeshifter?
-      # TODO
-    end
-
-    def true_form
-      # TODO
+      !!current_session&.shapeshifted?
     end
 
     private

@@ -144,12 +144,55 @@ RSpec.describe Veri::Authentication do
     end
   end
 
+  describe "#shapeshifter?" do
+    subject { controller.shapeshifter? }
+
+    let(:controller) { DummyController.new }
+
+    before { controller.request = ActionDispatch::TestRequest.create }
+
+    context "when there is no current session" do
+      it { is_expected.to be false }
+    end
+
+    context "when user has shapeshifted" do
+      let(:user) { User.create! }
+
+      before do
+        controller.log_in(user)
+        controller.current_session.shapeshift(user)
+      end
+
+      it { is_expected.to be true }
+    end
+
+    context "when user has not shapeshifted" do
+      let(:user) { User.create! }
+
+      before { controller.log_in(user) }
+
+      it { is_expected.to be false }
+    end
+
+    context "when user has reverted to true identity" do
+      let(:user) { User.create! }
+
+      before do
+        controller.log_in(user)
+        controller.current_session.shapeshift(user)
+        controller.current_session.revert_to_true_identity
+      end
+
+      it { is_expected.to be false }
+    end
+  end
+
   describe "helper methods" do
     let(:controller) { DummyController.new }
     let(:view) { controller.view_context }
     let(:user) { User.create! }
 
-    before { allow(controller).to receive_messages(current_user: user, logged_in?: true) }
+    before { allow(controller).to receive_messages(current_user: user, logged_in?: true, shapeshifter?: true) }
 
     it "provides current_user helper method" do
       expect(view.current_user).to eq(user)
@@ -157,6 +200,10 @@ RSpec.describe Veri::Authentication do
 
     it "provides logged_in? helper method" do
       expect(view.logged_in?).to be true
+    end
+
+    it "provides shapeshifter? helper method" do
+      expect(view.shapeshifter?).to be true
     end
   end
 end
