@@ -38,7 +38,7 @@ module Veri
     end
 
     def log_out
-      current_session&.terminate
+      current_session.terminate
       cookies.delete(:veri_token)
       after_logout
     end

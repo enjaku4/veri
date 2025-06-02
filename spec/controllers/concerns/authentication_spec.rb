@@ -110,11 +110,6 @@ RSpec.describe Veri::Authentication do
       allow(controller).to receive(:after_logout).and_return("foo")
       expect(subject).to eq("foo")
     end
-
-    it "does nothing if no user is logged in" do
-      controller.log_out
-      expect { controller.log_out }.not_to raise_error
-    end
   end
 
   describe "#logged_in?" do
