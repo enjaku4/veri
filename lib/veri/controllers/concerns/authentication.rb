@@ -23,7 +23,7 @@ module Veri
     end
 
     def current_user
-      @current_user ||= current_session&.authenticatable
+      @current_user ||= current_session&.identity
     end
 
     def current_session
