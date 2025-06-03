@@ -147,17 +147,19 @@ Available methods:
 Veri provides user impersonation functionality that allows, for example, administrators to temporarily assume another user's identity:
 
 ```rb
-class Admin::ImpersonationController < ApplicationController
-  def create
-    user = User.find(params[:user_id])
-    current_session.shapeshift(user)
-    redirect_to root_path, notice: "Now viewing as #{user.name}"
-  end
+module Admin
+  class ImpersonationController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      current_session.shapeshift(user)
+      redirect_to root_path, notice: "Now viewing as #{user.name}"
+    end
 
-  def destroy
-    original_user = current_session.true_identity
-    current_session.revert_to_true_identity
-    redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
+    def destroy
+      original_user = current_session.true_identity
+      current_session.revert_to_true_identity
+      redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
+    end
   end
 end
 ```
