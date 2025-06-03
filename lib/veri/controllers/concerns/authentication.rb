@@ -5,7 +5,7 @@ module Veri
     included do
       include ActionController::Cookies unless self < ActionController::Cookies
 
-      helper_method(:current_user, :logged_in?, :shapeshifter?) if respond_to?(:helper_method)
+      helper_method(:current_user, :logged_in?, :shapeshifter?, :current_session) if respond_to?(:helper_method)
     end
 
     class_methods do
