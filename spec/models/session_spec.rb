@@ -133,6 +133,109 @@ RSpec.describe Veri::Session do
     end
   end
 
+  describe "#shapeshifted?" do
+    subject { session.shapeshifted? }
+
+    let(:session) { described_class.new(original_authenticatable:) }
+
+    context "when shapeshifted_at is present" do
+      let(:original_authenticatable) { User.new }
+
+      it { is_expected.to be true }
+    end
+
+    context "when shapeshifted_at is nil" do
+      let(:original_authenticatable) { nil }
+
+      it { is_expected.to be false }
+    end
+  end
+
+  describe "#true_identity" do
+    subject { session.true_identity }
+
+    let(:session) { described_class.new(original_authenticatable:, authenticatable:) }
+    let(:authenticatable) { User.new }
+
+    context "original_authenticatable is present" do
+      let(:original_authenticatable) { User.new }
+
+      it { is_expected.to be original_authenticatable }
+    end
+
+    context "when original_authenticatable is nil" do
+      let(:original_authenticatable) { nil }
+
+      it { is_expected.to be authenticatable }
+    end
+  end
+
+  describe "#shapeshift" do
+    subject { session.shapeshift(user) }
+
+    context "when user is not valid" do
+      let(:session) { described_class.new }
+      let(:user) { nil }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+      end
+    end
+
+    context "when user is valid" do
+      let(:session) do
+        described_class.create!(
+          expires_at: 1.hour.from_now,
+          authenticatable: original_user,
+          hashed_token: "foo",
+          last_seen_at: Time.current
+        )
+      end
+      let(:original_user) { User.create! }
+      let(:user) { User.create! }
+
+      it "updates the session with the new user and sets shapeshifted_at" do
+        expect { subject }
+          .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
+          .and change(session, :original_authenticatable).from(nil).to(original_user)
+          .and change(session, :authenticatable).from(original_user).to(user)
+      end
+    end
+  end
+
+  describe "#revert_to_true_identity" do
+    subject { session.revert_to_true_identity }
+
+    let(:session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: user,
+        original_authenticatable: original_user,
+        shapeshifted_at: Time.current,
+        hashed_token: "foo",
+        last_seen_at: Time.current
+      )
+    end
+    let(:original_user) { User.create! }
+    let(:user) { User.create! }
+
+    it "reverts the session to the original user and clears shapeshifted_at" do
+      expect { subject }
+        .to change(session, :shapeshifted_at).from(be_within(3.seconds).of(Time.current)).to(nil)
+        .and change(session, :authenticatable).from(user).to(original_user)
+        .and change(session, :original_authenticatable).from(original_user).to(nil)
+    end
+  end
+
+  describe "#identity" do
+    subject { session.identity }
+
+    let(:session) { described_class.new(authenticatable:) }
+    let(:authenticatable) { User.new }
+
+    it { is_expected.to be authenticatable }
+  end
+
   describe ".establish" do
     subject { described_class.establish(authenticatable, request) }
 

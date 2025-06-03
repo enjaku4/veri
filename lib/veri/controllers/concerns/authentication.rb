@@ -5,7 +5,7 @@ module Veri
     included do
       include ActionController::Cookies unless self < ActionController::Cookies
 
-      helper_method(:current_user, :logged_in?) if respond_to?(:helper_method)
+      helper_method(:current_user, :logged_in?, :shapeshifter?, :current_session) if respond_to?(:helper_method)
     end
 
     class_methods do
@@ -23,7 +23,7 @@ module Veri
     end
 
     def current_user
-      @current_user ||= current_session&.authenticatable
+      @current_user ||= current_session&.identity
     end
 
     def current_session
@@ -34,13 +34,11 @@ module Veri
     def log_in(authenticatable)
       token = Veri::Session.establish(Veri::Inputs.process(authenticatable, as: :authenticatable), request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
-      after_login
     end
 
     def log_out
       current_session&.terminate
       cookies.delete(:veri_token)
-      after_logout
     end
 
     def logged_in?
@@ -49,6 +47,10 @@ module Veri
 
     def return_path
       cookies.signed[:veri_return_path]
+    end
+
+    def shapeshifter?
+      !!current_session&.shapeshifted?
     end
 
     private
@@ -66,8 +68,5 @@ module Veri
     def when_unauthenticated
       request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
     end
-
-    def after_login = nil
-    def after_logout = nil
   end
 end

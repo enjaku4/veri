@@ -10,9 +10,8 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
 - Cookie-based authentication with database-stored sessions
 - Supports multiple password hashing algorithms (argon2, bcrypt, scrypt)
 - Granular session management and control
-- Flexible authentication callbacks
-- No pre-defined business logic, no views, controllers, or mailers — just the essential methods
 - Built-in return path handling
+- User impersonation
 
 > ⚠️ **Development Notice**<br>
 > Veri is functional but in early development. Breaking changes may occur in minor releases until v1.0!
@@ -136,16 +135,49 @@ end
 
 Available methods:
 
-- `current_user` - returns the authenticated user or `nil`
-- `logged_in?` - returns `true` if the user is authenticated
-- `log_in(user)` - authenticates the user and creates a session
-- `log_out` - terminates the current session
-- `return_path` - returns the path the user was trying to access before authentication
-- `current_session` - returns the current authentication session
+- `current_user` - Returns authenticated user or `nil`
+- `logged_in?` - Returns `true` if user is authenticated
+- `log_in(user)` - Authenticates user and creates session
+- `log_out` - Terminates current session
+- `return_path` - Returns path user was accessing before authentication
+- `current_session` - Returns current authentication session
 
-### Authentication Callbacks
+### User Impersonation (Shapeshifting)
 
-Override these private methods to customize authentication behavior:
+Veri provides user impersonation functionality that allows, for example, administrators to temporarily assume another user's identity:
+
+```rb
+module Admin
+  class ImpersonationController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      current_session.shapeshift(user)
+      redirect_to root_path, notice: "Now viewing as #{user.name}"
+    end
+
+    def destroy
+      original_user = current_session.true_identity
+      current_session.revert_to_true_identity
+      redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
+    end
+  end
+end
+```
+
+Available session methods:
+
+- `shapeshift(user)` - Assume another user's identity (maintains original identity)
+- `revert_to_true_identity` - Return to original identity
+- `shapeshifted?` - Returns true if currently shapeshifted
+- `true_identity` - Returns original user when shapeshifted, otherwise current user
+
+Controller helper:
+
+- `shapeshifter?` - Returns true if the current session is shapeshifted
+
+### When unauthenticated
+
+Override this private method to customize authentication behavior:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -156,18 +188,6 @@ class ApplicationController < ActionController::Base
   # ...
 
   private
-
-  # Called after successful login
-  def after_login(user)
-    Rails.logger.info "User #{user.id} logged in"
-    # Custom redirect logic, analytics, etc.
-  end
-
-  # Called after logout
-  def after_logout
-    Rails.logger.info "User logged out"
-    # Cleanup, analytics, etc.
-  end
 
   # Customize unauthenticated user handling
   def when_unauthenticated
@@ -195,6 +215,8 @@ current_session
 ### Session Information
 
 ```rb
+session.identity
+# => authenticated user
 session.info
 # => {
 #   device: "Desktop",
@@ -234,6 +256,10 @@ Access authentication state in your views:
 ```erb
 <% if logged_in? %>
   <p>Welcome, <%= current_user.name %>!</p>
+  <% if shapeshifter? %>
+    <p><em>Currently viewing as <%= current_user.name %> (Original: <%= current_session.true_identity.name %>)</em></p>
+    <%= link_to "Return to Original Identity", revert_path, method: :patch %>
+  <% end %>
   <%= link_to "Logout", logout_path, method: :delete %>
 <% else %>
   <%= link_to "Login", login_path %>

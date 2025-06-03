@@ -41,8 +41,10 @@ RSpec.describe Veri::Authenticatable do
 
       before { allow(Veri::Configuration.hasher).to receive(:create).with(password).and_return("hashed_password") }
 
-      it "updates the hashed password" do
-        expect { subject }.to change(user, :hashed_password).from(nil).to("hashed_password")
+      it "updates the hashed password and password updated at timestamp" do
+        expect { subject }
+          .to change(user, :hashed_password).from(nil).to("hashed_password")
+          .and change(user, :password_updated_at).from(nil).to be_within(1.second).of(Time.current)
       end
     end
   end

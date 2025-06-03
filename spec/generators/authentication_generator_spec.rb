@@ -10,11 +10,14 @@ RSpec.describe Veri::AuthenticationGenerator do
       class AddVeriAuthentication < ActiveRecord::Migration[6.2]
         def change
           add_column :my_users, :hashed_password, :text
+          add_column :my_users, :password_updated_at, :datetime
 
           create_table :veri_sessions#{", id: :uuid" if args.include?("--uuid")} do |t|
             t.string :hashed_token, null: false, index: { unique: true }
             t.datetime :expires_at, null: false
             t.belongs_to :authenticatable, null: false, foreign_key: { to_table: :my_users }, index: true#{", type: :uuid" if args.include?("--uuid")}
+            t.belongs_to :original_authenticatable, foreign_key: { to_table: :my_users }, index: true#{", type: :uuid" if args.include?("--uuid")}
+            t.datetime :shapeshifted_at
             t.datetime :last_seen_at, null: false
             t.string :ip_address
             t.string :user_agent
