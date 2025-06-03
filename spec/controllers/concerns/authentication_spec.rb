@@ -191,11 +191,12 @@ RSpec.describe Veri::Authentication do
     let(:controller) { DummyController.new }
     let(:view) { controller.view_context }
     let(:user) { User.create! }
+    let(:session) { Veri::Session.new }
 
-    before { allow(controller).to receive_messages(current_user: user, logged_in?: true, shapeshifter?: true) }
+    before { allow(controller).to receive_messages(current_user: user, logged_in?: true, shapeshifter?: true, current_session: session) }
 
     it "provides current_user helper method" do
-      expect(view.current_user).to eq(user)
+      expect(view.current_user).to be user
     end
 
     it "provides logged_in? helper method" do
@@ -204,6 +205,10 @@ RSpec.describe Veri::Authentication do
 
     it "provides shapeshifter? helper method" do
       expect(view.shapeshifter?).to be true
+    end
+
+    it "provides current_session helper method" do
+      expect(view.current_session).to be session
     end
   end
 end

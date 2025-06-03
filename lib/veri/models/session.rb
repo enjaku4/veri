@@ -48,8 +48,8 @@ module Veri
     end
 
     def identity = authenticatable
-    def shapeshifted? = shapeshifted_at.present?
-    def true_identity = original_authenticatable
+    def shapeshifted? = original_authenticatable.present?
+    def true_identity = original_authenticatable || authenticatable
 
     def shapeshift(user)
       update!(
