@@ -23,6 +23,8 @@ module Veri
 
     private
 
-    def hasher = Veri::Configuration.hasher
+    def hasher
+      @hasher ||= Veri::Configuration.hasher
+    end
   end
 end

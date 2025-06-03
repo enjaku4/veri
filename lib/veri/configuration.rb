@@ -24,13 +24,15 @@ module Veri
             reader: true,
             constructor: -> (value) { Veri::Inputs.process(value, as: :string, error: Veri::ConfigurationError) }
 
+    HASHERS = {
+      argon2: Veri::Password::Argon2,
+      bcrypt: Veri::Password::BCrypt,
+      scrypt: Veri::Password::SCrypt
+    }.freeze
+    private_constant :HASHERS
+
     def hasher
-      case hashing_algorithm
-      when :argon2 then Veri::Password::Argon2
-      when :bcrypt then Veri::Password::BCrypt
-      when :scrypt then Veri::Password::SCrypt
-      else raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}"
-      end
+      HASHERS.fetch(hashing_algorithm) { raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}" }
     end
 
     def user_model

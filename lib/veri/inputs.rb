@@ -6,8 +6,17 @@ module Veri
 
     include Dry.Types()
 
+    TYPES = {
+      hashing_algorithm: -> { self::Strict::Symbol.enum(:argon2, :bcrypt, :scrypt) },
+      duration: -> { self::Instance(ActiveSupport::Duration) },
+      string: -> { self::Strict::String },
+      model: -> { self::Strict::Class.constructor { _1.try(:safe_constantize) || _1 }.constrained(lt: ActiveRecord::Base) },
+      authenticatable: -> { self::Instance(Veri::Configuration.user_model) },
+      request: -> { self::Instance(ActionDispatch::Request) }
+    }.freeze
+
     def process(value, as:, optional: false, error: Veri::InvalidArgumentError)
-      checker = send(as)
+      checker = type_for(as)
       checker = checker.optional if optional
 
       checker[value]
@@ -17,11 +26,6 @@ module Veri
 
     private
 
-    def hashing_algorithm = self::Strict::Symbol.enum(:argon2, :bcrypt, :scrypt)
-    def duration = self::Instance(ActiveSupport::Duration)
-    def string = self::Strict::String
-    def model = self::Strict::Class.constructor { _1.try(:safe_constantize) || _1 }.constrained(lt: ActiveRecord::Base)
-    def authenticatable = self::Instance(Veri::Configuration.user_model)
-    def request = self::Instance(ActionDispatch::Request)
+    def type_for(name) = Veri::Inputs::TYPES.fetch(name).call
   end
 end

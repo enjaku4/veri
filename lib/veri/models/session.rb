@@ -84,15 +84,20 @@ module Veri
       end
 
       def prune(authenticatable = nil)
-        processed_authenticatable = Veri::Inputs.process(authenticatable, as: :authenticatable, optional: true)
-        scope = processed_authenticatable ? where(authenticatable: processed_authenticatable) : all
-        to_be_pruned = scope.where(expires_at: ...Time.current)
+        scope = if authenticatable
+                  where(authenticatable: Veri::Inputs.process(authenticatable, as: :authenticatable, optional: true))
+                else
+                  all
+                end
+
+        expired_scope = scope.where(expires_at: ...Time.current)
+
         if Veri::Configuration.inactive_session_lifetime
-          to_be_pruned = to_be_pruned.or(
-            scope.where(last_seen_at: ...(Time.current - Veri::Configuration.inactive_session_lifetime))
-          )
+          inactive_cutoff = Time.current - Veri::Configuration.inactive_session_lifetime
+          expired_scope = expired_scope.or(scope.where(last_seen_at: ...inactive_cutoff))
         end
-        to_be_pruned.delete_all
+
+        expired_scope.delete_all
       end
 
       def terminate_all(authenticatable)
