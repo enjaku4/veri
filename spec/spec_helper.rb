@@ -47,3 +47,5 @@ require "#{File.dirname(__FILE__)}/support/models"
 require "#{File.dirname(__FILE__)}/support/application"
 require "#{File.dirname(__FILE__)}/support/configuration"
 require "#{File.dirname(__FILE__)}/support/controllers"
+
+# TODO: improve everything specs-related
