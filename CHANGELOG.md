@@ -1,4 +1,9 @@
-<!-- TODO: changes -->
+## v0.2.1
+
+### Misc
+
+- Enhanced error messages
+- Performance improvements and code optimizations
 
 ## v0.2.0
 
