@@ -1,5 +1,5 @@
 require "rails/generators/migration"
-# TODO: check if this can be improved
+
 module Veri
   class AuthenticationGenerator < Rails::Generators::Base
     include Rails::Generators::Migration
