@@ -84,6 +84,14 @@ RSpec.describe Veri::Authentication do
     it "logs in the user" do
       expect { subject }.to change(controller, :current_user).from(nil).to(user)
     end
+
+    context "when the user is not an instance of the configured user model" do
+      let(:user) { 123 }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `123`")
+      end
+    end
   end
 
   describe "#log_out" do

@@ -32,7 +32,7 @@ RSpec.describe Veri::Authenticatable do
       let(:password) { nil }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected a non-empty string, got `nil`")
       end
     end
 
@@ -58,7 +58,7 @@ RSpec.describe Veri::Authenticatable do
       let(:password) { nil }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected a non-empty string, got `nil`")
       end
     end
 

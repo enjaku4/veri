@@ -35,13 +35,13 @@ RSpec.describe Veri::Inputs do
     end
   end
 
-  describe "string" do
+  describe "non empty string" do
     ["valid string", " "].each do |string|
-      it_behaves_like "successful input processing", :string, string
+      it_behaves_like "successful input processing", :non_empty_string, string
     end
 
-    [nil, [], {}, :foo, 123, Veri].each do |invalid_input|
-      it_behaves_like "failed input processing", :string, invalid_input
+    [nil, [], {}, :foo, 123, Veri, ""].each do |invalid_input|
+      it_behaves_like "failed input processing", :non_empty_string, invalid_input
     end
   end
 
