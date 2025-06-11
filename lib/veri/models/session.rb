@@ -55,7 +55,11 @@ module Veri
       update!(
         shapeshifted_at: Time.current,
         original_authenticatable: authenticatable,
-        authenticatable: Veri::Inputs.process(user, as: :authenticatable)
+        authenticatable: Veri::Inputs.process(
+          user,
+          as: :authenticatable,
+          message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{user.inspect}`"
+        )
       )
     end
 
@@ -68,14 +72,14 @@ module Veri
     end
 
     class << self
-      def establish(authenticatable, request)
+      def establish(user, request)
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
         new(
           hashed_token: Digest::SHA256.hexdigest(token),
           expires_at:,
-          authenticatable: Veri::Inputs.process(authenticatable, as: :authenticatable, error: Veri::Error)
+          authenticatable: Veri::Inputs.process(user, as: :authenticatable, error: Veri::Error)
         ).update_info(
           Veri::Inputs.process(request, as: :request, error: Veri::Error)
         )
@@ -83,9 +87,16 @@ module Veri
         token
       end
 
-      def prune(authenticatable = nil)
-        scope = if authenticatable
-                  where(authenticatable: Veri::Inputs.process(authenticatable, as: :authenticatable, optional: true))
+      def prune(user = nil)
+        scope = if user
+                  where(
+                    authenticatable: Veri::Inputs.process(
+                      user,
+                      as: :authenticatable,
+                      optional: true,
+                      message: "Expected an instance of #{Veri::Configuration.user_model_name} or nil, got `#{user.inspect}`"
+                    )
+                  )
                 else
                   all
                 end
@@ -100,8 +111,12 @@ module Veri
         expired_scope.delete_all
       end
 
-      def terminate_all(authenticatable)
-        Veri::Inputs.process(authenticatable, as: :authenticatable).veri_sessions.delete_all
+      def terminate_all(user)
+        Veri::Inputs.process(
+          user,
+          as: :authenticatable,
+          message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{user.inspect}`"
+        ).veri_sessions.delete_all
       end
     end
   end

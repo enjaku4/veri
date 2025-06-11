@@ -44,7 +44,7 @@ RSpec.describe Veri do
         it "raises an error" do
           expect { described_class.configure { _1.hashing_algorithm = :invalid } }.to raise_error(
             Veri::ConfigurationError,
-            ":invalid violates constraints (included_in?([:argon2, :bcrypt, :scrypt], :invalid) failed)"
+            "Invalid hashing algorithm `:invalid`, supported algorithms are: argon2, bcrypt, scrypt"
           )
         end
       end
@@ -53,7 +53,7 @@ RSpec.describe Veri do
         it "raises an error" do
           expect { described_class.configure { _1.inactive_session_lifetime = "invalid" } }.to raise_error(
             Veri::ConfigurationError,
-            "\"invalid\" violates constraints (type?(ActiveSupport::Duration, \"invalid\") failed)"
+            "Invalid inactive session lifetime `\"invalid\"`, expected an instance of ActiveSupport::Duration or nil"
           )
         end
       end
@@ -62,7 +62,7 @@ RSpec.describe Veri do
         it "raises an error" do
           expect { described_class.configure { _1.total_session_lifetime = 10 } }.to raise_error(
             Veri::ConfigurationError,
-            "10 violates constraints (type?(ActiveSupport::Duration, 10) failed)"
+            "Invalid total session lifetime `10`, expected an instance of ActiveSupport::Duration"
           )
         end
       end
@@ -76,7 +76,7 @@ RSpec.describe Veri do
           it "raises an error" do
             expect { config.user_model }.to raise_error(
               Veri::ConfigurationError,
-              "\"Foo\" violates constraints (type?(Class, \"Foo\") failed)"
+              "Invalid user model name `Foo`, expected an ActiveRecord model name as a string"
             )
           end
         end
@@ -87,7 +87,7 @@ RSpec.describe Veri do
           it "raises an error" do
             expect { config.user_model }.to raise_error(
               Veri::ConfigurationError,
-              "Veri violates constraints (type?(Class, Veri) failed)"
+              "Invalid user model name `Veri`, expected an ActiveRecord model name as a string"
             )
           end
         end

@@ -178,7 +178,7 @@ RSpec.describe Veri::Session do
       let(:user) { nil }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `nil`")
       end
     end
 
@@ -289,7 +289,7 @@ RSpec.describe Veri::Session do
       let(:authenticatable) { Client.create! }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User or nil, got `#{authenticatable.inspect}`")
       end
     end
 
@@ -400,7 +400,7 @@ RSpec.describe Veri::Session do
       let(:authenticatable) { nil }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `nil`")
       end
     end
 

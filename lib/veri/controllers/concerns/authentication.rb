@@ -32,7 +32,12 @@ module Veri
     end
 
     def log_in(authenticatable)
-      token = Veri::Session.establish(Veri::Inputs.process(authenticatable, as: :authenticatable), request)
+      processed_authenticatable = Veri::Inputs.process(
+        authenticatable,
+        as: :authenticatable,
+        message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{authenticatable.inspect}`"
+      )
+      token = Veri::Session.establish(processed_authenticatable, request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
     end
 
