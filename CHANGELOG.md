@@ -1,3 +1,9 @@
+## v0.2.2
+
+### Bugs
+
+- Fixed class resolution in `current_user` method
+
 ## v0.2.1
 
 ### Misc
