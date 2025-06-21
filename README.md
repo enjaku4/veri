@@ -28,7 +28,7 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
   - [Testing](#testing)
 
 **Community Resources:**
-  - [Contributing](#contributing)
+  - [Getting Help and Contributing](#getting-help-and-contributing)
   - [License](#license)
   - [Code of Conduct](#code-of-conduct)
 
@@ -310,7 +310,7 @@ RSpec.configure do |config|
 end
 ```
 
-## Contributing
+## Getting Help and Contributing
 
 ### Getting Help
 Have a question or need assistance? Open a discussion in our [discussions section](https://github.com/brownboxdev/veri/discussions) for:
