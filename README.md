@@ -330,7 +330,7 @@ Ready to contribute? You can:
 - Improve documentation
 - Add new features (please discuss first in our [discussions section](https://github.com/brownboxdev/veri/discussions))
 
-Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/veri/blob/master/CONTRIBUTING.md)
+Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/veri/blob/main/CONTRIBUTING.md)
 
 ## License
 
