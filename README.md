@@ -108,7 +108,7 @@ end
 
 ### Authentication Methods
 
-This is a simplified example of how to use Veri's authentication methods in your controllers:
+This is a simplified example of how to use Veri's authentication methods:
 
 ```rb
 class SessionsController < ApplicationController
