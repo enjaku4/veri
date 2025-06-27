@@ -118,6 +118,10 @@ RSpec.describe Veri::Authentication do
     it "logs out the user" do
       expect { subject }.to change(user.veri_sessions, :count).from(1).to(0)
     end
+
+    it "deletes the veri_token cookie" do
+      expect { subject }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+    end
   end
 
   describe "#logged_in?" do

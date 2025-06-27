@@ -75,6 +75,12 @@ RSpec.describe ApiController, type: :controller do
       end
     end
 
+    it "deletes the veri_token cookie" do
+      travel_to 2.hours.from_now do
+        expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+      end
+    end
+
     it "does not set the return path if request format is HTML" do
       travel_to 2.hours.from_now do
         post :create
@@ -116,6 +122,12 @@ RSpec.describe ApiController, type: :controller do
       end
     end
 
+    it "deletes the veri_token cookie" do
+      travel_to 2.hours.from_now do
+        expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+      end
+    end
+
     it "does not set the return path if request format is HTML" do
       travel_to 2.hours.from_now do
         post :create
@@ -152,6 +164,10 @@ RSpec.describe ApiController, type: :controller do
 
     it "terminates the session" do
       expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+    end
+
+    it "deletes the veri_token cookie" do
+      expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
     end
 
     it "does not set the return path if request format is HTML" do
