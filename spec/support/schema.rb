@@ -4,6 +4,8 @@ ActiveRecord::Schema.define do
   create_table "users", force: :cascade do |t|
     t.text "hashed_password"
     t.datetime "password_updated_at"
+    t.boolean "locked", default: false, null: false
+    t.datetime "locked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

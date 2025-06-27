@@ -130,4 +130,38 @@ RSpec.describe ApiController, type: :controller do
       end
     end
   end
+
+  context "when user is logged in but account is locked" do
+    let(:user) { User.create!(locked: true) }
+
+    before do
+      user.update!(locked: false)
+      controller.log_in(user)
+      user.update!(locked: true)
+    end
+
+    it "does not allow access when request format is HTML" do
+      post :create
+      expect(response).to redirect_to(DummyApplication.routes.url_helpers.root_path)
+    end
+
+    it "does not allow access when request format is not HTML" do
+      post :create, format: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "terminates the session" do
+      expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+    end
+
+    it "does not set the return path if request format is HTML" do
+      post :create
+      expect(controller.return_path).to be_nil
+    end
+
+    it "does not set the return path if request format is not HTML" do
+      post :create, format: :json
+      expect(controller.return_path).to be_nil
+    end
+  end
 end
