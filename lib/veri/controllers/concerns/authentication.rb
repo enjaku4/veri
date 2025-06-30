@@ -68,22 +68,25 @@ module Veri
 
     def with_authentication
       if logged_in? && current_session.active?
-        current_user.locked? ? handle_unauthenticated : current_session.update_info(request)
+        if current_user.locked?
+          log_out
+          when_unauthenticated
+        else
+          current_session.update_info(request)
+        end
+
         return
       end
 
+      log_out
+
       cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
-      handle_unauthenticated
+      when_unauthenticated
     end
 
     def when_unauthenticated
       request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
-    end
-
-    def handle_unauthenticated
-      log_out
-      when_unauthenticated
     end
   end
 end
