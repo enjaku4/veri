@@ -39,8 +39,12 @@ module Veri
         as: :authenticatable,
         message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{authenticatable.inspect}`"
       )
+
+      return false if processed_authenticatable.locked?
+
       token = Veri::Session.establish(processed_authenticatable, request)
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
+      true
     end
 
     def log_out
@@ -63,9 +67,18 @@ module Veri
     private
 
     def with_authentication
-      current_session.update_info(request) and return if logged_in? && current_session.active?
+      if logged_in? && current_session.active?
+        if current_user.locked?
+          log_out
+          when_unauthenticated
+        else
+          current_session.update_info(request)
+        end
 
-      current_session&.terminate
+        return
+      end
+
+      log_out
 
       cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
