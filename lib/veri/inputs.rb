@@ -6,6 +6,9 @@ module Veri
 
     include Dry.Types()
 
+    # TODO: separate classes per type, add Tenant type that would check that tenant is nil, string, or ActiveRecord instance
+    # TODO: Tenant type must be able to resolve tenant, and transform it into { tenant_type:, tenant_id: } hash
+
     TYPES = {
       hashing_algorithm: -> { self::Strict::Symbol.enum(:argon2, :bcrypt, :scrypt) },
       duration: -> { self::Instance(ActiveSupport::Duration) },

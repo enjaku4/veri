@@ -29,7 +29,9 @@ module Veri
     end
 
     def current_session
+      # TODO: cookie must be namespaced based on current_tenant
       token = cookies.encrypted[:veri_token]
+      # TODO: find also by resolved current_tenant
       @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token)) : nil
     end
 
@@ -42,7 +44,9 @@ module Veri
 
       return false if processed_authenticatable.locked?
 
+      # TODO: session will accept resolved tenant
       token = Veri::Session.establish(processed_authenticatable, request)
+      # TODO: cookie must be namespaced based on current_tenant
       cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
       true
     end
@@ -57,6 +61,7 @@ module Veri
     end
 
     def return_path
+      # TODO: namespace cookie based on current_tenant
       cookies.signed[:veri_return_path]
     end
 
@@ -80,6 +85,7 @@ module Veri
 
       log_out
 
+      # TODO: namespace cookie based on current_tenant
       cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
       when_unauthenticated
@@ -88,5 +94,7 @@ module Veri
     def when_unauthenticated
       request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
     end
+
+    # TODO: add overridable current_tenant method, which returns nil by default
   end
 end

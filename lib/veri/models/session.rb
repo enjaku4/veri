@@ -83,6 +83,7 @@ module Veri
     end
 
     class << self
+      # TODO: accept tenant, can be resolved, can be not
       def establish(user, request)
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
@@ -98,6 +99,8 @@ module Veri
         token
       end
 
+      # TODO: probably need prune_inactive, and prune_missing_tenants methods
+      # TODO: also probably need migration helpers for tenant name update and delete
       def prune(user = nil)
         scope = if user
                   where(
