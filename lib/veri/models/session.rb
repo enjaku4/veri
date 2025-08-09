@@ -7,6 +7,7 @@ module Veri
     # rubocop:disable Rails/ReflectionClassName
     belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
     belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
+    belongs_to :tenant, polymorphic: true, optional: true
     # rubocop:enable Rails/ReflectionClassName
 
     def active? = !expired? && !inactive?
@@ -69,6 +70,16 @@ module Veri
         authenticatable: original_authenticatable,
         original_authenticatable: nil
       )
+    end
+
+    def tenant
+      return tenant_type if tenant_type.present? && tenant_id.blank?
+
+      record = super
+
+      raise ActiveRecord::RecordNotFound.new(nil, tenant_type, nil, tenant_id) if tenant_id.present? && !record
+
+      record
     end
 
     class << self

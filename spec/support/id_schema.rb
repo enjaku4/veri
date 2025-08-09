@@ -26,9 +26,12 @@ ActiveRecord::Schema.define do
     t.string "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "tenant_type"
+    t.integer "tenant_id"
     t.index ["hashed_token"], name: "index_veri_sessions_on_hashed_token", unique: true
     t.index ["authenticatable_id"], name: "index_veri_sessions_on_authenticatable_id"
     t.index ["original_authenticatable_id"], name: "index_veri_sessions_on_original_authenticatable_id"
+    t.index ["tenant_type", "tenant_id"], name: "index_veri_sessions_on_tenant"
   end
 
   add_foreign_key "veri_sessions", "users", column: "authenticatable_id"

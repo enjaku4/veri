@@ -236,6 +236,29 @@ RSpec.describe Veri::Session do
     it { is_expected.to be authenticatable }
   end
 
+  describe "#tenant" do
+    subject { session.tenant }
+
+    context "when tenant_type and tenant_id are both nil" do
+      let(:session) { described_class.new(tenant_type: nil, tenant_id: nil) }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when tenant_type is present and tenant_id is nil" do
+      let(:session) { described_class.new(tenant_type: "subdomain", tenant_id: nil) }
+
+      it { is_expected.to eq("subdomain") }
+    end
+
+    context "when tenant_type and tenant_id are both present" do
+      let(:tenant) { Client.create! }
+      let(:session) { described_class.new(tenant_type: tenant.class.to_s, tenant_id: tenant.id) }
+
+      it { is_expected.to eq(tenant) }
+    end
+  end
+
   describe ".establish" do
     subject { described_class.establish(authenticatable, request) }
 
