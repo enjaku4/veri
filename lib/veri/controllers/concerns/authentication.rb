@@ -34,11 +34,10 @@ module Veri
     end
 
     def log_in(authenticatable)
-      processed_authenticatable = Veri::Inputs.process(
+      processed_authenticatable = Veri::Inputs::Authenticatable.new(
         authenticatable,
-        as: :authenticatable,
         message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{authenticatable.inspect}`"
-      )
+      ).process
 
       return false if processed_authenticatable.locked?
 

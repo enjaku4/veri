@@ -7,13 +7,18 @@ require_relative "veri/password/argon2"
 require_relative "veri/password/bcrypt"
 require_relative "veri/password/scrypt"
 
-require_relative "veri/inputs"
+require_relative "veri/inputs/base"
+require_relative "veri/inputs/authenticatable"
+require_relative "veri/inputs/duration"
+require_relative "veri/inputs/hashing_algorithm"
+require_relative "veri/inputs/model"
+require_relative "veri/inputs/non_empty_string"
 require_relative "veri/configuration"
 
 module Veri
   class Error < StandardError; end
-  class ConfigurationError < Veri::Error; end
   class InvalidArgumentError < Veri::Error; end
+  class ConfigurationError < Veri::InvalidArgumentError; end
 
   delegate :configure, to: Veri::Configuration
   module_function :configure
