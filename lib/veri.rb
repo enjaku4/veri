@@ -20,7 +20,6 @@ module Veri
   class Error < StandardError; end
   class InvalidArgumentError < Veri::Error; end
   class ConfigurationError < Veri::InvalidArgumentError; end
-  class InvalidTenantError < Veri::InvalidArgumentError; end
 
   delegate :configure, to: Veri::Configuration
   module_function :configure
