@@ -94,8 +94,9 @@ module Veri
         token
       end
 
-      # TODO: probably need prune_inactive, and prune_missing_tenants methods
-      # TODO: also probably need migration helpers for tenant name update and delete
+      # TODO: probably needs prune_inactive, and prune_missing_tenants methods
+      # TODO: also probably needs migration helpers for tenant name update and delete
+      # TODO: also fail fast automatically if tenant class doesn't exist
       def prune(user = nil)
         scope = if user
                   where(
