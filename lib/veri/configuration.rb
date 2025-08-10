@@ -11,46 +11,42 @@ module Veri
             default: :argon2,
             reader: true,
             constructor: -> (value) do
-              Veri::Inputs.process(
+              Veri::Inputs::HashingAlgorithm.new(
                 value,
-                as: :hashing_algorithm,
                 error: Veri::ConfigurationError,
                 message: "Invalid hashing algorithm `#{value.inspect}`, supported algorithms are: #{Veri::Configuration::HASHERS.keys.join(", ")}"
-              )
+              ).process
             end
     setting :inactive_session_lifetime,
             default: nil,
             reader: true,
             constructor: -> (value) do
-              Veri::Inputs.process(
+              Veri::Inputs::Duration.new(
                 value,
-                as: :duration,
                 optional: true,
                 error: Veri::ConfigurationError,
                 message: "Invalid inactive session lifetime `#{value.inspect}`, expected an instance of ActiveSupport::Duration or nil"
-              )
+              ).process
             end
     setting :total_session_lifetime,
             default: 14.days,
             reader: true,
             constructor: -> (value) do
-              Veri::Inputs.process(
+              Veri::Inputs::Duration.new(
                 value,
-                as: :duration,
                 error: Veri::ConfigurationError,
                 message: "Invalid total session lifetime `#{value.inspect}`, expected an instance of ActiveSupport::Duration"
-              )
+              ).process
             end
     setting :user_model_name,
             default: "User",
             reader: true,
             constructor: -> (value) do
-              Veri::Inputs.process(
+              Veri::Inputs::NonEmptyString.new(
                 value,
-                as: :non_empty_string,
                 error: Veri::ConfigurationError,
                 message: "Invalid user model name `#{value.inspect}`, expected an ActiveRecord model name as a string"
-              )
+              ).process
             end
 
     HASHERS = {
@@ -64,12 +60,11 @@ module Veri
     end
 
     def user_model
-      Veri::Inputs.process(
+      Veri::Inputs::Model.new(
         user_model_name,
-        as: :model,
         error: Veri::ConfigurationError,
         message: "Invalid user model name `#{user_model_name}`, expected an ActiveRecord model name as a string"
-      )
+      ).process
     end
   end
 end

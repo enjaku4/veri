@@ -13,11 +13,7 @@ module Veri
     def update_password(password)
       update!(
         hashed_password: hasher.create(
-          Veri::Inputs.process(
-            password,
-            as: :non_empty_string,
-            message: "Expected a non-empty string, got `#{password.inspect}`"
-          )
+          Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process
         ),
         password_updated_at: Time.current
       )
@@ -25,11 +21,7 @@ module Veri
 
     def verify_password(password)
       hasher.verify(
-        Veri::Inputs.process(
-          password,
-          as: :non_empty_string,
-          message: "Expected a non-empty string, got `#{password.inspect}`"
-        ),
+        Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process,
         hashed_password
       )
     end
