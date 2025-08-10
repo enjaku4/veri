@@ -30,7 +30,7 @@ ActiveRecord::Schema.define do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "tenant_type"
-    t.uuid "tenant_id"
+    t.string "tenant_id", limit: 36
     t.index ["hashed_token"], name: "index_veri_sessions_on_hashed_token", unique: true
     t.index ["authenticatable_id"], name: "index_veri_sessions_on_authenticatable_id"
     t.index ["original_authenticatable_id"], name: "index_veri_sessions_on_original_authenticatable_id"
