@@ -13,7 +13,6 @@ require_relative "veri/inputs/duration"
 require_relative "veri/inputs/hashing_algorithm"
 require_relative "veri/inputs/model"
 require_relative "veri/inputs/non_empty_string"
-require_relative "veri/inputs/request"
 require_relative "veri/configuration"
 
 module Veri

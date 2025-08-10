@@ -27,12 +27,10 @@ module Veri
     alias terminate delete
 
     def update_info(request)
-      processed_request = Veri::Inputs::Request.new(request, error: Veri::Error).process
-
       update!(
         last_seen_at: Time.current,
-        ip_address: processed_request.remote_ip,
-        user_agent: processed_request.user_agent
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent
       )
     end
 
@@ -91,9 +89,7 @@ module Veri
           hashed_token: Digest::SHA256.hexdigest(token),
           expires_at:,
           authenticatable: Veri::Inputs::Authenticatable.new(user, error: Veri::Error).process
-        ).update_info(
-          Veri::Inputs::Request.new(request, error: Veri::Error).process
-        )
+        ).update_info(request)
 
         token
       end
