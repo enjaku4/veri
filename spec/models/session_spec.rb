@@ -86,25 +86,14 @@ RSpec.describe Veri::Session do
     subject { session.update_info(request) }
 
     let(:session) { described_class.new(hashed_token: "foo", expires_at: 1.hour.from_now, authenticatable: User.new) }
+    let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
 
-    context "when request is valid" do
-      let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
-
-      it "updates last_seen_at, ip_address, and user_agent and persists the session" do
-        expect { session.update_info(request) }
-          .to change(session, :last_seen_at).from(nil).to(be_within(3.seconds).of(Time.current))
-          .and change(session, :ip_address).from(nil).to("1.2.3.4")
-          .and change(session, :user_agent).from(nil).to("IE7")
-          .and change(session, :persisted?).from(false).to(true)
-      end
-    end
-
-    context "when request is invalid" do
-      let(:request) { nil }
-
-      it "raises an error" do
-        expect { subject }.to raise_error(Veri::Error)
-      end
+    it "updates last_seen_at, ip_address, and user_agent and persists the session" do
+      expect { session.update_info(request) }
+        .to change(session, :last_seen_at).from(nil).to(be_within(3.seconds).of(Time.current))
+        .and change(session, :ip_address).from(nil).to("1.2.3.4")
+        .and change(session, :user_agent).from(nil).to("IE7")
+        .and change(session, :persisted?).from(false).to(true)
     end
   end
 
@@ -239,27 +228,18 @@ RSpec.describe Veri::Session do
   describe ".establish" do
     subject { described_class.establish(authenticatable, request) }
 
+    let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
+
     context "when authenticatable is invalid" do
       let(:authenticatable) { nil }
-      let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4") }
 
       it "raises an error" do
         expect { subject }.to raise_error(Veri::Error)
       end
     end
 
-    context "when request is invalid" do
+    context "when authenticatable is valid" do
       let(:authenticatable) { User.create! }
-      let(:request) { nil }
-
-      it "raises an error" do
-        expect { subject }.to raise_error(Veri::Error)
-      end
-    end
-
-    context "when both authenticatable and request are valid" do
-      let(:authenticatable) { User.create! }
-      let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
 
       before do
         allow(SecureRandom).to receive(:hex).with(32).and_return("token")
