@@ -1,3 +1,10 @@
+## v0.3.1
+
+### Misc
+
+- Minor improvements and code cleanup
+- Relaxed dependency versions
+
 ## v0.3.0
 
 ### Breaking
