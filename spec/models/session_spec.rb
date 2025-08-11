@@ -241,7 +241,7 @@ RSpec.describe Veri::Session do
     end
 
     context "when tenant_type and tenant_id are both present" do
-      let(:tenant) { Client.create! }
+      let(:tenant) { Company.create! }
       let(:session) { described_class.new(tenant_type: tenant.class.to_s, tenant_id: tenant.id) }
 
       it { is_expected.to eq(tenant) }
@@ -313,7 +313,7 @@ RSpec.describe Veri::Session do
           authenticatable: User.create!,
           hashed_token: "bar#{i}",
           last_seen_at: 10.minutes.ago,
-          tenant_type: "Client",
+          tenant_type: "Company",
           tenant_id: 42
         )
       end

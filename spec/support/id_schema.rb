@@ -15,6 +15,11 @@ ActiveRecord::Schema.define do
     t.datetime "updated_at", null: false
   end
 
+  create_table "companies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "veri_sessions", force: :cascade do |t|
     t.string "hashed_token", null: false
     t.datetime "expires_at", null: false

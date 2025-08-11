@@ -94,7 +94,6 @@ module Veri
         token
       end
 
-      # TODO: also probably needs migration helpers for tenant name update and delete
       # TODO: also fail fast automatically if tenant class doesn't exist
       def prune
         expired_scope = where(expires_at: ...Time.current)

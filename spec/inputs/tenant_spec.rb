@@ -10,9 +10,9 @@ RSpec.describe Veri::Inputs::Tenant do
       end
 
       context "when an instance of ActiveRecord::Base is given" do
-        let(:tenant) { Client.create! }
+        let(:tenant) { Company.create! }
 
-        it { is_expected.to eq(tenant_type: "Client", tenant_id: tenant.id) }
+        it { is_expected.to eq(tenant_type: "Company", tenant_id: tenant.id) }
       end
 
       context "when nil is given" do
@@ -22,14 +22,14 @@ RSpec.describe Veri::Inputs::Tenant do
       end
 
       context "when the tenant is already processed" do
-        let(:tenant) { { tenant_type: "Project", tenant_id: 1 } }
+        let(:tenant) { { tenant_type: "Company", tenant_id: 1 } }
 
-        it { is_expected.to eq(tenant_type: "Project", tenant_id: 1) }
+        it { is_expected.to eq(tenant_type: "Company", tenant_id: 1) }
       end
     end
 
     context "when the given tenant is invalid" do
-      [1, ["tenant"], Client, "", :tenant, {}, :""].each do |invalid_tenant|
+      [1, ["tenant"], Company, "", :tenant, {}, :""].each do |invalid_tenant|
         context "when '#{invalid_tenant}' is given" do
           let(:tenant) { invalid_tenant }
 
@@ -40,7 +40,7 @@ RSpec.describe Veri::Inputs::Tenant do
       end
 
       context "when an instance of ActiveRecord::Base is given but not persisted" do
-        let(:tenant) { Client.new }
+        let(:tenant) { Company.new }
 
         it "raises an error" do
           expect { subject }.to raise_error(Veri::InvalidArgumentError, "Error")
