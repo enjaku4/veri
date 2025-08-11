@@ -94,30 +94,26 @@ module Veri
         token
       end
 
-      # TODO: probably needs prune_inactive, and prune_missing_tenants methods
       # TODO: also probably needs migration helpers for tenant name update and delete
       # TODO: also fail fast automatically if tenant class doesn't exist
-      def prune(user = nil)
-        scope = if user
-                  where(
-                    authenticatable: Veri::Inputs::Authenticatable.new(
-                      user,
-                      optional: true,
-                      message: "Expected an instance of #{Veri::Configuration.user_model_name} or nil, got `#{user.inspect}`"
-                    ).process
-                  )
-                else
-                  all
-                end
-
-        expired_scope = scope.where(expires_at: ...Time.current)
+      def prune
+        expired_scope = where(expires_at: ...Time.current)
 
         if Veri::Configuration.inactive_session_lifetime
           inactive_cutoff = Time.current - Veri::Configuration.inactive_session_lifetime
-          expired_scope = expired_scope.or(scope.where(last_seen_at: ...inactive_cutoff))
+          expired_scope = expired_scope.or(where(last_seen_at: ...inactive_cutoff))
         end
 
         expired_scope.delete_all
+
+        ids = where.not(tenant_id: nil).includes(:tenant).filter_map do |session|
+          session.tenant
+          nil
+        rescue ActiveRecord::RecordNotFound
+          session.id
+        end
+
+        where(id: ids).delete_all if ids.any?
       end
 
       def terminate_all(user)

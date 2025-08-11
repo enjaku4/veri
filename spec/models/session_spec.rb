@@ -279,112 +279,57 @@ RSpec.describe Veri::Session do
   end
 
   describe ".prune" do
-    subject { described_class.prune(authenticatable) }
+    subject { described_class.prune }
 
-    context "when authenticatable is invalid" do
-      let(:authenticatable) { Client.create! }
-
-      it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User or nil, got `#{authenticatable.inspect}`")
-      end
+    let!(:session1) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: 10.minutes.ago
+      )
+    end
+    let!(:session2) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "bar",
+        last_seen_at: 3.minutes.ago,
+        tenant_type: "subdomain",
+        tenant_id: nil
+      )
     end
 
-    context "when there are no sessions" do
-      context "when authenticatable is present" do
-        let(:authenticatable) { User.create! }
-
-        it "does not do anything" do
-          expect { subject }.not_to change(described_class, :count)
-        end
-      end
-
-      context "when authenticatable is nil" do
-        let(:authenticatable) { nil }
-
-        it "does not do anything" do
-          expect { subject }.not_to change(described_class, :count)
-        end
-      end
-    end
-
-    context "when authenticatable is nil" do
-      let(:authenticatable) { nil }
-      let!(:session) do
+    before do
+      Array.new(3) do |i|
+        described_class.create!(
+          expires_at: 1.hour.ago,
+          authenticatable: User.create!,
+          hashed_token: "foo#{i}",
+          last_seen_at: 10.minutes.ago
+        )
         described_class.create!(
           expires_at: 1.hour.from_now,
           authenticatable: User.create!,
-          hashed_token: "foo",
-          last_seen_at: 10.minutes.ago
+          hashed_token: "bar#{i}",
+          last_seen_at: 10.minutes.ago,
+          tenant_type: "Client",
+          tenant_id: 42
         )
-      end
-
-      before do
-        Array.new(3) do |i|
-          described_class.create!(
-            expires_at: 1.hour.ago,
-            authenticatable: User.create!,
-            hashed_token: "foo#{i}",
-            last_seen_at: 10.minutes.ago
-          )
-        end
-      end
-
-      it "deletes all expired sessions" do
-        expect { subject }.to change(described_class, :count).from(4).to(1)
-        expect(described_class.where(id: session.id)).to all(be_persisted)
-      end
-
-      context "when inactive session lifetime is set" do
-        before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
-
-        it "deletes sessions that are both expired and inactive" do
-          expect { subject }.to change(described_class, :count).from(4).to(0)
-        end
       end
     end
 
-    context "when authenticatable is present" do
-      let(:authenticatable) { User.create! }
-      let!(:sessions) do
-        Array.new(3) do |i|
-          described_class.create!(
-            expires_at: 1.hour.ago,
-            authenticatable:,
-            hashed_token: "foo#{i}",
-            last_seen_at: 10.minutes.ago
-          )
-        end
-      end
+    it "deletes all expired sessions and sessions with missing tenants" do
+      expect { subject }.to change(described_class, :count).from(8).to(2)
+      expect(described_class.where(id: [session1.id, session2.id])).to all(be_persisted)
+    end
 
-      before do
-        Array.new(3) do |i|
-          described_class.create!(
-            expires_at: 1.hour.ago,
-            authenticatable: User.create!,
-            hashed_token: "bar#{i}",
-            last_seen_at: 10.minutes.ago
-          )
-        end
-        described_class.create!(
-          expires_at: 1.hour.from_now,
-          authenticatable:,
-          hashed_token: "baz",
-          last_seen_at: 10.minutes.ago
-        )
-      end
+    context "when inactive session lifetime is set" do
+      before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
 
-      it "deletes only expired sessions for the given authenticatable" do
-        expect { subject }.to change(described_class, :count).from(7).to(4)
-        expect(described_class.where(id: sessions)).to all(be_destroyed)
-      end
-
-      context "when inactive session lifetime is set" do
-        before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
-
-        it "deletes sessions that are both expired and inactive for the given authenticatable" do
-          expect { subject }.to change(described_class, :count).from(7).to(3)
-          expect(described_class.where(authenticatable:)).to all(be_destroyed)
-        end
+      it "deletes sessions that are both expired and inactive" do
+        expect { subject }.to change(described_class, :count).from(8).to(1)
+        expect(described_class.where(id: session2.id)).to all(be_persisted)
       end
     end
   end
