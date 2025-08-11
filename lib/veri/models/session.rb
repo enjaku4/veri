@@ -80,15 +80,15 @@ module Veri
     end
 
     class << self
-      # TODO: accept tenant, can be resolved, can be not
-      def establish(user, request)
+      def establish(user, request, resolved_tenant)
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
         new(
           hashed_token: Digest::SHA256.hexdigest(token),
           expires_at:,
-          authenticatable: Veri::Inputs::Authenticatable.new(user, error: Veri::Error).process
+          authenticatable: user,
+          **resolved_tenant
         ).update_info(request)
 
         token

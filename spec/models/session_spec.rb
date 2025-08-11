@@ -249,17 +249,10 @@ RSpec.describe Veri::Session do
   end
 
   describe ".establish" do
-    subject { described_class.establish(authenticatable, request) }
+    subject { described_class.establish(authenticatable, request, **tenant) }
 
+    let(:tenant) { { tenant_type: "subdomain", tenant_id: nil } }
     let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
-
-    context "when authenticatable is invalid" do
-      let(:authenticatable) { nil }
-
-      it "raises an error" do
-        expect { subject }.to raise_error(Veri::Error)
-      end
-    end
 
     context "when authenticatable is valid" do
       let(:authenticatable) { User.create! }

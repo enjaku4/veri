@@ -75,9 +75,9 @@ RSpec.describe DummyController, type: :controller do
       end
     end
 
-    it "deletes the veri_token cookie" do
+    it "deletes the auth cookie" do
       travel_to 2.hours.from_now do
-        expect { get :index }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+        expect { get :index }.to change { controller.send(:cookies).encrypted["auth_4333b114"] }.from(be_present).to(be_nil)
       end
     end
 
@@ -122,9 +122,9 @@ RSpec.describe DummyController, type: :controller do
       end
     end
 
-    it "deletes the veri_token cookie" do
+    it "deletes the auth cookie" do
       travel_to 2.hours.from_now do
-        expect { get :index }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+        expect { get :index }.to change { controller.send(:cookies).encrypted["auth_4333b114"] }.from(be_present).to(be_nil)
       end
     end
 
@@ -166,8 +166,8 @@ RSpec.describe DummyController, type: :controller do
       expect { get :index }.to change(Veri::Session, :count).from(1).to(0)
     end
 
-    it "deletes the veri_token cookie" do
-      expect { get :index }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+    it "deletes the auth cookie" do
+      expect { get :index }.to change { controller.send(:cookies).encrypted["auth_4333b114"] }.from(be_present).to(be_nil)
     end
 
     it "does not set the return path if request format is HTML" do

@@ -1,3 +1,5 @@
+require "digest/sha2"
+
 module Veri
   module Authentication
     extend ActiveSupport::Concern
@@ -29,10 +31,8 @@ module Veri
     end
 
     def current_session
-      # TODO: cookie must be namespaced based on current_tenant
-      token = cookies.encrypted[:veri_token]
-      # TODO: find also by resolved current_tenant
-      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token)) : nil
+      token = cookies.encrypted[cookie_name]
+      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token), **resolved_tenant) : nil
     end
 
     def log_in(authenticatable)
@@ -43,16 +43,15 @@ module Veri
 
       return false if processed_authenticatable.locked?
 
-      # TODO: session will accept resolved tenant
-      token = Veri::Session.establish(processed_authenticatable, request)
-      # TODO: cookie must be namespaced based on current_tenant
-      cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
+      token = Veri::Session.establish(processed_authenticatable, request, **resolved_tenant)
+
+      cookies.encrypted.permanent[cookie_name] = { value: token, httponly: true }
       true
     end
 
     def log_out
       current_session&.terminate
-      cookies.delete(:veri_token)
+      cookies.delete(cookie_name)
     end
 
     def logged_in?
@@ -60,8 +59,7 @@ module Veri
     end
 
     def return_path
-      # TODO: namespace cookie based on current_tenant
-      cookies.signed[:veri_return_path]
+      cookies.signed["#{cookie_name}_return_path"]
     end
 
     def shapeshifter?
@@ -84,8 +82,7 @@ module Veri
 
       log_out
 
-      # TODO: namespace cookie based on current_tenant
-      cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
+      cookies.signed["#{cookie_name}_return_path"] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
       when_unauthenticated
     end
@@ -94,6 +91,18 @@ module Veri
       request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
     end
 
-    # TODO: add overridable current_tenant method, which returns nil by default
+    def current_tenant = nil
+
+    def resolved_tenant
+      @resolved_tenant ||= Veri::Inputs::Tenant.new(
+        current_tenant,
+        error: Veri::InvalidTenantError,
+        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{current_tenant.inspect}`"
+      ).resolve
+    end
+
+    def cookie_name
+      @cookie_name ||= "auth_#{Digest::SHA2.hexdigest(Marshal.dump(resolved_tenant))[0..7]}"
+    end
   end
 end
