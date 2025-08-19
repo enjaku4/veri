@@ -192,8 +192,8 @@ RSpec.describe Veri::Session do
     end
   end
 
-  describe "#revert_to_true_identity" do
-    subject { session.revert_to_true_identity }
+  describe "#to_true_identity" do
+    subject { session.to_true_identity }
 
     let(:session) do
       described_class.create!(

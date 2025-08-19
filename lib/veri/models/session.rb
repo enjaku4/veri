@@ -61,7 +61,7 @@ module Veri
       )
     end
 
-    def revert_to_true_identity
+    def to_true_identity
       update!(
         shapeshifted_at: nil,
         authenticatable: original_authenticatable,

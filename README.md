@@ -161,7 +161,7 @@ module Admin
 
     def destroy
       original_user = current_session.true_identity
-      current_session.revert_to_true_identity
+      current_session.to_true_identity
       redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
     end
   end
@@ -171,7 +171,7 @@ end
 Available session methods:
 
 - `shapeshift(user)` - Assume another user's identity (maintains original identity)
-- `revert_to_true_identity` - Return to original identity
+- `to_true_identity` - Return to original identity
 - `shapeshifted?` - Returns true if currently shapeshifted
 - `true_identity` - Returns original user when shapeshifted, otherwise current user
 

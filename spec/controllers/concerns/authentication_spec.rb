@@ -202,7 +202,7 @@ RSpec.describe Veri::Authentication do
       before do
         controller.log_in(user)
         controller.current_session.shapeshift(user)
-        controller.current_session.revert_to_true_identity
+        controller.current_session.to_true_identity
       end
 
       it { is_expected.to be false }
