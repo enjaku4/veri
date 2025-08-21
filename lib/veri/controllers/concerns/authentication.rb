@@ -31,7 +31,7 @@ module Veri
     end
 
     def current_session
-      token = cookies.encrypted[cookie_name]
+      token = cookies.encrypted[auth_cookie_name]
       @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token), **resolved_tenant) : nil
     end
 
@@ -46,13 +46,13 @@ module Veri
 
       token = Veri::Session.establish(processed_authenticatable, request, **resolved_tenant)
 
-      cookies.encrypted.permanent[cookie_name] = { value: token, httponly: true }
+      cookies.encrypted.permanent[auth_cookie_name] = { value: token, httponly: true }
       true
     end
 
     def log_out
       current_session&.terminate
-      cookies.delete(cookie_name)
+      cookies.delete(auth_cookie_name)
     end
 
     def logged_in?
@@ -60,7 +60,7 @@ module Veri
     end
 
     def return_path
-      cookies.signed["#{cookie_name}_return_path"]
+      cookies.signed["#{auth_cookie_name}_return_path"]
     end
 
     def shapeshifter?
@@ -83,7 +83,7 @@ module Veri
 
       log_out
 
-      cookies.signed["#{cookie_name}_return_path"] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
+      cookies.signed["#{auth_cookie_name}_return_path"] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
       when_unauthenticated
     end
@@ -102,8 +102,8 @@ module Veri
       ).resolve
     end
 
-    def cookie_name
-      @cookie_name ||= "auth_#{Digest::SHA2.hexdigest(Marshal.dump(resolved_tenant))[0..7]}"
+    def auth_cookie_name
+      @auth_cookie_name ||= "auth_#{Digest::SHA2.hexdigest(Marshal.dump(resolved_tenant))[0..7]}"
     end
   end
 end
