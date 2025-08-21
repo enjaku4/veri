@@ -120,7 +120,7 @@ RSpec.describe Veri::Authentication do
     end
 
     it "deletes the veri_token cookie" do
-      expect { subject }.to change { controller.send(:cookies).encrypted["auth_4333b114"] }.from(be_present).to(be_nil)
+      expect { subject }.to change { controller.send(:cookies).encrypted["auth_4333b114_token"] }.from(be_present).to(be_nil)
     end
   end
 
