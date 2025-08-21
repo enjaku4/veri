@@ -35,7 +35,6 @@ module Veri
       @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token), **resolved_tenant) : nil
     end
 
-    # TODO: tests for all changed methods where applicable
     def log_in(authenticatable)
       processed_authenticatable = Veri::Inputs::Authenticatable.new(
         authenticatable,

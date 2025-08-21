@@ -3,7 +3,6 @@ require "rails/railtie"
 module Veri
   class Railtie < Rails::Railtie
     initializer "veri.to_prepare" do |app|
-      # TODO: test this
       app.config.to_prepare do
         Veri::Session.where.not(tenant_id: nil).distinct.pluck(:tenant_type).each do |tenant_class|
           tenant_class.constantize
