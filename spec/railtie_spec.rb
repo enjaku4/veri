@@ -2,15 +2,9 @@ RSpec.describe Veri::Railtie do
   context "to_prepare" do
     subject { DummyApplication.config.to_prepare_blocks.each(&:call) }
 
-    context "when eager_load is true" do
-      xit "checks for missing tenant classes"
-    end
+    xit "checks for missing tenant classes"
 
-    context "when eager_load is false" do
-      before { allow(Rails.configuration).to receive(:eager_load).and_return(false) }
-
-      xit "checks for missing tenant classes"
-    end
+    xit "includes Veri::Authenticatable in the user model"
   end
 
   context "extend_migration_helpers" do
