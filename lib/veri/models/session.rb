@@ -10,6 +10,14 @@ module Veri
     belongs_to :tenant, polymorphic: true, optional: true
     # rubocop:enable Rails/ReflectionClassName
 
+    # TODO: test scopes
+    scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
+    scope :expired, -> { where(expires_at: ...Time.current) }
+    scope :inactive, -> do
+      inactive_session_lifetime = Veri::Configuration.inactive_session_lifetime
+      inactive_session_lifetime ? where(last_seen_at: ...(Time.current - inactive_session_lifetime)) : none
+    end
+
     def active? = !expired? && !inactive?
 
     def expired?
