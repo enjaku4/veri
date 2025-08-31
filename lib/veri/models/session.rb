@@ -4,13 +4,10 @@ module Veri
   class Session < ActiveRecord::Base
     self.table_name = "veri_sessions"
 
-    # rubocop:disable Rails/ReflectionClassName
     belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
     belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
-    # rubocop:enable Rails/ReflectionClassName
 
-    # TODO: test scopes
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
     scope :expired, -> { where(expires_at: ...Time.current) }
     scope :inactive, -> do

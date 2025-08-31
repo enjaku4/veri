@@ -1,4 +1,84 @@
 RSpec.describe Veri::Session do
+  describe ".active" do
+    subject { described_class.active }
+
+    let!(:active_session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: Time.current
+      )
+    end
+
+    before do
+      Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes }
+      described_class.create!(
+        expires_at: 1.hour.ago,
+        authenticatable: User.create!,
+        hashed_token: "bar",
+        last_seen_at: Time.current
+      )
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "baz",
+        last_seen_at: 10.minutes.ago
+      )
+    end
+
+    it { is_expected.to contain_exactly(active_session) }
+  end
+
+  describe ".expired" do
+    subject { described_class.expired }
+
+    let!(:expired_session) do
+      described_class.create!(
+        expires_at: 1.hour.ago,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: Time.current
+      )
+    end
+
+    before do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "bar",
+        last_seen_at: Time.current
+      )
+    end
+
+    it { is_expected.to contain_exactly(expired_session) }
+  end
+
+  describe ".inactive" do
+    subject { described_class.inactive }
+
+    let!(:inactive_session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: 10.minutes.ago
+      )
+    end
+
+    before do
+      Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes }
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "bar",
+        last_seen_at: Time.current
+      )
+    end
+
+    it { is_expected.to contain_exactly(inactive_session) }
+  end
+
   describe "active?" do
     subject { described_class.new(expires_at:, last_seen_at:).active? }
 
