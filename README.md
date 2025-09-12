@@ -137,14 +137,27 @@ class SessionsController < ApplicationController
 end
 ```
 
-Available methods:
+Available controller methods:
 
-- `current_user` - Returns authenticated user or `nil`
-- `logged_in?` - Returns `true` if user is authenticated
-- `log_in(user)` - Authenticates user and creates session, returns `true` on success or `false` if account is locked
-- `log_out` - Terminates current session
-- `return_path` - Returns path user was trying to access before authentication, if any
-- `current_session` - Returns current authentication session
+```rb
+# Returns authenticated user or nil
+current_user
+
+# Returns true if user is authenticated
+logged_in?
+
+# Authenticates user and creates session, returns true on success or false if account is locked
+log_in(user)
+
+# Terminates current session
+log_out
+
+# Returns path user was trying to access before authentication, if any
+return_path
+
+# Returns current authentication session
+current_session
+```
 
 ### User Impersonation (Shapeshifting)
 
@@ -170,14 +183,26 @@ end
 
 Available session methods:
 
-- `shapeshift(user)` - Assume another user's identity (maintains original identity)
-- `to_true_identity` - Return to original identity
-- `shapeshifted?` - Returns true if currently shapeshifted
-- `true_identity` - Returns original user when shapeshifted, otherwise current user
+```rb
+# Assume another user's identity (maintains original identity)
+session.shapeshift(user)
+
+# Return to original identity
+session.to_true_identity
+
+# Returns true if currently shapeshifted
+session.shapeshifted?
+
+# Returns original user when shapeshifted, otherwise current user
+session.true_identity
+```
 
 Controller helper:
 
-- `shapeshifter?` - Returns true if the current session is shapeshifted
+```rb
+# Returns true if the current session is shapeshifted
+shapeshifter?
+```
 
 ### When unauthenticated
 
@@ -321,7 +346,8 @@ end
 Sessions expose their tenant through `tenant` method:
 
 ```rb
-session.tenant # Returns the tenant (string, model instance, or nil in single-tenant applications)
+# Returns the tenant (string, model instance, or nil in single-tenant applications)
+session.tenant
 ```
 
 ### Migration Helpers
