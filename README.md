@@ -1,5 +1,3 @@
-<!--TODO-->
-
 # Veri: Minimal Authentication Framework for Rails
 
 [![Gem Version](https://badge.fury.io/rb/veri.svg)](http://badge.fury.io/rb/veri)
@@ -15,6 +13,7 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
 - Return path handling
 - User impersonation feature
 - Account lockout functionality
+- Multi-tenancy support
 
 > ⚠️ **Development Notice**<br>
 > Veri is functional but in early development. Breaking changes may occur in minor releases until v1.0!
@@ -210,7 +209,7 @@ Veri stores authentication sessions in the database, providing session managemen
 
 ```rb
 # Get all sessions for a user
-user.veri_sessions
+user.sessions
 
 # Get current session in controller
 current_session
@@ -237,6 +236,9 @@ session.info
 session.active?     # Session is active (neither expired nor inactive)
 session.inactive?   # Session exceeded inactivity timeout
 session.expired?    # Session exceeded maximum lifetime
+Session.active      # Fetch active sessions
+Session.inactive    # Fetch inactive sessions
+Session.expired     # Fetch expired sessions
 ```
 
 ### Session Management
@@ -245,12 +247,11 @@ session.expired?    # Session exceeded maximum lifetime
 # Terminate a specific session
 session.terminate
 
-# Terminate all sessions for a user
-Veri::Session.terminate_all(user)
+# Terminate all sessions
+Veri::Session.terminate_all
 
 # Clean up expired/inactive sessions
-Veri::Session.prune           # All sessions
-Veri::Session.prune(user)     # Specific user's sessions
+Veri::Session.prune
 ```
 
 ## Account Lockout
@@ -266,6 +267,12 @@ user.unlock!
 
 # Check if account is locked
 user.locked?
+
+# Fetch locked users
+User.locked
+
+# Fetch unlocked users
+User.unlocked
 ```
 
 When an account is locked, users cannot log in. If they're already logged in, their sessions will be terminated and they'll be treated as unauthenticated users.
