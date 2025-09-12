@@ -22,7 +22,7 @@ module Veri
       )
     end
 
-    def sessions(password)
+    def verify_password(password)
       hasher.verify(
         Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process,
         hashed_password
