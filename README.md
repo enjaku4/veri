@@ -27,6 +27,7 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
   - [Controller Integration](#controller-integration)
   - [Authentication Sessions](#authentication-sessions)
   - [Account Lockout](#account-lockout)
+  - [Multi-Tenancy](#multi-tenancy)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -276,6 +277,44 @@ User.unlocked
 ```
 
 When an account is locked, users cannot log in. If they're already logged in, their sessions will be terminated and they'll be treated as unauthenticated users.
+
+## Multi-Tenancy
+
+Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants (e.g., organizations, clients, or subdomains).
+
+### Setting Up Multi-Tenancy
+
+To enable multi-tenancy, override the `current_tenant` method in your application controller:
+
+```rb
+class ApplicationController < ActionController::Base
+  include Veri::Authentication
+
+  with_authentication
+
+  private
+
+  def current_tenant
+    # Option 1: String-based tenancy (e.g., subdomain)
+    request.subdomain
+
+    # Option 2: Model-based tenancy (e.g., organization)
+    # Company.find_by(subdomain: request.subdomain)
+  end
+end
+```
+
+### Migration Helpers
+
+Handle tenant changes when models are renamed or removed. These are irreversible data migrations.
+
+```rb
+  # Rename a tenant class (e.g., when you rename your Organization model to Company)
+  migrate_authentication_tenant!("Organization", "Company")
+
+  # Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
+  delete_authentication_tenant!("Organization")
+```
 
 ## View Helpers
 
