@@ -43,7 +43,7 @@ module Veri
 
       return false if processed_authenticatable.locked?
 
-      token = Veri::Session.establish(processed_authenticatable, request, **resolved_tenant)
+      token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
 
       cookies.encrypted.permanent["#{auth_cookie_prefix}_token"] = { value: token, httponly: true }
       true
