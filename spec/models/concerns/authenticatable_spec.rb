@@ -5,7 +5,27 @@ RSpec.describe Veri::Authenticatable do
     end
   end
 
-  describe "sessions" do
+  describe ".locked" do
+    let!(:locked_user) { User.create!(locked: true) }
+
+    before { User.create!(locked: false) }
+
+    it "returns only locked users" do
+      expect(User.locked).to contain_exactly(locked_user)
+    end
+  end
+
+  describe ".unlocked" do
+    let!(:unlocked_user) { User.create!(locked: false) }
+
+    before { User.create!(locked: true) }
+
+    it "returns only unlocked users" do
+      expect(User.unlocked).to contain_exactly(unlocked_user)
+    end
+  end
+
+  describe "#sessions" do
     let(:user) { User.create! }
     let!(:sessions) do
       Array.new(3) do |i|
