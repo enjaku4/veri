@@ -7,7 +7,10 @@ module Veri
 
       @@included = name
 
-      has_many :veri_sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :destroy
+      has_many :sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :destroy
+
+      scope :locked, -> { where(locked: true) }
+      scope :unlocked, -> { where(locked: false) }
     end
 
     def update_password(password)

@@ -1,3 +1,5 @@
+require "digest/sha2"
+
 module Veri
   module Authentication
     extend ActiveSupport::Concern
@@ -29,8 +31,8 @@ module Veri
     end
 
     def current_session
-      token = cookies.encrypted[:veri_token]
-      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token)) : nil
+      token = cookies.encrypted["#{auth_cookie_prefix}_token"]
+      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token), **resolved_tenant) : nil
     end
 
     def log_in(authenticatable)
@@ -41,14 +43,15 @@ module Veri
 
       return false if processed_authenticatable.locked?
 
-      token = Veri::Session.establish(processed_authenticatable, request)
-      cookies.encrypted.permanent[:veri_token] = { value: token, httponly: true }
+      token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
+
+      cookies.encrypted.permanent["#{auth_cookie_prefix}_token"] = { value: token, httponly: true }
       true
     end
 
     def log_out
       current_session&.terminate
-      cookies.delete(:veri_token)
+      cookies.delete("#{auth_cookie_prefix}_token")
     end
 
     def logged_in?
@@ -56,7 +59,7 @@ module Veri
     end
 
     def return_path
-      cookies.signed[:veri_return_path]
+      cookies.signed["#{auth_cookie_prefix}_return_path"]
     end
 
     def shapeshifter?
@@ -79,13 +82,27 @@ module Veri
 
       log_out
 
-      cookies.signed[:veri_return_path] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
+      cookies.signed["#{auth_cookie_prefix}_return_path"] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
       when_unauthenticated
     end
 
     def when_unauthenticated
       request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
+    end
+
+    def current_tenant = nil
+
+    def resolved_tenant
+      @resolved_tenant ||= Veri::Inputs::Tenant.new(
+        current_tenant,
+        error: Veri::InvalidTenantError,
+        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{current_tenant.inspect}`"
+      ).resolve
+    end
+
+    def auth_cookie_prefix
+      @auth_cookie_prefix ||= "auth_#{Digest::SHA2.hexdigest(Marshal.dump(resolved_tenant))[0..7]}"
     end
   end
 end

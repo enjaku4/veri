@@ -13,6 +13,7 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
 - Return path handling
 - User impersonation feature
 - Account lockout functionality
+- Multi-tenancy support
 
 > ⚠️ **Development Notice**<br>
 > Veri is functional but in early development. Breaking changes may occur in minor releases until v1.0!
@@ -26,6 +27,7 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
   - [Controller Integration](#controller-integration)
   - [Authentication Sessions](#authentication-sessions)
   - [Account Lockout](#account-lockout)
+  - [Multi-Tenancy](#multi-tenancy)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -84,10 +86,10 @@ Your user model is automatically extended with password management methods:
 
 ```rb
 # Set or update a password
-user.update_password("new_password")
+user.update_password("password")
 
 # Verify a password
-user.verify_password("submitted_password")
+user.verify_password("password")
 ```
 
 ## Controller Integration
@@ -141,7 +143,7 @@ Available methods:
 - `logged_in?` - Returns `true` if user is authenticated
 - `log_in(user)` - Authenticates user and creates session, returns `true` on success or `false` if account is locked
 - `log_out` - Terminates current session
-- `return_path` - Returns path user was accessing before authentication
+- `return_path` - Returns path user was trying to access before authentication, if any
 - `current_session` - Returns current authentication session
 
 ### User Impersonation (Shapeshifting)
@@ -159,7 +161,7 @@ module Admin
 
     def destroy
       original_user = current_session.true_identity
-      current_session.revert_to_true_identity
+      current_session.to_true_identity
       redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
     end
   end
@@ -169,7 +171,7 @@ end
 Available session methods:
 
 - `shapeshift(user)` - Assume another user's identity (maintains original identity)
-- `revert_to_true_identity` - Return to original identity
+- `to_true_identity` - Return to original identity
 - `shapeshifted?` - Returns true if currently shapeshifted
 - `true_identity` - Returns original user when shapeshifted, otherwise current user
 
@@ -208,7 +210,7 @@ Veri stores authentication sessions in the database, providing session managemen
 
 ```rb
 # Get all sessions for a user
-user.veri_sessions
+user.sessions
 
 # Get current session in controller
 current_session
@@ -219,6 +221,7 @@ current_session
 ```rb
 session.identity
 # => authenticated user
+
 session.info
 # => {
 #   device: "Desktop",
@@ -232,9 +235,23 @@ session.info
 ### Session Status
 
 ```rb
-session.active?     # Session is active (neither expired nor inactive)
-session.inactive?   # Session exceeded inactivity timeout
-session.expired?    # Session exceeded maximum lifetime
+# Session is active (neither expired nor inactive)
+session.active?
+
+# Session exceeded inactivity timeout
+session.inactive?
+
+# Session exceeded maximum lifetime
+session.expired?
+
+# Fetch active sessions
+Veri::Session.active
+
+# Fetch inactive sessions
+Veri::Session.inactive
+
+# Fetch expired sessions
+Veri::Session.expired
 ```
 
 ### Session Management
@@ -243,12 +260,11 @@ session.expired?    # Session exceeded maximum lifetime
 # Terminate a specific session
 session.terminate
 
-# Terminate all sessions for a user
-Veri::Session.terminate_all(user)
+# Terminate all sessions
+Veri::Session.terminate_all
 
 # Clean up expired/inactive sessions
-Veri::Session.prune           # All sessions
-Veri::Session.prune(user)     # Specific user's sessions
+Veri::Session.prune
 ```
 
 ## Account Lockout
@@ -264,9 +280,61 @@ user.unlock!
 
 # Check if account is locked
 user.locked?
+
+# Fetch locked users
+User.locked
+
+# Fetch unlocked users
+User.unlocked
 ```
 
-When an account is locked, users cannot log in. If they're already logged in, their sessions will be terminated and they'll be treated as unauthenticated users.
+When an account is locked, the user cannot log in. If the user is already logged in, their sessions will be terminated, and they will be treated as an unauthenticated user.
+
+## Multi-Tenancy
+
+Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants (e.g., organizations, clients, or subdomains).
+
+### Setting Up Multi-Tenancy
+
+To enable multi-tenancy, override `current_tenant` method:
+
+```rb
+class ApplicationController < ActionController::Base
+  include Veri::Authentication
+
+  with_authentication
+
+  private
+
+  def current_tenant
+    # Option 1: String-based tenancy (e.g., subdomain)
+    request.subdomain
+
+    # Option 2: Model-based tenancy (e.g., organization)
+    # Company.find_by(subdomain: request.subdomain)
+  end
+end
+```
+
+### Session Tenant Access
+
+Sessions expose their tenant through `tenant` method:
+
+```rb
+session.tenant # Returns the tenant (string, model instance, or nil in single-tenant applications)
+```
+
+### Migration Helpers
+
+Handle tenant changes when models are renamed or removed. These are irreversible data migrations.
+
+```rb
+# Rename a tenant class (e.g., when you rename your Organization model to Company)
+migrate_authentication_tenant!("Organization", "Company")
+
+# Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
+delete_authentication_tenant!("Organization")
+```
 
 ## View Helpers
 

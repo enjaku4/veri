@@ -63,6 +63,9 @@ Rails/I18nLocaleTexts:
 Rails/RakeEnvironment:
   Enabled: false
 
+Rails/ReflectionClassName:
+  Enabled: false
+
 Rails/SkipsModelValidations:
   Enabled: false
 

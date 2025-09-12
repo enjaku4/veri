@@ -64,7 +64,7 @@ RSpec.describe Veri::Authentication do
       before { controller.log_in(user) }
 
       it "returns the current session" do
-        expect(subject).to eq(user.veri_sessions.take)
+        expect(subject).to eq(user.sessions.take)
       end
     end
 
@@ -116,11 +116,11 @@ RSpec.describe Veri::Authentication do
     end
 
     it "logs out the user" do
-      expect { subject }.to change(user.veri_sessions, :count).from(1).to(0)
+      expect { subject }.to change(user.sessions, :count).from(1).to(0)
     end
 
     it "deletes the veri_token cookie" do
-      expect { subject }.to change { controller.send(:cookies).encrypted[:veri_token] }.from(be_present).to(be_nil)
+      expect { subject }.to change { controller.send(:cookies).encrypted["auth_4333b114_token"] }.from(be_present).to(be_nil)
     end
   end
 
@@ -152,7 +152,7 @@ RSpec.describe Veri::Authentication do
     before { controller.request = ActionDispatch::TestRequest.create }
 
     context "when return_path is set in cookies" do
-      before { controller.send(:cookies).signed[:veri_return_path] = "/some/path" }
+      before { controller.send(:cookies).signed["auth_4333b114_return_path"] = "/some/path" }
 
       it "returns the return path from the session" do
         expect(subject).to eq("/some/path")
@@ -202,7 +202,7 @@ RSpec.describe Veri::Authentication do
       before do
         controller.log_in(user)
         controller.current_session.shapeshift(user)
-        controller.current_session.revert_to_true_identity
+        controller.current_session.to_true_identity
       end
 
       it { is_expected.to be false }

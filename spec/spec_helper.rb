@@ -56,7 +56,7 @@ if ENV["UUID_TESTS"]
   require "securerandom"
 
   ActiveSupport.on_load(:active_record) do
-    [Veri::Session, User, Client].each do |model_class|
+    [Veri::Session, User, Client, Company].each do |model_class|
       model_class.before_create do
         self.id = SecureRandom.uuid if id.blank?
       end
