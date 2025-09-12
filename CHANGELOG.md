@@ -1,4 +1,16 @@
-<!--TODO-->
+## v0.4.0
+
+### Breaking
+
+- Changed `veri_sessions` table to support multi-tenancy
+- Renamed `revert_to_true_identity` session method to `to_true_identity`
+- Session method `prune` no longer accepts a user argument
+
+### Features
+
+- Added multi-tenancy support
+- Added session scopes to fetch active, expired, and inactive sessions
+- Added user scopes to fetch locked and unlocked users
 
 ## v0.3.1
 
