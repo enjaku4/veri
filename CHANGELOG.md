@@ -5,6 +5,7 @@
 - Changed `veri_sessions` table to support multi-tenancy
 - Renamed `revert_to_true_identity` session method to `to_true_identity`
 - Session method `prune` no longer accepts a user argument
+- Session method `terminate_all` no longer accepts a user argument
 
 ### Features
 
