@@ -39,7 +39,7 @@ RSpec.describe Veri::Authenticatable do
     end
 
     it "returns all sessions for the authenticatable" do
-      expect(user.veri_sessions).to match_array(sessions)
+      expect(user.sessions).to match_array(sessions)
     end
   end
 

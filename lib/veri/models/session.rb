@@ -119,12 +119,7 @@ module Veri
         where(id: ids).delete_all if ids.any?
       end
 
-      def terminate_all(user)
-        Veri::Inputs::Authenticatable.new(
-          user,
-          message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{user.inspect}`"
-        ).process.veri_sessions.delete_all
-      end
+      alias terminate_all delete_all
     end
   end
 end

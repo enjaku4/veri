@@ -415,33 +415,22 @@ RSpec.describe Veri::Session do
   end
 
   describe ".terminate_all" do
-    subject { described_class.terminate_all(authenticatable) }
+    subject { described_class.terminate_all }
 
-    context "when authenticatable is invalid" do
-      let(:authenticatable) { nil }
-
-      it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `nil`")
+    let!(:sessions) do
+      Array.new(3) do |i|
+        described_class.create!(
+          expires_at: 1.hour.from_now,
+          authenticatable: User.create!,
+          hashed_token: "foo#{i}",
+          last_seen_at: Time.current
+        )
       end
     end
 
-    context "when authenticatable is valid" do
-      let(:authenticatable) { User.create! }
-      let!(:sessions) do
-        Array.new(3) do |i|
-          described_class.create!(
-            expires_at: 1.hour.from_now,
-            authenticatable:,
-            hashed_token: "foo#{i}",
-            last_seen_at: Time.current
-          )
-        end
-      end
-
-      it "deletes all sessions for the given authenticatable" do
-        expect { subject }.to change(described_class, :count).from(3).to(0)
-        expect(described_class.where(id: sessions)).to all(be_destroyed)
-      end
+    it "deletes all sessions" do
+      expect { subject }.to change(described_class, :count).from(3).to(0)
+      expect(described_class.where(id: sessions)).to all(be_destroyed)
     end
   end
 end

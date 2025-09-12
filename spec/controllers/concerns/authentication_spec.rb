@@ -64,7 +64,7 @@ RSpec.describe Veri::Authentication do
       before { controller.log_in(user) }
 
       it "returns the current session" do
-        expect(subject).to eq(user.veri_sessions.take)
+        expect(subject).to eq(user.sessions.take)
       end
     end
 
@@ -116,7 +116,7 @@ RSpec.describe Veri::Authentication do
     end
 
     it "logs out the user" do
-      expect { subject }.to change(user.veri_sessions, :count).from(1).to(0)
+      expect { subject }.to change(user.sessions, :count).from(1).to(0)
     end
 
     it "deletes the veri_token cookie" do
