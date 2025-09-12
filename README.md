@@ -221,6 +221,7 @@ current_session
 ```rb
 session.identity
 # => authenticated user
+
 session.info
 # => {
 #   device: "Desktop",
@@ -234,12 +235,23 @@ session.info
 ### Session Status
 
 ```rb
-session.active?     # Session is active (neither expired nor inactive)
-session.inactive?   # Session exceeded inactivity timeout
-session.expired?    # Session exceeded maximum lifetime
-Session.active      # Fetch active sessions
-Session.inactive    # Fetch inactive sessions
-Session.expired     # Fetch expired sessions
+# Session is active (neither expired nor inactive)
+session.active?
+
+# Session exceeded inactivity timeout
+session.inactive?
+
+# Session exceeded maximum lifetime
+session.expired?
+
+# Fetch active sessions
+Veri::Session.active
+
+# Fetch inactive sessions
+Veri::Session.inactive
+
+# Fetch expired sessions
+Veri::Session.expired
 ```
 
 ### Session Management
