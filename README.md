@@ -309,7 +309,7 @@ end
 Sessions expose their tenant through the `tenant` method:
 
 ```rb
-session.tenant  # Returns the tenant (string, model instance, or nil)
+session.tenant # Returns the tenant (string, model instance, or nil)
 ```
 
 ### Migration Helpers
@@ -318,10 +318,10 @@ Handle tenant changes when models are renamed or removed. These are irreversible
 
 ```rb
   # Rename a tenant class (e.g., when you rename your Organization model to Company)
-  migrate_authentication_tenant!("Organization", "Company")
+migrate_authentication_tenant!("Organization", "Company")
 
   # Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
-  delete_authentication_tenant!("Organization")
+delete_authentication_tenant!("Organization")
 ```
 
 ## View Helpers
