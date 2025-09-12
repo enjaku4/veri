@@ -135,22 +135,6 @@ class SessionsController < ApplicationController
     redirect_to root_path
   end
 end
-
-class RegistrationsController < ApplicationController
-  skip_authentication
-
-  def create
-    user = User.new(user_params)
-
-    if user.valid?
-      user.update_password(params[:password])
-      log_in(user)
-      redirect_to dashboard_path, notice: "Welcome!"
-    else
-      render :new, status: :unprocessable_entity
-    end
-  end
-end
 ```
 
 Available methods:
