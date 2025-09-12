@@ -304,6 +304,14 @@ class ApplicationController < ActionController::Base
 end
 ```
 
+### Session Tenant Access
+
+Sessions expose their tenant through the `tenant` method:
+
+```rb
+session.tenant  # Returns the tenant (string, model instance, or nil)
+```
+
 ### Migration Helpers
 
 Handle tenant changes when models are renamed or removed. These are irreversible data migrations.
