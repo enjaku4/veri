@@ -86,10 +86,10 @@ Your user model is automatically extended with password management methods:
 
 ```rb
 # Set or update a password
-user.update_password("new_password")
+user.update_password("password")
 
 # Verify a password
-user.verify_password("submitted_password")
+user.verify_password("password")
 ```
 
 ## Controller Integration
@@ -135,6 +135,22 @@ class SessionsController < ApplicationController
     redirect_to root_path
   end
 end
+
+class RegistrationsController < ApplicationController
+  skip_authentication
+
+  def create
+    user = User.new(user_params)
+
+    if user.valid?
+      user.update_password(params[:password])
+      log_in(user)
+      redirect_to dashboard_path, notice: "Welcome!"
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+end
 ```
 
 Available methods:
@@ -143,7 +159,7 @@ Available methods:
 - `logged_in?` - Returns `true` if user is authenticated
 - `log_in(user)` - Authenticates user and creates session, returns `true` on success or `false` if account is locked
 - `log_out` - Terminates current session
-- `return_path` - Returns path user was accessing before authentication
+- `return_path` - Returns path user was trying to access before authentication, if any
 - `current_session` - Returns current authentication session
 
 ### User Impersonation (Shapeshifting)
@@ -288,7 +304,7 @@ User.locked
 User.unlocked
 ```
 
-When an account is locked, users cannot log in. If they're already logged in, their sessions will be terminated and they'll be treated as unauthenticated users.
+When an account is locked, the user cannot log in. If the user is already logged in, their sessions will be terminated, and they will be treated as an unauthenticated user.
 
 ## Multi-Tenancy
 
@@ -296,7 +312,7 @@ Veri supports multi-tenancy, allowing you to isolate authentication sessions bet
 
 ### Setting Up Multi-Tenancy
 
-To enable multi-tenancy, override the `current_tenant` method in your application controller:
+To enable multi-tenancy, override `current_tenant` method:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -318,10 +334,10 @@ end
 
 ### Session Tenant Access
 
-Sessions expose their tenant through the `tenant` method:
+Sessions expose their tenant through `tenant` method:
 
 ```rb
-session.tenant # Returns the tenant (string, model instance, or nil)
+session.tenant # Returns the tenant (string, model instance, or nil in single-tenant applications)
 ```
 
 ### Migration Helpers
@@ -329,10 +345,10 @@ session.tenant # Returns the tenant (string, model instance, or nil)
 Handle tenant changes when models are renamed or removed. These are irreversible data migrations.
 
 ```rb
-  # Rename a tenant class (e.g., when you rename your Organization model to Company)
+# Rename a tenant class (e.g., when you rename your Organization model to Company)
 migrate_authentication_tenant!("Organization", "Company")
 
-  # Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
+# Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
 ```
 
