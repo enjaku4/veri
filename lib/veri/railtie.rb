@@ -4,10 +4,12 @@ module Veri
   class Railtie < Rails::Railtie
     initializer "veri.to_prepare" do |app|
       app.config.to_prepare do
-        Veri::Session.where.not(tenant_id: nil).distinct.pluck(:tenant_type).each do |tenant_class|
-          tenant_class.constantize
-        rescue NameError => e
-          raise Veri::Error, "Tenant not found: class `#{e.name}` may have been renamed or deleted"
+        if ActiveRecord::Base.connection.data_source_exists?("veri_sessions")
+          Veri::Session.where.not(tenant_id: nil).distinct.pluck(:tenant_type).each do |tenant_class|
+            tenant_class.constantize
+          rescue NameError => e
+            raise Veri::Error, "Tenant not found: class `#{e.name}` may have been renamed or deleted"
+          end
         end
 
         user_model = Veri::Configuration.user_model
