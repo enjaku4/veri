@@ -288,7 +288,7 @@ session.terminate
 # Terminate all sessions
 Veri::Session.terminate_all
 
-# Clean up expired/inactive sessions
+# Clean up expired/inactive sessions, and sessions with deleted tenant
 Veri::Session.prune
 ```
 
