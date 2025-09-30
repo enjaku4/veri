@@ -1,29 +1,46 @@
 require "openssl"
 require "base64"
+require "securerandom"
 
 module Veri
   module Password
     module Pbkdf2
       module_function
 
-      SALT_BYTES = 16
-      ITERATIONS = 200_000
-      HASH_BYTES = 32
-      DIGEST = "sha256"
+      ITERATIONS = 210_000
+      SALT_BYTES = 64
+      HASH_BYTES = 64
+      DIGEST = "sha512"
 
       def create(password)
         salt = SecureRandom.random_bytes(SALT_BYTES)
-        hash = OpenSSL::KDF.pbkdf2_hmac(password, salt:, iterations: ITERATIONS, length: HASH_BYTES, hash: DIGEST)
+        hash = OpenSSL::KDF.pbkdf2_hmac(
+          password,
+          salt:,
+          iterations: ITERATIONS,
+          length: HASH_BYTES,
+          hash: DIGEST
+        )
 
-        Base64.strict_encode64(salt + hash)
+        "#{DIGEST}$#{ITERATIONS}$#{HASH_BYTES}$#{Base64.strict_encode64(salt)}$#{Base64.strict_encode64(hash)}"
       end
 
       def verify(password, hashed_password)
-        data = Base64.decode64(hashed_password)
-        salt, expected_hash = data[0, SALT_BYTES], data[SALT_BYTES..]
-        hash = OpenSSL::KDF.pbkdf2_hmac(password, salt:, iterations: ITERATIONS, length: HASH_BYTES, hash: DIGEST)
+        parts = hashed_password.split("$")
+        digest, iterations, hash_bytes, encoded_salt, encoded_hash = parts[0], parts[1], parts[2], parts[3], parts[4]
 
-        OpenSSL.fixed_length_secure_compare(hash, expected_hash)
+        salt = Base64.strict_decode64(encoded_salt)
+        hash = Base64.strict_decode64(encoded_hash)
+
+        recalculated_hash = OpenSSL::KDF.pbkdf2_hmac(
+          password,
+          salt:,
+          iterations: iterations.to_i,
+          length: hash_bytes.to_i,
+          hash: digest
+        )
+
+        OpenSSL.fixed_length_secure_compare(recalculated_hash, hash)
       end
     end
   end

@@ -1,16 +1,18 @@
 RSpec.describe Veri::Password::Pbkdf2 do
   describe ".create" do
-    let(:salt) { SecureRandom.random_bytes(16) }
+    let(:salt) { SecureRandom.random_bytes(64) }
 
     before do
-      allow(SecureRandom).to receive(:random_bytes).with(16).and_return(salt)
+      allow(SecureRandom).to receive(:random_bytes).with(64).and_return(salt)
       allow(OpenSSL::KDF).to receive(:pbkdf2_hmac).with(
-        "secure_password", salt:, iterations: 200_000, length: 32, hash: "sha256"
+        "secure_password", salt:, iterations: 210_000, length: 64, hash: "sha512"
       ).and_return("hashed_password")
     end
 
     it "creates a hashed password" do
-      expect(described_class.create("secure_password")).to eq(Base64.strict_encode64("#{salt}hashed_password"))
+      expect(described_class.create("secure_password")).to eq(
+        "sha512$210000$64$#{Base64.strict_encode64(salt)}$#{Base64.strict_encode64("hashed_password")}"
+      )
     end
   end
 
