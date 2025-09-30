@@ -120,6 +120,9 @@ Style/Lambda:
 Style/MutableConstant:
   Enabled: false
 
+Style/ParallelAssignment:
+  Enabled: false
+
 Style/RedundantFetchBlock:
   Enabled: false
 

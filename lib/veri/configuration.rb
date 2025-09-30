@@ -52,6 +52,7 @@ module Veri
     HASHERS = {
       argon2: Veri::Password::Argon2,
       bcrypt: Veri::Password::BCrypt,
+      pbkdf2: Veri::Password::Pbkdf2,
       scrypt: Veri::Password::SCrypt
     }.freeze
 

@@ -44,7 +44,7 @@ RSpec.describe Veri do
         it "raises an error" do
           expect { described_class.configure { _1.hashing_algorithm = :invalid } }.to raise_error(
             Veri::ConfigurationError,
-            "Invalid hashing algorithm `:invalid`, supported algorithms are: argon2, bcrypt, scrypt"
+            "Invalid hashing algorithm `:invalid`, supported algorithms are: argon2, bcrypt, pbkdf2, scrypt"
           )
         end
       end
