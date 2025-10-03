@@ -1,7 +1,7 @@
 # Veri: Minimal Authentication Framework for Rails
 
 [![Gem Version](https://badge.fury.io/rb/veri.svg)](http://badge.fury.io/rb/veri)
-[![Github Actions badge](https://github.com/brownboxdev/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/brownboxdev/veri/actions/workflows/ci.yml)
+[![Github Actions badge](https://github.com/enjaku4/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/enjaku4/veri/actions/workflows/ci.yml)
 
 Veri is a cookie-based authentication library for Ruby on Rails that provides essential authentication building blocks without imposing business logic. Unlike full-featured solutions, Veri gives you complete control over your authentication flow while handling the complex underlying mechanics of secure password storage and session management.
 
@@ -426,13 +426,13 @@ end
 ## Getting Help and Contributing
 
 ### Getting Help
-Have a question or need assistance? Open a discussion in our [discussions section](https://github.com/brownboxdev/veri/discussions) for:
+Have a question or need assistance? Open a discussion in our [discussions section](https://github.com/enjaku4/veri/discussions) for:
 - Usage questions
 - Implementation guidance
 - Feature suggestions
 
 ### Reporting Issues
-Found a bug? Please [create an issue](https://github.com/brownboxdev/veri/issues) with:
+Found a bug? Please [create an issue](https://github.com/enjaku4/veri/issues) with:
 - A clear description of the problem
 - Steps to reproduce the issue
 - Your environment details (Rails version, Ruby version, etc.)
@@ -441,14 +441,14 @@ Found a bug? Please [create an issue](https://github.com/brownboxdev/veri/issues
 Ready to contribute? You can:
 - Fix bugs by submitting pull requests
 - Improve documentation
-- Add new features (please discuss first in our [discussions section](https://github.com/brownboxdev/veri/discussions))
+- Add new features (please discuss first in our [discussions section](https://github.com/enjaku4/veri/discussions))
 
-Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/veri/blob/main/CONTRIBUTING.md)
+Before contributing, please read the [contributing guidelines](https://github.com/enjaku4/veri/blob/main/CONTRIBUTING.md)
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://github.com/brownboxdev/veri/blob/main/LICENSE.txt).
+The gem is available as open source under the terms of the [MIT License](https://github.com/enjaku4/veri/blob/main/LICENSE.txt).
 
 ## Code of Conduct
 
-Everyone interacting in the Veri project is expected to follow the [code of conduct](https://github.com/brownboxdev/veri/blob/main/CODE_OF_CONDUCT.md).
+Everyone interacting in the Veri project is expected to follow the [code of conduct](https://github.com/enjaku4/veri/blob/main/CODE_OF_CONDUCT.md).

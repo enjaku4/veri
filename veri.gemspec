@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name = "veri"
   spec.version = Veri::VERSION
   spec.authors = ["enjaku4"]
-  spec.homepage = "https://github.com/brownboxdev/veri"
+  spec.homepage = "https://github.com/enjaku4/veri"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
