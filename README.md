@@ -15,9 +15,6 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
 - Account lockout functionality
 - Multi-tenancy support
 
-> ⚠️ **Development Notice**<br>
-> Veri is functional but in early development. Breaking changes may occur in minor releases until v1.0!
-
 ## Table of Contents
 
 **Gem Usage:**
@@ -115,6 +112,22 @@ end
 This is a simplified example of how to use Veri's authentication methods:
 
 ```rb
+class RegistrationsController < ApplicationController
+  skip_authentication
+
+  def create
+    user = User.new(user_params)
+
+    if user.valid?
+      user.update_password(user_params[:password])
+      log_in(user)
+      redirect_to dashboard_path
+    else
+      render :new, status: :unprocessable_content
+    end
+  end
+end
+
 class SessionsController < ApplicationController
   skip_authentication except: [:destroy]
 
@@ -126,7 +139,7 @@ class SessionsController < ApplicationController
       redirect_to return_path || dashboard_path
     else
       flash.now[:alert] = "Invalid credentials"
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
