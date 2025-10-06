@@ -2,7 +2,7 @@ source "https://rubygems.org"
 
 gemspec
 
-rails_version = ENV.fetch("RAILS_VERSION", "~> 7.1")
+rails_version = ENV.fetch("RAILS_VERSION", "~> 7.2")
 
 gem "argon2"
 gem "bcrypt"
