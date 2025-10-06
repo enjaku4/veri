@@ -8,6 +8,10 @@
 
 - Minor improvements and code optimizations
 
+### Bugs
+
+- Fixed an error that occurred when running any Rails command before the database was set up
+
 ## v0.4.0
 
 ### Breaking
