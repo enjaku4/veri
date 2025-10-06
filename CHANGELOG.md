@@ -10,7 +10,7 @@
 
 ### Bugs
 
-- Fixed an error that occurred when running any Rails command before the database was set up
+- Fixed error raised on Rails console commands when the database was not yet set up
 
 ## v0.4.0
 
