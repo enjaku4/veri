@@ -1,4 +1,12 @@
-<!--TODO-->
+## v0.5.0
+
+### Features
+
+- Added support for pbkdf2 password hashing algorithm
+
+### Misc
+
+- Minor improvements and code optimizations
 
 ## v0.4.0
 
