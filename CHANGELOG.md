@@ -8,10 +8,6 @@
 
 - Added support for pbkdf2 password hashing algorithm
 
-### Misc
-
-- Minor improvements and code optimizations
-
 ### Bugs
 
 - Fixed error raised on Rails console commands when the database was not yet set up
