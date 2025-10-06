@@ -288,8 +288,14 @@ session.terminate
 # Terminate all sessions
 Veri::Session.terminate_all
 
+# Terminate all sessions for a specific user
+user.sessions.terminate_all
+
 # Clean up expired/inactive sessions, and sessions with deleted tenant
 Veri::Session.prune
+
+# Clean up expired/inactive sessions for a specific user
+user.sessions.prune
 ```
 
 ## Account Lockout
