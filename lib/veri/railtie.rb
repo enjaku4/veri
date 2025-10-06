@@ -4,7 +4,8 @@ module Veri
   class Railtie < Rails::Railtie
     initializer "veri.to_prepare" do |app|
       app.config.to_prepare do
-        if ActiveRecord::Base.connection.data_source_exists?("veri_sessions")
+        connection = ActiveRecord::Base.connection
+        if connection.database_exists? && connection.data_source_exists?("veri_sessions")
           Veri::Session.where.not(tenant_id: nil).distinct.pluck(:tenant_type).each do |tenant_class|
             tenant_class.constantize
           rescue NameError => e
