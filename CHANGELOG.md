@@ -1,5 +1,9 @@
 ## v0.5.0
 
+### Breaking
+
+- Dropped support for Rails 7.1
+
 ### Features
 
 - Added support for pbkdf2 password hashing algorithm
