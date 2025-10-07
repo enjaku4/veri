@@ -9,7 +9,7 @@ plugins:
   - rubocop-thread_safety
 
 AllCops:
-  TargetRailsVersion: 7.1
+  TargetRailsVersion: 7.2
   TargetRubyVersion: 3.2
   NewCops: enable
 
@@ -118,6 +118,9 @@ Style/Lambda:
   EnforcedStyle: literal
 
 Style/MutableConstant:
+  Enabled: false
+
+Style/ParallelAssignment:
   Enabled: false
 
 Style/RedundantFetchBlock:

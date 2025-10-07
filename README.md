@@ -8,15 +8,12 @@ Veri is a cookie-based authentication library for Ruby on Rails that provides es
 **Key Features:**
 
 - Cookie-based authentication with database-stored sessions
-- Multiple password hashing algorithms (argon2, bcrypt, scrypt)
+- Multiple password hashing algorithms (argon2, bcrypt, pbkdf2, scrypt)
 - Granular session management and control
 - Return path handling
 - User impersonation feature
 - Account lockout functionality
 - Multi-tenancy support
-
-> ⚠️ **Development Notice**<br>
-> Veri is functional but in early development. Breaking changes may occur in minor releases until v1.0!
 
 ## Table of Contents
 
@@ -73,7 +70,7 @@ If customization is required, configure Veri in an initializer:
 ```rb
 # These are the default values; you can change them as needed
 Veri.configure do |config|
-  config.hashing_algorithm = :argon2       # Password hashing algorithm (:argon2, :bcrypt, or :scrypt)
+  config.hashing_algorithm = :argon2       # Password hashing algorithm (:argon2, :bcrypt, :pbkdf2, or :scrypt)
   config.inactive_session_lifetime = nil   # Session inactivity timeout (nil means sessions never expire due to inactivity)
   config.total_session_lifetime = 14.days  # Maximum session duration regardless of activity
   config.user_model_name = "User"          # Your user model name
@@ -115,6 +112,22 @@ end
 This is a simplified example of how to use Veri's authentication methods:
 
 ```rb
+class RegistrationsController < ApplicationController
+  skip_authentication
+
+  def create
+    user = User.new(user_params)
+
+    if user.valid?
+      user.update_password(user_params[:password])
+      log_in(user)
+      redirect_to dashboard_path
+    else
+      render :new, status: :unprocessable_content
+    end
+  end
+end
+
 class SessionsController < ApplicationController
   skip_authentication except: [:destroy]
 
@@ -126,7 +139,7 @@ class SessionsController < ApplicationController
       redirect_to return_path || dashboard_path
     else
       flash.now[:alert] = "Invalid credentials"
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -288,8 +301,14 @@ session.terminate
 # Terminate all sessions
 Veri::Session.terminate_all
 
-# Clean up expired/inactive sessions
+# Terminate all sessions for a specific user
+user.sessions.terminate_all
+
+# Clean up expired/inactive sessions, and sessions with deleted tenant
 Veri::Session.prune
+
+# Clean up expired/inactive sessions for a specific user
+user.sessions.prune
 ```
 
 ## Account Lockout

@@ -5,6 +5,7 @@ require "active_support"
 
 require_relative "veri/password/argon2"
 require_relative "veri/password/bcrypt"
+require_relative "veri/password/pbkdf2"
 require_relative "veri/password/scrypt"
 
 require_relative "veri/inputs/base"

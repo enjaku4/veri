@@ -16,7 +16,7 @@ RSpec.describe Veri::Inputs::HashingAlgorithm do
   end
 
   describe "valid inputs" do
-    [:argon2, :bcrypt, :scrypt].each do |algorithm|
+    [:argon2, :bcrypt, :pbkdf2, :scrypt].each do |algorithm|
       it_behaves_like "successful input processing", algorithm
     end
   end

@@ -100,23 +100,15 @@ module Veri
       end
 
       def prune
-        expired_scope = where(expires_at: ...Time.current)
+        expired.or(inactive).delete_all
 
-        if Veri::Configuration.inactive_session_lifetime
-          inactive_cutoff = Time.current - Veri::Configuration.inactive_session_lifetime
-          expired_scope = expired_scope.or(where(last_seen_at: ...inactive_cutoff))
-        end
-
-        expired_scope.delete_all
-
-        ids = where.not(tenant_id: nil).includes(:tenant).filter_map do |session|
-          session.tenant
-          nil
+        orphaned_tenant_sessions = where.not(tenant_id: nil).includes(:tenant).filter_map do |session|
+          !session.tenant
         rescue ActiveRecord::RecordNotFound
           session.id
         end
 
-        where(id: ids).delete_all if ids.any?
+        where(id: orphaned_tenant_sessions).delete_all if orphaned_tenant_sessions.any?
       end
 
       alias terminate_all delete_all
