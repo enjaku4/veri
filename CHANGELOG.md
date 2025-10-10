@@ -1,3 +1,9 @@
+## v1.0.1
+
+### Bugs
+
+- Fixed tenant validation blocking Rails console and database commands when orphaned tenant classes exist
+
 ## v1.0.0
 
 ### Breaking

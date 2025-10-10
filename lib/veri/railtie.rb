@@ -2,6 +2,10 @@ require "rails/railtie"
 
 module Veri
   class Railtie < Rails::Railtie
+    def self.server_running?
+      !!defined?(Rails::Server)
+    end
+
     def self.table_exists?
       ActiveRecord::Base.connection.data_source_exists?("veri_sessions")
     rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
@@ -10,7 +14,7 @@ module Veri
 
     initializer "veri.to_prepare" do |app|
       app.config.to_prepare do
-        if Veri::Railtie.table_exists?
+        if Veri::Railtie.server_running? && Veri::Railtie.table_exists?
           Veri::Session.where.not(tenant_id: nil).distinct.pluck(:tenant_type).each do |tenant_class|
             tenant_class.constantize
           rescue NameError => e
