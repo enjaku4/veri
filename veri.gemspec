@@ -4,12 +4,16 @@ Gem::Specification.new do |spec|
   spec.name = "veri"
   spec.version = Veri::VERSION
   spec.authors = ["enjaku4"]
+  spec.email = ["enjaku4@icloud.com"]
   spec.homepage = "https://github.com/enjaku4/veri"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
+  spec.metadata["documentation_uri"] = "#{spec.homepage}/blob/main/README.md"
   spec.metadata["rubygems_mfa_required"] = "true"
   spec.summary = "Minimal cookie-based authentication library for Ruby on Rails"
+  spec.description = "Veri provides cookie-based authentication for Ruby on Rails applications with secure password storage, granular session management, multi-tenancy support, and user impersonation feature, without imposing business logic"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2", "< 3.5"
 
