@@ -1,19 +1,21 @@
-# Veri: Minimal Authentication Framework for Rails
+# Veri: Minimal Authentication for Rails
 
 [![Gem Version](https://badge.fury.io/rb/veri.svg)](http://badge.fury.io/rb/veri)
+[![Downloads](https://img.shields.io/gem/dt/veri.svg)](https://rubygems.org/gems/veri)
 [![Github Actions badge](https://github.com/enjaku4/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/enjaku4/veri/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/enjaku4/veri.svg)](LICENSE)
 
-Veri is a cookie-based authentication library for Ruby on Rails that provides essential authentication building blocks without imposing business logic. Unlike full-featured solutions, Veri gives you complete control over your authentication flow while handling the complex underlying mechanics of secure password storage and session management.
+Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions, Veri doesn't impose business logic or generate controllers, views, and mailers for you. Instead, it provides essential authentication building blocks giving you complete control over your authentication flow while handling the complex underlying mechanics of secure password storage and session management.
 
 **Key Features:**
 
 - Cookie-based authentication with database-stored sessions
 - Multiple password hashing algorithms (argon2, bcrypt, pbkdf2, scrypt)
+- Multi-tenancy support
 - Granular session management and control
-- Return path handling
 - User impersonation feature
 - Account lockout functionality
-- Multi-tenancy support
+- Return path handling
 
 ## Table of Contents
 
@@ -65,7 +67,7 @@ rails db:migrate
 
 ## Configuration
 
-If customization is required, configure Veri in an initializer:
+Configure Veri in an initializer if customization is needed:
 
 ```rb
 # These are the default values; you can change them as needed
@@ -174,7 +176,7 @@ current_session
 
 ### User Impersonation (Shapeshifting)
 
-Veri provides user impersonation functionality that allows, for example, administrators to temporarily assume another user's identity:
+Veri provides user impersonation functionality that allows administrators to temporarily assume another user's identity:
 
 ```rb
 module Admin
@@ -219,7 +221,7 @@ shapeshifter?
 
 ### When unauthenticated
 
-Override this private method to customize authentication behavior:
+Override this private method to customize unauthenticated user behavior:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -231,10 +233,8 @@ class ApplicationController < ActionController::Base
 
   private
 
-  # Customize unauthenticated user handling
   def when_unauthenticated
-    # By default redirects back with a fallback to the root path if the request format is HTML,
-    # otherwise responds with 401 Unauthorized
+    # By default, redirects back (HTML) or returns 401 (other formats)
     redirect_to login_path
   end
 end
@@ -313,7 +313,7 @@ user.sessions.prune
 
 ## Account Lockout
 
-Veri provides account lockout functionality to temporarily disable user accounts (for example, after too many failed login attempts or for security reasons).
+Veri provides account lockout functionality to temporarily disable user accounts.
 
 ```rb
 # Lock a user account
@@ -332,11 +332,11 @@ User.locked
 User.unlocked
 ```
 
-When an account is locked, the user cannot log in. If the user is already logged in, their sessions will be terminated, and they will be treated as an unauthenticated user.
+When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they're treated as unauthenticated.
 
 ## Multi-Tenancy
 
-Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants (e.g., organizations, clients, or subdomains).
+Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants like organizations, clients, or subdomains.
 
 ### Setting Up Multi-Tenancy
 
@@ -400,7 +400,7 @@ Access authentication state in your views:
 
 ## Testing
 
-Veri doesn't provide test helpers, but you can easily create your own:
+Veri doesn't include test helpers, but you can easily create your own:
 
 ### Request Specs (Recommended)
 
