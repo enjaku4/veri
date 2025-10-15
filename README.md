@@ -213,9 +213,9 @@ Controller helper:
 shapeshifter?
 ```
 
-### When unauthenticated
+### When Unauthenticated
 
-Override this private method to customize unauthenticated user behavior:
+Override this private method to customize behavior for unauthenticated users:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -326,11 +326,11 @@ User.locked
 User.unlocked
 ```
 
-When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they're treated as unauthenticated.
+When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
 
 ## Multi-Tenancy
 
-Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants like organizations, clients, or subdomains.
+Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
 
 ### Setting Up Multi-Tenancy
 
