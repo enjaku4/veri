@@ -1,4 +1,64 @@
 RSpec.describe Veri::Session do
+  describe ".in_tenant" do
+    subject { described_class.in_tenant(tenant) }
+
+    context "when tenant is a string" do
+      let(:tenant) { "subdomain" }
+
+      let!(:session_in_tenant) do
+        described_class.create!(
+          expires_at: 1.hour.from_now,
+          authenticatable: User.create!,
+          hashed_token: "foo",
+          last_seen_at: Time.current,
+          tenant_type: "subdomain",
+          tenant_id: nil
+        )
+      end
+
+      before do
+        described_class.create!(
+          expires_at: 1.hour.from_now,
+          authenticatable: User.create!,
+          hashed_token: "bar",
+          last_seen_at: Time.current,
+          tenant_type: "Company",
+          tenant_id: 42
+        )
+      end
+
+      it { is_expected.to contain_exactly(session_in_tenant) }
+    end
+
+    context "when tenant is an ActiveRecord model" do
+      let(:tenant) { Company.create! }
+
+      let!(:session_in_tenant) do
+        described_class.create!(
+          expires_at: 1.hour.from_now,
+          authenticatable: User.create!,
+          hashed_token: "foo",
+          last_seen_at: Time.current,
+          tenant_type: "Company",
+          tenant_id: tenant.id
+        )
+      end
+
+      before do
+        described_class.create!(
+          expires_at: 1.hour.from_now,
+          authenticatable: User.create!,
+          hashed_token: "bar",
+          last_seen_at: Time.current,
+          tenant_type: "subdomain",
+          tenant_id: nil
+        )
+      end
+
+      it { is_expected.to contain_exactly(session_in_tenant) }
+    end
+  end
+
   describe ".active" do
     subject { described_class.active }
 
