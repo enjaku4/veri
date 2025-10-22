@@ -362,7 +362,19 @@ Sessions expose their tenant through `tenant` method:
 # Returns the tenant (string, model instance, or nil in single-tenant applications)
 session.tenant
 ```
-<!--TODO: describe fetching and terminating sessions by both user and tenant-->
+
+To manage sessions for a specific tenant:
+
+```rb
+# Fetch all sessions for a given tenant
+Veri::Session.in_tenant(tenant)
+
+# Fetch all user sessions for a given tenant
+user.sessions.in_tenant(tenant)
+
+# Terminate all user sessions for a given tenant
+user.sessions.in_tenant(tenant).terminate_all
+```
 
 ### Migration Helpers
 
