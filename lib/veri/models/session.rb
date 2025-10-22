@@ -8,6 +8,7 @@ module Veri
     belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
 
+    scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
     scope :expired, -> { where(expires_at: ...Time.current) }
     scope :inactive, -> do

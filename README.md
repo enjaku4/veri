@@ -363,6 +363,19 @@ Sessions expose their tenant through `tenant` method:
 session.tenant
 ```
 
+To manage sessions for a specific tenant:
+
+```rb
+# Fetch all sessions for a given tenant
+Veri::Session.in_tenant(tenant)
+
+# Fetch sessions for a specific user within a tenant
+user.sessions.in_tenant(tenant)
+
+# Terminate all sessions for a specific user within a tenant
+user.sessions.in_tenant(tenant).terminate_all
+```
+
 ### Migration Helpers
 
 Handle tenant changes when models are renamed or removed. These are irreversible data migrations.

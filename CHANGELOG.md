@@ -1,3 +1,13 @@
+## v1.1.0
+
+### Features
+
+- Added `Veri::Session.in_tenant` method to fetch sessions for a specific tenant
+
+### Misc
+
+- Added support for Rails 8.1
+
 ## v1.0.1
 
 ### Bugs
