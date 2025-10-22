@@ -5,11 +5,11 @@
 [![Github Actions badge](https://github.com/enjaku4/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/enjaku4/veri/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/enjaku4/veri.svg)](LICENSE)
 
-Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks giving you complete control over your authentication flow. This approach works well for applications that need custom authentication experiences - instead of modifying existing templates or generated controllers, you build your own interface while Veri handles the complex underlying mechanics of secure password storage and session verification. On top of that, Veri provides multi-tenancy, granular session management, multiple password hashing algorithms, and user impersonation feature.
+Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks giving you complete control over your authentication flow. It's ideal for applications that require custom authentication experiences: you design your own interfaces and flows, while Veri handles the complex underlying mechanics of secure password storage and session verification. On top of that, Veri supports multi-tenancy, granular session management, multiple password hashing algorithms, and includes a user impersonation feature.
 
 **Example of Usage:**
 
-Consider a SaaS application where users need to see all their active sessions across different devices and browsers, with the ability to terminate specific sessions remotely. The same session management interface is provided to administrators in their admin panel, giving them visibility into user activity and the ability to terminate user sessions or lock accounts for security reasons. Additionally, administrators have the ability to temporarily assume a user's identity for troubleshooting purposes. All of this can be achieved easily with Veri.
+Consider a multi-tenant SaaS application where users can view all their active sessions across devices and browsers and terminate specific sessions remotely. Administrators have the same interface in their admin panel, giving them visibility into user activity and the ability to end sessions or lock accounts for security. Additionally, administrators can temporarily assume a user’s identity for troubleshooting. All of this is easily handled with Veri.
 
 ## Table of Contents
 
