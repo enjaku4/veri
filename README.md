@@ -5,7 +5,7 @@
 [![Github Actions badge](https://github.com/enjaku4/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/enjaku4/veri/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/enjaku4/veri.svg)](LICENSE)
 
-Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks giving you complete control over your authentication flow. It's ideal for applications that require custom authentication experiences: you design your own interfaces and flows, while Veri handles the complex underlying mechanics of secure password storage and session verification. On top of that, Veri supports multi-tenancy, granular session management, multiple password hashing algorithms, and includes a user impersonation feature.
+Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks. It's ideal for applications that require custom authentication experiences: you design your own interfaces and flows, while Veri handles the complex underlying mechanics of secure password storage and session verification. On top of that, Veri supports multi-tenancy, granular session management, multiple password hashing algorithms, and includes a user impersonation feature.
 
 **Example of Usage:**
 
