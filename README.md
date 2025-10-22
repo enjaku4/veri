@@ -362,6 +362,7 @@ Sessions expose their tenant through `tenant` method:
 # Returns the tenant (string, model instance, or nil in single-tenant applications)
 session.tenant
 ```
+<!--TODO: describe fetching and terminating sessions by both user and tenant-->
 
 ### Migration Helpers
 
