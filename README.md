@@ -369,10 +369,10 @@ To manage sessions for a specific tenant:
 # Fetch all sessions for a given tenant
 Veri::Session.in_tenant(tenant)
 
-# Fetch all user sessions for a given tenant
+# Fetch sessions for a specific user within a tenant
 user.sessions.in_tenant(tenant)
 
-# Terminate all user sessions for a given tenant
+# Terminate all sessions for a specific user within a tenant
 user.sessions.in_tenant(tenant).terminate_all
 ```
 
