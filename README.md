@@ -5,11 +5,13 @@
 [![Github Actions badge](https://github.com/enjaku4/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/enjaku4/veri/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/enjaku4/veri.svg)](LICENSE)
 
-Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks. It's ideal for applications that require custom authentication experiences: you design your own interfaces and flows, while Veri handles the complex underlying mechanics of secure password storage and session verification. On top of that, Veri supports multi-tenancy, granular session management, multiple password hashing algorithms, and includes a user impersonation feature.
+Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks. It's ideal for applications that require custom authentication experiences: you design your own interfaces and flows, while Veri handles the complex underlying mechanics of secure password storage and session verification.
+
+Veri supports multi-tenancy, granular session management, multiple password hashing algorithms, and provides a user impersonation feature for administration purposes.
 
 **Example of Usage:**
 
-Consider a multi-tenant SaaS application where users can view all their active sessions across devices and browsers and terminate specific sessions remotely. Administrators have the same interface in their admin panel, giving them visibility into user activity and the ability to end sessions or lock accounts for security. Additionally, administrators can temporarily assume a user’s identity for troubleshooting. All of this is easily handled with Veri.
+Consider a multi-tenant SaaS application where users need to manage their active sessions across devices and browsers, terminating specific sessions remotely when needed. Administrators require similar capabilities in their admin panel, with additional powers to lock accounts and temporarily assume user identities for troubleshooting. You can build all this easily with Veri.
 
 ## Table of Contents
 
@@ -39,7 +41,7 @@ gem "veri"
 
 Install the gem:
 
-```bash
+```shell
 bundle install
 ```
 
@@ -334,7 +336,7 @@ Veri supports multi-tenancy, allowing you to isolate authentication sessions bet
 
 ### Setting Up Multi-Tenancy
 
-To enable multi-tenancy, override `current_tenant` method:
+To isolate authentication sessions between different tenants, override the `current_tenant` method:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -349,7 +351,7 @@ class ApplicationController < ActionController::Base
     request.subdomain
 
     # Option 2: Model-based tenancy (e.g., organization)
-    # Company.find_by(subdomain: request.subdomain)
+    Company.find_by(subdomain: request.subdomain)
   end
 end
 ```
