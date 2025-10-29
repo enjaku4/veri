@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.metadata["documentation_uri"] = "#{spec.homepage}/blob/main/README.md"
   spec.metadata["rubygems_mfa_required"] = "true"
   spec.summary = "Minimal cookie-based authentication library for Ruby on Rails"
-  spec.description = "Veri provides cookie-based authentication for Ruby on Rails applications with secure password storage, granular session management, multi-tenancy support, and user impersonation feature, without imposing business logic"
+  spec.description = "Minimal cookie-based authentication for Rails applications with multi-tenancy support and granular session management"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2", "< 3.5"
 
