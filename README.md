@@ -20,11 +20,11 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Configuration](#configuration)
   - [Password Management](#password-management)
   - [Controller Integration](#controller-integration)
-  - [User Impersonation](#user-impersonation)
   - [When Unauthenticated](#when-unauthenticated)
   - [Authentication Sessions](#authentication-sessions)
   - [Account Lockout](#account-lockout)
   - [Multi-Tenancy](#multi-tenancy)
+  - [User Impersonation](#user-impersonation)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -91,9 +91,9 @@ user.verify_password("password")
 
 ## Controller Integration
 
-### Basic Setup
+### Setup
 
-Include the authentication module and configure protection:
+Include the authentication module in your controllers and configure protection:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -172,51 +172,6 @@ return_path
 
 # Returns current authentication session
 current_session
-```
-
-## User Impersonation
-
-Veri allows administrators to temporarily assume another user's identity:
-
-```rb
-module Admin
-  class ImpersonationController < ApplicationController
-    def create
-      user = User.find(params[:user_id])
-      current_session.shapeshift(user)
-      redirect_to root_path, notice: "Now viewing as #{user.name}"
-    end
-
-    def destroy
-      original_user = current_session.true_identity
-      current_session.to_true_identity
-      redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
-    end
-  end
-end
-```
-
-Available session methods:
-
-```rb
-# Assume another user's identity (maintains original identity)
-session.shapeshift(user)
-
-# Return to original identity
-session.to_true_identity
-
-# Returns true if currently shapeshifted
-session.shapeshifted?
-
-# Returns original user when shapeshifted, otherwise current user
-session.true_identity
-```
-
-Controller helper:
-
-```rb
-# Returns true if the current session is shapeshifted
-shapeshifter?
 ```
 
 ## When Unauthenticated
@@ -315,7 +270,7 @@ user.sessions.prune
 
 ## Account Lockout
 
-Veri provides account lockout functionality to temporarily disable user accounts.
+Veri provides an account lockout functionality to temporarily disable user accounts.
 
 ```rb
 # Lock a user account
@@ -392,6 +347,51 @@ migrate_authentication_tenant!("Organization", "Company")
 
 # Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
+```
+
+## User Impersonation
+
+Veri allows administrators to temporarily assume another user's identity:
+
+```rb
+module Admin
+  class ImpersonationController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      current_session.shapeshift(user)
+      redirect_to root_path, notice: "Now viewing as #{user.name}"
+    end
+
+    def destroy
+      original_user = current_session.true_identity
+      current_session.to_true_identity
+      redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
+    end
+  end
+end
+```
+
+Available session methods:
+
+```rb
+# Assume another user's identity (maintains original identity)
+session.shapeshift(user)
+
+# Return to original identity
+session.to_true_identity
+
+# Returns true if currently shapeshifted
+session.shapeshifted?
+
+# Returns original user when shapeshifted, otherwise current user
+session.true_identity
+```
+
+Controller helper:
+
+```rb
+# Returns true if the current session is shapeshifted
+shapeshifter?
 ```
 
 ## View Helpers
