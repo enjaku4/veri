@@ -5,9 +5,9 @@
 [![Github Actions badge](https://github.com/enjaku4/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/enjaku4/veri/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/enjaku4/veri.svg)](LICENSE)
 
-Veri is a cookie-based authentication library for Ruby on Rails. Unlike other solutions that generate controllers, views, and mailers for you, Veri provides only essential building blocks. It's ideal for applications that require custom authentication experiences: you design your own interfaces and flows, while Veri handles the complex underlying mechanics of secure password storage and session verification.
+Veri is a minimalistic cookie-based authentication library for Ruby on Rails. It provides only essential building blocks for secure user authentication without cluttering your app with generated controllers or views, which is ideal for custom authentication flows.
 
-Veri supports multi-tenancy, granular session management, multiple password hashing algorithms, and provides a user impersonation feature for administration purposes.
+Veri focuses on granular authentication management, supports multi-tenancy, several password hashing algorithms, and includes a user impersonation feature for administration purposes.
 
 **Example of Usage:**
 
@@ -20,6 +20,8 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Configuration](#configuration)
   - [Password Management](#password-management)
   - [Controller Integration](#controller-integration)
+  - [User Impersonation](#user-impersonation)
+  - [When Unauthenticated](#when-unauthenticated)
   - [Authentication Sessions](#authentication-sessions)
   - [Account Lockout](#account-lockout)
   - [Multi-Tenancy](#multi-tenancy)
@@ -45,7 +47,7 @@ Install the gem:
 bundle install
 ```
 
-Generate the migration for your user model (replace `users` with your user table name if different):
+Generate the migration for your user model (replace `users` with your table name if different):
 
 ```shell
 # For standard integer IDs
@@ -105,9 +107,11 @@ class PicturesController < ApplicationController
 end
 ```
 
-### Authentication Methods
+Both `with_authentication` and `skip_authentication` work exactly the same as Rails' `before_action` and `skip_before_action` methods.
 
-This is a simplified example of how to use Veri's authentication methods:
+### Basic Authentication Flow
+
+Here's a simplified example of Veri's authentication methods. In real applications, business logic would be more complex and typically placed in the service layer:
 
 ```rb
 class RegistrationsController < ApplicationController
@@ -170,9 +174,9 @@ return_path
 current_session
 ```
 
-### User Impersonation (Shapeshifting)
+## User Impersonation
 
-Veri provides user impersonation functionality that allows administrators to temporarily assume another user's identity:
+Veri allows administrators to temporarily assume another user's identity:
 
 ```rb
 module Admin
@@ -215,9 +219,9 @@ Controller helper:
 shapeshifter?
 ```
 
-### When Unauthenticated
+## When Unauthenticated
 
-Override this private method to customize behavior for unauthenticated users:
+By default, when unauthenticated, Veri redirects back (HTML) or returns 401 (other formats). You can override this private method to customize behavior for unauthenticated users:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -230,11 +234,12 @@ class ApplicationController < ActionController::Base
   private
 
   def when_unauthenticated
-    # By default, redirects back (HTML) or returns 401 (other formats)
     redirect_to login_path
   end
 end
 ```
+
+The `when_unauthenticated` method can be overridden in any controller to provide controller-specific unauthenticated access handling.
 
 ## Authentication Sessions
 
@@ -253,9 +258,10 @@ current_session
 ### Session Information
 
 ```rb
+# Get the authenticated user
 session.identity
-# => authenticated user
 
+# Get session details
 session.info
 # => {
 #   device: "Desktop",
@@ -328,15 +334,17 @@ User.locked
 User.unlocked
 ```
 
-When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
+When an account is locked, the user cannot log in. Existing sessions are terminated automatically.
 
 ## Multi-Tenancy
 
-Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
+Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations or subdomains. By default, Veri assumes a single-tenant setup and `current_tenant` returns `nil`.
 
-### Setting Up Multi-Tenancy
+Tenants can be represented as either a string or an `ActiveRecord` model instance.
 
-To isolate authentication sessions between different tenants, override the `current_tenant` method:
+### Setup
+
+Override the `current_tenant` method to enable tenant isolation:
 
 ```rb
 class ApplicationController < ActionController::Base
@@ -356,18 +364,14 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-### Session Tenant Access
+### Managing Tenant Sessions
 
-Sessions expose their tenant through `tenant` method:
+You can access tenant information and manage sessions for a specific tenant:
 
 ```rb
-# Returns the tenant (string, model instance, or nil in single-tenant applications)
+# Get the session's tenant
 session.tenant
-```
 
-To manage sessions for a specific tenant:
-
-```rb
 # Fetch all sessions for a given tenant
 Veri::Session.in_tenant(tenant)
 
@@ -378,9 +382,9 @@ user.sessions.in_tenant(tenant)
 user.sessions.in_tenant(tenant).terminate_all
 ```
 
-### Migration Helpers
+### Tenant Migrations
 
-Handle tenant changes when models are renamed or removed. These are irreversible data migrations.
+When you rename or remove models used as tenants, you need to update Veri's stored data accordingly. Use these irreversible data migrations:
 
 ```rb
 # Rename a tenant class (e.g., when you rename your Organization model to Company)
@@ -392,7 +396,7 @@ delete_authentication_tenant!("Organization")
 
 ## View Helpers
 
-Access authentication state in your views:
+Check authentication state in your views:
 
 ```erb
 <% if logged_in? %>
