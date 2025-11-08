@@ -352,6 +352,11 @@ delete_authentication_tenant!("Organization")
 
 ## User Impersonation
 
+> ⚠️ **Known Issues**
+> - User Impersonation in multitenant environments has security implications
+> - Use only in single-tenant applications
+> - Full fix coming in v2.0
+
 Veri provides user impersonation functionality that allows administrators to temporarily assume another user's identity:
 
 ```rb
