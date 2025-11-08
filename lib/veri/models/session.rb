@@ -7,7 +7,7 @@ module Veri
     belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
     belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
-
+    # TODO: add shapeshifted scope
     scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
     scope :expired, -> { where(expires_at: ...Time.current) }
@@ -56,6 +56,7 @@ module Veri
     def shapeshifted? = original_authenticatable.present?
     def true_identity = original_authenticatable || authenticatable
 
+    # TODO: add tenant parameter
     def shapeshift(user)
       update!(
         shapeshifted_at: Time.current,
@@ -67,6 +68,7 @@ module Veri
       )
     end
 
+    # TODO: restore tenant info as well
     def to_true_identity
       update!(
         shapeshifted_at: nil,

@@ -11,6 +11,7 @@ module Veri
     class_option :uuid, type: :boolean, default: false, desc: "Use UUIDs as primary keys"
 
     def create_migrations
+      # TODO: add original tenant columns
       migration_template "add_veri_authentication.rb.erb", "db/migrate/add_veri_authentication.rb"
     end
 
