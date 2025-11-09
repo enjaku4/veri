@@ -72,6 +72,7 @@ module Veri
       if logged_in? && current_session.active?
         if current_user.locked?
           log_out
+          # TODO: add overridable when_locked that by default calls when_unauthenticated
           when_unauthenticated
         else
           current_session.update_info(request)
