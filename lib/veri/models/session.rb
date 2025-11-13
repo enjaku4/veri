@@ -7,6 +7,7 @@ module Veri
     belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
     belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
+    belongs_to :original_tenant, polymorphic: true, optional: true
     # TODO: add shapeshifted scope
     scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
@@ -56,7 +57,7 @@ module Veri
     def shapeshifted? = original_authenticatable.present?
     def true_identity = original_authenticatable || authenticatable
 
-    # TODO: add tenant parameter
+    # TODO: add tenant parameter, or pass session instead?
     def shapeshift(user)
       update!(
         shapeshifted_at: Time.current,
@@ -83,6 +84,17 @@ module Veri
       record = super
 
       raise ActiveRecord::RecordNotFound.new(nil, tenant_type, nil, tenant_id) if tenant_id.present? && !record
+
+      record
+    end
+
+    # TODO: sort out duplicated code, add specs
+    def original_tenant
+      return original_tenant_type if original_tenant_type.present? && original_tenant_id.blank?
+
+      record = super
+
+      raise ActiveRecord::RecordNotFound.new(nil, original_tenant_type, nil, original_tenant_id) if original_tenant_id.present? && !record
 
       record
     end
