@@ -7,6 +7,7 @@ module Veri
     belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
     belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
+    belongs_to :original_tenant, polymorphic: true, optional: true
 
     scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
@@ -56,10 +57,20 @@ module Veri
     def shapeshifted? = original_authenticatable.present?
     def true_identity = original_authenticatable || authenticatable
 
-    def shapeshift(user)
+    # TODO: add specs
+    def shapeshift(user, tenant: nil)
+      resolved_tenant ||= Veri::Inputs::Tenant.new(
+        tenant,
+        error: Veri::InvalidTenantError,
+        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{tenant.inspect}`"
+      ).resolve
+
       update!(
         shapeshifted_at: Time.current,
         original_authenticatable: authenticatable,
+        original_tenant_type: tenant_type,
+        original_tenant_id: tenant_id,
+        **resolved_tenant,
         authenticatable: Veri::Inputs::Authenticatable.new(
           user,
           message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{user.inspect}`"
@@ -67,10 +78,15 @@ module Veri
       )
     end
 
+    # TODO: add specs
     def to_true_identity
       update!(
         shapeshifted_at: nil,
         authenticatable: original_authenticatable,
+        tenant_type: original_tenant_type,
+        tenant_id: original_tenant_id,
+        original_tenant_type: nil,
+        original_tenant_id: nil,
         original_authenticatable: nil
       )
     end
@@ -81,6 +97,17 @@ module Veri
       record = super
 
       raise ActiveRecord::RecordNotFound.new(nil, tenant_type, nil, tenant_id) if tenant_id.present? && !record
+
+      record
+    end
+
+    # TODO: sort out duplicated code, add specs
+    def original_tenant
+      return original_tenant_type if original_tenant_type.present? && original_tenant_id.blank?
+
+      record = super
+
+      raise ActiveRecord::RecordNotFound.new(nil, original_tenant_type, nil, original_tenant_id) if original_tenant_id.present? && !record
 
       record
     end
