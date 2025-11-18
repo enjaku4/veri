@@ -92,24 +92,12 @@ module Veri
     end
 
     def tenant
-      return tenant_type if tenant_type.present? && tenant_id.blank?
-
-      record = super
-
-      raise ActiveRecord::RecordNotFound.new(nil, tenant_type, nil, tenant_id) if tenant_id.present? && !record
-
-      record
+      resolve_tenant(tenant_type, tenant_id) { super }
     end
 
-    # TODO: sort out duplicated code, add specs
+    # TODO: add specs
     def original_tenant
-      return original_tenant_type if original_tenant_type.present? && original_tenant_id.blank?
-
-      record = super
-
-      raise ActiveRecord::RecordNotFound.new(nil, original_tenant_type, nil, original_tenant_id) if original_tenant_id.present? && !record
-
-      record
+      resolve_tenant(original_tenant_type, original_tenant_id) { super }
     end
 
     class << self
@@ -140,6 +128,18 @@ module Veri
       end
 
       alias terminate_all delete_all
+    end
+
+    private
+
+    def resolve_tenant(type, id)
+      return type if type.present? && id.blank?
+
+      record = yield
+
+      raise ActiveRecord::RecordNotFound.new(nil, type, nil, id) if id.present? && !record
+
+      record
     end
   end
 end
