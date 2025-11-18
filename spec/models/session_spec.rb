@@ -384,6 +384,12 @@ RSpec.describe Veri::Session do
   describe "#to_true_identity" do
     subject { session.to_true_identity }
 
+    let(:original_tenant) { Company.create! }
+    let(:tenant) { Company.create! }
+
+    let(:original_user) { User.create! }
+    let(:user) { User.create! }
+
     let(:session) do
       described_class.create!(
         expires_at: 1.hour.from_now,
@@ -391,17 +397,22 @@ RSpec.describe Veri::Session do
         original_authenticatable: original_user,
         shapeshifted_at: Time.current,
         hashed_token: "foo",
-        last_seen_at: Time.current
+        last_seen_at: Time.current,
+        tenant:,
+        original_tenant:
       )
     end
-    let(:original_user) { User.create! }
-    let(:user) { User.create! }
 
-    it "reverts the session to the original user and clears shapeshifted_at" do
-      expect { subject }
-        .to change(session, :shapeshifted_at).from(be_within(3.seconds).of(Time.current)).to(nil)
-        .and change(session, :authenticatable).from(user).to(original_user)
-        .and change(session, :original_authenticatable).from(original_user).to(nil)
+    it "reverts the session to the original user, restores tenant and clears shapeshift metadata" do
+      subject
+      session.reload
+
+      expect(session.shapeshifted_at).to be_nil
+      expect(session.authenticatable).to eq(original_user)
+      expect(session.original_authenticatable).to be_nil
+
+      expect(session.tenant).to eq(original_tenant)
+      expect(session.original_tenant).to be_nil
     end
   end
 

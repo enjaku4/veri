@@ -77,7 +77,6 @@ module Veri
       )
     end
 
-    # TODO: add specs
     def to_true_identity
       update!(
         shapeshifted_at: nil,
