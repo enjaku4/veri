@@ -1,3 +1,5 @@
+<!--TODO: new version and migration guide-->
+
 ## v1.1.0
 
 ### Features

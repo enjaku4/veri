@@ -88,7 +88,7 @@ module Veri
     end
 
     def when_unauthenticated
-      request.format.html? ? redirect_back(fallback_location: root_path) : head(:unauthorized)
+      request.format.html? ? redirect_back_or_to(root_path) : head(:unauthorized)
     end
 
     def current_tenant = nil

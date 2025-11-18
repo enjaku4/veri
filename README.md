@@ -247,7 +247,7 @@ Veri::Session.expired
 ```
 
 ### Session Management
-
+<!--TODO: describe new prune-->
 ```rb
 # Terminate a specific session
 session.terminate
@@ -351,7 +351,7 @@ delete_authentication_tenant!("Organization")
 ```
 
 ## User Impersonation
-
+<!--TODO: remove warning, describe new interface-->
 > ⚠️ **Known Issues**
 > - User Impersonation in multitenant environments has security implications
 > - Use only in single-tenant applications
