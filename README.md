@@ -247,7 +247,7 @@ Veri::Session.expired
 ```
 
 ### Session Management
-
+<!--TODO: describe new prune-->
 ```rb
 # Terminate a specific session
 session.terminate
