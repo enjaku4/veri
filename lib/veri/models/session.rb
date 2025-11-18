@@ -57,7 +57,6 @@ module Veri
     def shapeshifted? = original_authenticatable.present?
     def true_identity = original_authenticatable || authenticatable
 
-    # TODO: add specs
     def shapeshift(user, tenant: nil)
       resolved_tenant ||= Veri::Inputs::Tenant.new(
         tenant,

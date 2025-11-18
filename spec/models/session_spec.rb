@@ -300,10 +300,19 @@ RSpec.describe Veri::Session do
   end
 
   describe "#shapeshift" do
-    subject { session.shapeshift(user) }
+    subject { session.shapeshift(user, tenant:) }
+
+    let(:session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: Time.current
+      )
+    end
 
     context "when user is not valid" do
-      let(:session) { described_class.new }
+      let(:tenant) { nil }
       let(:user) { nil }
 
       it "raises an error" do
@@ -311,23 +320,63 @@ RSpec.describe Veri::Session do
       end
     end
 
-    context "when user is valid" do
-      let(:session) do
-        described_class.create!(
-          expires_at: 1.hour.from_now,
-          authenticatable: original_user,
-          hashed_token: "foo",
-          last_seen_at: Time.current
-        )
-      end
-      let(:original_user) { User.create! }
+    context "when tenant is invalid" do
+      let(:tenant) { 123 }
       let(:user) { User.create! }
 
-      it "updates the session with the new user and sets shapeshifted_at" do
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`")
+      end
+    end
+
+    context "when tenant is nil" do
+      let(:tenant) { nil }
+      let(:user) { User.create! }
+      let(:original_user) { session.authenticatable }
+
+      it "updates the session with the new user and no tenant" do
         expect { subject }
           .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
           .and change(session, :original_authenticatable).from(nil).to(original_user)
           .and change(session, :authenticatable).from(original_user).to(user)
+      end
+
+      it "does not change tenant_type and tenant_id" do
+        expect { subject }.not_to(change { [session.reload.tenant_type, session.reload.tenant_id] })
+      end
+    end
+
+    context "when tenant is a string" do
+      let(:tenant) { "subdomain" }
+      let(:user) { User.create! }
+      let(:original_user) { session.authenticatable }
+
+      it "updates the session with the new user and tenant as a string" do
+        expect { subject }
+          .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
+          .and change(session, :original_authenticatable).from(nil).to(original_user)
+          .and change(session, :authenticatable).from(original_user).to(user)
+          .and change(session, :tenant_type).from(nil).to("subdomain")
+      end
+
+      it "does not change tenant_id" do
+        expect { subject }
+          .not_to change(session, :tenant_id)
+      end
+    end
+
+    context "when tenant is an ActiveRecord model" do
+      let(:tenant) { Company.create! }
+      let(:user) { User.create! }
+      let(:original_user) { session.authenticatable }
+
+      it "updates the session with the new user and tenant as a model instance" do
+        expect { subject }
+          .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
+          .and change(session, :original_authenticatable).from(nil).to(original_user)
+          .and change(session, :authenticatable).from(original_user).to(user)
+          .and change(session, :tenant_type).from(nil).to(tenant.class.to_s)
+          .and change(session, :tenant_id).from(nil).to(tenant.id)
       end
     end
   end
