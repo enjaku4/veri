@@ -95,7 +95,6 @@ module Veri
       resolve_tenant(tenant_type, tenant_id) { super }
     end
 
-    # TODO: add specs
     def original_tenant
       resolve_tenant(original_tenant_type, original_tenant_id) { super }
     end

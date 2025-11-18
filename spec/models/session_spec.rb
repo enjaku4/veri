@@ -388,6 +388,29 @@ RSpec.describe Veri::Session do
     end
   end
 
+  describe "#original_tenant" do
+    subject { session.original_tenant }
+
+    context "when original_tenant_type and original_tenant_id are both nil" do
+      let(:session) { described_class.new(original_tenant_type: nil, original_tenant_id: nil) }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when original_tenant_type is present and original_tenant_id is nil" do
+      let(:session) { described_class.new(original_tenant_type: "subdomain", original_tenant_id: nil) }
+
+      it { is_expected.to eq("subdomain") }
+    end
+
+    context "when original_tenant_type and original_tenant_id are both present" do
+      let(:original_tenant) { Company.create! }
+      let(:session) { described_class.new(original_tenant_type: original_tenant.class.to_s, original_tenant_id: original_tenant.id) }
+
+      it { is_expected.to eq(original_tenant) }
+    end
+  end
+
   describe ".establish" do
     subject { described_class.establish(authenticatable, request, tenant) }
 
