@@ -493,56 +493,32 @@ RSpec.describe Veri::Session do
   describe ".prune" do
     subject { described_class.prune }
 
-    let!(:session1) do
+    let(:tenant) { Company.create! }
+    let!(:session) do
       described_class.create!(
         expires_at: 1.hour.from_now,
         authenticatable: User.create!,
         hashed_token: "foo",
-        last_seen_at: 10.minutes.ago
-      )
-    end
-    let!(:session2) do
-      described_class.create!(
-        expires_at: 1.hour.from_now,
-        authenticatable: User.create!,
-        hashed_token: "bar",
-        last_seen_at: 3.minutes.ago,
-        tenant_type: "subdomain",
-        tenant_id: nil
+        last_seen_at: 10.minutes.ago,
+        tenant:
       )
     end
 
     before do
-      Array.new(3) do |i|
-        described_class.create!(
-          expires_at: 1.hour.ago,
-          authenticatable: User.create!,
-          hashed_token: "foo#{i}",
-          last_seen_at: 10.minutes.ago
-        )
-        described_class.create!(
-          expires_at: 1.hour.from_now,
-          authenticatable: User.create!,
-          hashed_token: "bar#{i}",
-          last_seen_at: 10.minutes.ago,
-          tenant_type: "Company",
-          tenant_id: 42
-        )
-      end
+      described_class.create!(
+        expires_at: 1.hour.ago,
+        authenticatable: User.create!,
+        hashed_token: "bar",
+        last_seen_at: Time.current,
+        tenant: Company.create!
+      )
     end
 
-    it "deletes all expired sessions and sessions with missing tenants" do
-      expect { subject }.to change(described_class, :count).from(8).to(2)
-      expect(described_class.where(id: [session1.id, session2.id])).to all(be_persisted)
-    end
-
-    context "when inactive session lifetime is set" do
-      before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
-
-      it "deletes sessions that are both expired and inactive" do
-        expect { subject }.to change(described_class, :count).from(8).to(1)
-        expect(described_class.where(id: session2.id)).to all(be_persisted)
-      end
+    it "deletes orphaned tenant sessions" do
+      tenant.destroy!
+      expect { subject }
+        .to change { described_class.exists?(id: session.id) }.from(true).to(false)
+        .and change(described_class, :count).from(2).to(1)
     end
   end
 

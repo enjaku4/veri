@@ -114,8 +114,6 @@ module Veri
       end
 
       def prune
-        expired.or(inactive).delete_all
-
         orphaned_tenant_sessions = where.not(tenant_id: nil).includes(:tenant).filter_map do |session|
           !session.tenant
         rescue ActiveRecord::RecordNotFound
