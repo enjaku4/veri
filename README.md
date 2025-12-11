@@ -265,8 +265,6 @@ user.sessions.inactive.terminate_all
 Veri::Session.expired.terminate_all
 ```
 
-```rb
-
 ## Account Lockout
 
 Veri provides account lockout functionality to temporarily disable user accounts.
