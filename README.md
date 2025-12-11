@@ -247,7 +247,7 @@ Veri::Session.expired
 ```
 
 ### Session Management
-<!--TODO: describe new prune-->
+
 ```rb
 # Terminate a specific session
 session.terminate
@@ -258,12 +258,14 @@ Veri::Session.terminate_all
 # Terminate all sessions for a specific user
 user.sessions.terminate_all
 
-# Clean up expired/inactive sessions, and sessions with deleted tenant
-Veri::Session.prune
+# Clean up inactive sessions for a specific user
+user.sessions.inactive.terminate_all
 
-# Clean up expired/inactive sessions for a specific user
-user.sessions.prune
+# Clean up expired sessions globally
+Veri::Session.expired.terminate_all
 ```
+
+```rb
 
 ## Account Lockout
 
@@ -338,6 +340,16 @@ user.sessions.in_tenant(tenant)
 user.sessions.in_tenant(tenant).terminate_all
 ```
 
+### Orphaned Sessions
+
+When a tenant object is deleted from your database, its associated sessions become orphaned.
+
+To clean up orphaned sessions, use:
+
+```rb
+Veri.prune
+```
+
 ### Tenant Migrations
 
 When you rename or remove models used as tenants, you need to update Veri's stored data accordingly. Use these irreversible data migrations:
@@ -346,7 +358,7 @@ When you rename or remove models used as tenants, you need to update Veri's stor
 # Rename a tenant class (e.g., when you rename your Organization model to Company)
 migrate_authentication_tenant!("Organization", "Company")
 
-# Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
+# Remove tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
 ```
 
