@@ -22,8 +22,8 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Controller Integration](#controller-integration)
   - [Authentication Sessions](#authentication-sessions)
   - [Account Lockout](#account-lockout)
-  - [Multi-Tenancy](#multi-tenancy)
   - [User Impersonation](#user-impersonation)
+  - [Multi-Tenancy](#multi-tenancy)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -258,11 +258,11 @@ Veri::Session.terminate_all
 # Terminate all sessions for a specific user
 user.sessions.terminate_all
 
-# Clean up expired/inactive sessions, and sessions with deleted tenant
-Veri::Session.prune
+# Clean up inactive sessions for a specific user
+user.sessions.inactive.terminate_all
 
-# Clean up expired/inactive sessions for a specific user
-user.sessions.prune
+# Clean up expired sessions globally
+Veri::Session.expired.terminate_all
 ```
 
 ## Account Lockout
@@ -287,6 +287,51 @@ User.unlocked
 ```
 
 When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
+
+## User Impersonation
+
+Veri provides user impersonation functionality that allows administrators to temporarily assume another user's identity:
+
+```rb
+module Admin
+  class ImpersonationController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      current_session.shapeshift(user)
+      redirect_to root_path, notice: "Now viewing as #{user.name}"
+    end
+
+    def destroy
+      original_user = current_session.true_identity
+      current_session.to_true_identity
+      redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
+    end
+  end
+end
+```
+
+Available session methods:
+
+```rb
+# Assume another user's identity in a single-tenant application
+session.shapeshift(user)
+
+# Return to original identity
+session.to_true_identity
+
+# Returns true if currently shapeshifted
+session.shapeshifted?
+
+# Returns original user when shapeshifted, otherwise current user
+session.true_identity
+```
+
+Controller helper:
+
+```rb
+# Returns true if the current session is shapeshifted
+shapeshifter?
+```
 
 ## Multi-Tenancy
 
@@ -338,6 +383,31 @@ user.sessions.in_tenant(tenant)
 user.sessions.in_tenant(tenant).terminate_all
 ```
 
+### User Impersonation with Tenants
+
+When using user impersonation in a multi-tenant setup, Veri allows cross-tenant shapeshifting while preserving the original tenant context:
+
+```rb
+# Assume another user's identity across tenants
+session.shapeshift(user, tenant: company)
+
+# Returns the original tenant when shapeshifted
+session.true_tenant
+
+# Returning to true identiry restores both user and tenant
+session.to_true_identity
+```
+
+### Orphaned Sessions
+
+When a tenant object is deleted from your database, its associated sessions become orphaned.
+
+To clean up orphaned sessions, use:
+
+```rb
+Veri.prune
+```
+
 ### Tenant Migrations
 
 When you rename or remove models used as tenants, you need to update Veri's stored data accordingly. Use these irreversible data migrations:
@@ -346,58 +416,8 @@ When you rename or remove models used as tenants, you need to update Veri's stor
 # Rename a tenant class (e.g., when you rename your Organization model to Company)
 migrate_authentication_tenant!("Organization", "Company")
 
-# Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
+# Remove tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
-```
-
-## User Impersonation
-
-> ⚠️ **Known Issues**
-> - User Impersonation in multitenant environments has security implications
-> - Use only in single-tenant applications
-> - Full fix coming in v2.0
-
-Veri provides user impersonation functionality that allows administrators to temporarily assume another user's identity:
-
-```rb
-module Admin
-  class ImpersonationController < ApplicationController
-    def create
-      user = User.find(params[:user_id])
-      current_session.shapeshift(user)
-      redirect_to root_path, notice: "Now viewing as #{user.name}"
-    end
-
-    def destroy
-      original_user = current_session.true_identity
-      current_session.to_true_identity
-      redirect_to admin_dashboard_path, notice: "Returned to #{original_user.name}"
-    end
-  end
-end
-```
-
-Available session methods:
-
-```rb
-# Assume another user's identity (maintains original identity)
-session.shapeshift(user)
-
-# Return to original identity
-session.to_true_identity
-
-# Returns true if currently shapeshifted
-session.shapeshifted?
-
-# Returns original user when shapeshifted, otherwise current user
-session.true_identity
-```
-
-Controller helper:
-
-```rb
-# Returns true if the current session is shapeshifted
-shapeshifter?
 ```
 
 ## View Helpers
