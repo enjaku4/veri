@@ -9,7 +9,6 @@ gem "bcrypt"
 gem "byebug"
 gem "database_cleaner-active_record"
 gem "dry-configurable"
-gem "dry-types"
 gem "rails", rails_version
 gem "rake"
 gem "rspec"

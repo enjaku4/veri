@@ -3,7 +3,7 @@ module Veri
     class NonEmptyString < Veri::Inputs::Base
       private
 
-      def type = -> { self.class::Strict::String.constrained(min_size: 1) }
+      def processor = -> { @value.is_a?(String) && !@value.empty? ? @value : raise_error }
     end
   end
 end

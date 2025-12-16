@@ -3,7 +3,7 @@ module Veri
     class HashingAlgorithm < Veri::Inputs::Base
       private
 
-      def type = -> { self.class::Strict::Symbol.enum(:argon2, :bcrypt, :pbkdf2, :scrypt) }
+      def processor = -> { [:argon2, :bcrypt, :pbkdf2, :scrypt].include?(@value) ? @value : raise_error }
     end
   end
 end
