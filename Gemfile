@@ -8,7 +8,6 @@ gem "argon2"
 gem "bcrypt"
 gem "byebug"
 gem "database_cleaner-active_record"
-gem "dry-configurable"
 gem "rails", rails_version
 gem "rake"
 gem "rspec"
