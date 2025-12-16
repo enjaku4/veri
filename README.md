@@ -393,10 +393,9 @@ session.shapeshift(user, tenant: company)
 
 # Returns the original tenant when shapeshifted
 session.true_tenant
-
-# Returning to true identiry restores both user and tenant
-session.to_true_identity
 ```
+
+All other session methods work the same way in multi-tenant applications as in single-tenant applications, however `to_true_identity` will restore both the original user and tenant.
 
 ### Orphaned Sessions
 
