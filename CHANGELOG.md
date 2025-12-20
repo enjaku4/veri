@@ -1,4 +1,24 @@
-<!--TODO: new version and migration guide-->
+## v2.0.0
+
+### Breaking
+
+- Changed `Veri::Session#shapeshift` method signature, now it accepts a tenant argument
+- `Veri.prune` now deletes only sessions with orphaned tenant, and doesn't touch inactive or expired ones
+
+### Features
+
+- Added `Veri::Session#true_tenant` method to fetch the original tenant of a session
+
+### Bugs
+
+- Fixed issue with user impersonation across different tenants
+
+### Misc
+
+- Dropped some unnecessary dependencies
+
+<!--TODO: guide-->
+To upgrade to v2.0.0, please refer to the [migration guide](https://github.com/enjaku4/veri/discussions/#)
 
 ## v1.1.0
 
