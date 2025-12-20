@@ -2,8 +2,8 @@
 
 ### Breaking
 
-- Changed `Veri::Session#shapeshift` method signature, now it accepts a tenant argument
-- `Veri.prune` now deletes only sessions with orphaned tenant, and doesn't touch inactive or expired ones
+- Changed `Veri::Session#shapeshift` method signature to accept an optional `tenant:` keyword argument
+- `Veri.prune` now deletes only sessions with orphaned tenants and no longer removes inactive or expired sessions
 
 ### Features
 
