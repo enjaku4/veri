@@ -59,7 +59,7 @@ module Veri
     def true_tenant = original_tenant || tenant
 
     def shapeshift(user, tenant: nil)
-      resolved_tenant ||= Veri::Inputs::Tenant.new(
+      resolved_tenant = Veri::Inputs::Tenant.new(
         tenant,
         error: Veri::InvalidTenantError,
         message: "Expected a string, an ActiveRecord model instance, or nil, got `#{tenant.inspect}`"
