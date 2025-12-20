@@ -17,7 +17,6 @@
 
 - Dropped some unnecessary dependencies
 
-<!--TODO: guide-->
 To upgrade to v2.0.0, please refer to the [migration guide](https://github.com/enjaku4/veri/discussions/14)
 
 ## v1.1.0
