@@ -313,7 +313,7 @@ end
 Available session methods:
 
 ```rb
-# Assume another user's identity in a single-tenant application
+# Assume another user's identity
 session.shapeshift(user)
 
 # Return to original identity
@@ -395,7 +395,7 @@ session.shapeshift(user, tenant: company)
 session.true_tenant
 ```
 
-All other session methods work the same way in multi-tenant applications as in single-tenant applications, however `to_true_identity` will restore both the original user and tenant.
+All other session methods work the same way in multi-tenant applications as in single-tenant applications. However, `to_true_identity` will restore both the original user and tenant.
 
 ### Orphaned Sessions
 
