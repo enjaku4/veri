@@ -17,7 +17,6 @@ Gem::Specification.new do |spec|
   spec.summary = "Minimal cookie-based authentication library for Ruby on Rails"
   spec.description = "Minimal cookie-based authentication for Rails applications with multi-tenancy support and granular session management"
   spec.license = "MIT"
-  # TODO: support new ruby
   spec.required_ruby_version = ">= 3.2", "< 4.1"
 
   spec.files = [
