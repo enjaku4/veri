@@ -1,53 +1,55 @@
 require "active_support/core_ext/numeric/time"
-require "dry-configurable"
+require "singleton"
 
 module Veri
-  module Configuration
-    extend Dry::Configurable
+  class Configuration
+    include Singleton
 
-    module_function
+    attr_reader :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime, :user_model_name
 
-    setting :hashing_algorithm,
-            default: :argon2,
-            reader: true,
-            constructor: -> (value) do
-              Veri::Inputs::HashingAlgorithm.new(
-                value,
-                error: Veri::ConfigurationError,
-                message: "Invalid hashing algorithm `#{value.inspect}`, supported algorithms are: #{Veri::Configuration::HASHERS.keys.join(", ")}"
-              ).process
-            end
-    setting :inactive_session_lifetime,
-            default: nil,
-            reader: true,
-            constructor: -> (value) do
-              Veri::Inputs::Duration.new(
-                value,
-                optional: true,
-                error: Veri::ConfigurationError,
-                message: "Invalid inactive session lifetime `#{value.inspect}`, expected an instance of ActiveSupport::Duration or nil"
-              ).process
-            end
-    setting :total_session_lifetime,
-            default: 14.days,
-            reader: true,
-            constructor: -> (value) do
-              Veri::Inputs::Duration.new(
-                value,
-                error: Veri::ConfigurationError,
-                message: "Invalid total session lifetime `#{value.inspect}`, expected an instance of ActiveSupport::Duration"
-              ).process
-            end
-    setting :user_model_name,
-            default: "User",
-            reader: true,
-            constructor: -> (value) do
-              Veri::Inputs::NonEmptyString.new(
-                value,
-                error: Veri::ConfigurationError,
-                message: "Invalid user model name `#{value.inspect}`, expected an ActiveRecord model name as a string"
-              ).process
-            end
+    def initialize
+      reset_to_defaults!
+    end
+
+    def hashing_algorithm=(value)
+      @hashing_algorithm = Veri::Inputs::HashingAlgorithm.new(
+        value,
+        error: Veri::ConfigurationError,
+        message: "Invalid hashing algorithm `#{value.inspect}`, supported algorithms are: #{HASHERS.keys.join(", ")}"
+      ).process
+    end
+
+    def inactive_session_lifetime=(value)
+      @inactive_session_lifetime = Veri::Inputs::Duration.new(
+        value,
+        optional: true,
+        error: Veri::ConfigurationError,
+        message: "Invalid inactive session lifetime `#{value.inspect}`, expected an instance of ActiveSupport::Duration or nil"
+      ).process
+    end
+
+    def total_session_lifetime=(value)
+      @total_session_lifetime = Veri::Inputs::Duration.new(
+        value,
+        error: Veri::ConfigurationError,
+        message: "Invalid total session lifetime `#{value.inspect}`, expected an instance of ActiveSupport::Duration"
+      ).process
+    end
+
+    def user_model_name=(value)
+      @user_model_name = Veri::Inputs::NonEmptyString.new(
+        value,
+        error: Veri::ConfigurationError,
+        message: "Invalid user model name `#{value.inspect}`, expected an ActiveRecord model name as a string"
+      ).process
+    end
+
+    def reset_to_defaults!
+      @hashing_algorithm = :argon2
+      @inactive_session_lifetime = nil
+      @total_session_lifetime = 14.days
+      @user_model_name = "User"
+    end
 
     HASHERS = {
       argon2: Veri::Password::Argon2,
@@ -55,6 +57,7 @@ module Veri
       pbkdf2: Veri::Password::Pbkdf2,
       scrypt: Veri::Password::SCrypt
     }.freeze
+    private_constant :HASHERS
 
     def hasher
       HASHERS.fetch(hashing_algorithm) { raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}" }
@@ -66,6 +69,17 @@ module Veri
         error: Veri::ConfigurationError,
         message: "Invalid user model name `#{user_model_name}`, expected an ActiveRecord model name as a string"
       ).process
+    end
+
+    def configure
+      yield self
+    end
+
+    class << self
+      delegate :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime, :user_model_name,
+               :hashing_algorithm=, :inactive_session_lifetime=, :total_session_lifetime=, :user_model_name=,
+               :hasher, :user_model, :reset_to_defaults!, :configure,
+               to: :instance
     end
   end
 end

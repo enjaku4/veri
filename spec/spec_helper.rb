@@ -33,7 +33,7 @@ RSpec.configure do |config|
   end
 
   config.around do |example|
-    Veri::Configuration.reset_config
+    Veri::Configuration.reset_to_defaults!
 
     DatabaseCleaner.cleaning do
       example.run
@@ -49,7 +49,6 @@ end
 
 require "#{File.dirname(__FILE__)}/support/models"
 require "#{File.dirname(__FILE__)}/support/application"
-require "#{File.dirname(__FILE__)}/support/configuration"
 require "#{File.dirname(__FILE__)}/support/controllers"
 
 if ENV["UUID_TESTS"]
