@@ -348,6 +348,17 @@ RSpec.describe Veri::Session do
       end
     end
 
+    context "when session is already shapeshifted" do
+      let(:tenant) { nil }
+      let(:user) { User.create! }
+
+      before { session.shapeshift(User.create!) }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift from a shapeshifted session")
+      end
+    end
+
     context "when tenant is nil" do
       let(:tenant) { nil }
       let(:user) { User.create! }

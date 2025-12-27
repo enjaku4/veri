@@ -59,6 +59,8 @@ module Veri
     def true_tenant = original_tenant || tenant
 
     def shapeshift(user, tenant: nil)
+      raise Veri::Error, "Cannot shapeshift from a shapeshifted session" if shapeshifted?
+
       resolved_tenant = Veri::Inputs::Tenant.new(
         tenant,
         error: Veri::InvalidTenantError,
