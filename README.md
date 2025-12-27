@@ -313,7 +313,7 @@ end
 Available session methods:
 
 ```rb
-# Assume another user's identity
+# Assume another user's identity (in single-tenant applications)
 session.shapeshift(user)
 
 # Return to original identity
@@ -337,8 +337,6 @@ shapeshifter?
 
 Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
 
-By default, Veri assumes a single-tenant setup where `current_tenant` returns `nil`. Tenants can be represented as either a string or an `ActiveRecord` model instance.
-
 ### Setup
 
 To isolate authentication sessions between different tenants, override the `current_tenant` method:
@@ -360,6 +358,8 @@ class ApplicationController < ActionController::Base
   end
 end
 ```
+
+By default, Veri assumes a single-tenant setup where `current_tenant` returns `nil`. Tenants can be represented as either a string or an `ActiveRecord` model instance.
 
 ### Session Tenant Access
 
