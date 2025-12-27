@@ -45,10 +45,10 @@ module Veri
     end
 
     def reset_to_defaults!
-      @hashing_algorithm = :argon2
-      @inactive_session_lifetime = nil
-      @total_session_lifetime = 14.days
-      @user_model_name = "User"
+      self.hashing_algorithm = :argon2
+      self.inactive_session_lifetime = nil
+      self.total_session_lifetime = 14.days
+      self.user_model_name = "User"
     end
 
     HASHERS = {
