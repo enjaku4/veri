@@ -11,6 +11,14 @@ module Veri
       reset_to_defaults!
     end
 
+    HASHERS = {
+      argon2: Veri::Password::Argon2,
+      bcrypt: Veri::Password::BCrypt,
+      pbkdf2: Veri::Password::Pbkdf2,
+      scrypt: Veri::Password::SCrypt
+    }.freeze
+    private_constant :HASHERS
+
     def hashing_algorithm=(value)
       @hashing_algorithm = Veri::Inputs::HashingAlgorithm.new(
         value,
@@ -50,14 +58,6 @@ module Veri
       self.total_session_lifetime = 14.days
       self.user_model_name = "User"
     end
-
-    HASHERS = {
-      argon2: Veri::Password::Argon2,
-      bcrypt: Veri::Password::BCrypt,
-      pbkdf2: Veri::Password::Pbkdf2,
-      scrypt: Veri::Password::SCrypt
-    }.freeze
-    private_constant :HASHERS
 
     def hasher
       HASHERS.fetch(hashing_algorithm) { raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}" }
