@@ -404,7 +404,7 @@ When a tenant object is deleted from your database, its associated sessions beco
 To clean up orphaned sessions, use:
 
 ```rb
-Veri.prune
+Veri::Session.prune
 ```
 
 ### Tenant Migrations
