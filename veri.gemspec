@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Minimal cookie-based authentication library for Ruby on Rails"
   spec.description = "Minimal cookie-based authentication for Rails applications with multi-tenancy support and granular session management"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2", "< 3.5"
+  spec.required_ruby_version = ">= 3.2", "< 4.1"
 
   spec.files = [
     "veri.gemspec", "README.md", "CHANGELOG.md", "LICENSE.txt"
@@ -27,8 +27,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "argon2", "~> 2.0"
   spec.add_dependency "bcrypt", "~> 3.0"
-  spec.add_dependency "dry-configurable", "~> 1.1"
-  spec.add_dependency "dry-types", "~> 1.7"
   spec.add_dependency "rails", ">= 7.2", "< 8.2"
   spec.add_dependency "scrypt", "~> 3.0"
   spec.add_dependency "user_agent_parser", "~> 2.0"

@@ -3,7 +3,13 @@ module Veri
     class Model < Veri::Inputs::Base
       private
 
-      def type = -> { self.class::Strict::Class.constructor { _1.try(:safe_constantize) }.constrained(lt: ActiveRecord::Base) }
+      def processor
+        -> {
+          model = @value.try(:safe_constantize) || @value
+          raise_error unless model.is_a?(Class) && model < ActiveRecord::Base
+          model
+        }
+      end
     end
   end
 end

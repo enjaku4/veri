@@ -3,7 +3,7 @@ module Veri
     class Authenticatable < Veri::Inputs::Base
       private
 
-      def type = -> { self.class::Instance(Veri::Configuration.user_model) }
+      def processor = -> { @value.is_a?(Veri::Configuration.user_model) ? @value : raise_error }
     end
   end
 end

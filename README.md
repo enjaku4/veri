@@ -22,8 +22,8 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Controller Integration](#controller-integration)
   - [Authentication Sessions](#authentication-sessions)
   - [Account Lockout](#account-lockout)
-  - [Multi-Tenancy](#multi-tenancy)
   - [User Impersonation](#user-impersonation)
+  - [Multi-Tenancy](#multi-tenancy)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -258,11 +258,11 @@ Veri::Session.terminate_all
 # Terminate all sessions for a specific user
 user.sessions.terminate_all
 
-# Clean up expired/inactive sessions, and sessions with deleted tenant
-Veri::Session.prune
+# Clean up inactive sessions for a specific user
+user.sessions.inactive.terminate_all
 
-# Clean up expired/inactive sessions for a specific user
-user.sessions.prune
+# Clean up expired sessions globally
+Veri::Session.expired.terminate_all
 ```
 
 ## Account Lockout
@@ -288,74 +288,7 @@ User.unlocked
 
 When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
 
-## Multi-Tenancy
-
-Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
-
-By default, Veri assumes a single-tenant setup where `current_tenant` returns `nil`. Tenants can be represented as either a string or an `ActiveRecord` model instance.
-
-### Setup
-
-To isolate authentication sessions between different tenants, override the `current_tenant` method:
-
-```rb
-class ApplicationController < ActionController::Base
-  include Veri::Authentication
-
-  with_authentication
-
-  private
-
-  def current_tenant
-    # Option 1: String-based tenancy (e.g., subdomain)
-    request.subdomain
-
-    # Option 2: Model-based tenancy (e.g., organization)
-    Company.find_by(subdomain: request.subdomain)
-  end
-end
-```
-
-### Session Tenant Access
-
-Sessions expose their tenant through the `tenant` method:
-
-```rb
-# Returns the tenant (string, model instance, or nil in single-tenant applications)
-session.tenant
-```
-
-To manage sessions for a specific tenant:
-
-```rb
-# Fetch all sessions for a given tenant
-Veri::Session.in_tenant(tenant)
-
-# Fetch sessions for a specific user within a tenant
-user.sessions.in_tenant(tenant)
-
-# Terminate all sessions for a specific user within a tenant
-user.sessions.in_tenant(tenant).terminate_all
-```
-
-### Tenant Migrations
-
-When you rename or remove models used as tenants, you need to update Veri's stored data accordingly. Use these irreversible data migrations:
-
-```rb
-# Rename a tenant class (e.g., when you rename your Organization model to Company)
-migrate_authentication_tenant!("Organization", "Company")
-
-# Remove orphaned tenant data (e.g., when you delete the Organization model entirely)
-delete_authentication_tenant!("Organization")
-```
-
 ## User Impersonation
-
-> ⚠️ **Known Issues**
-> - User Impersonation in multitenant environments has security implications
-> - Use only in single-tenant applications
-> - Full fix coming in v2.0
 
 Veri provides user impersonation functionality that allows administrators to temporarily assume another user's identity:
 
@@ -380,7 +313,7 @@ end
 Available session methods:
 
 ```rb
-# Assume another user's identity (maintains original identity)
+# Assume another user's identity (in single-tenant applications)
 session.shapeshift(user)
 
 # Return to original identity
@@ -398,6 +331,92 @@ Controller helper:
 ```rb
 # Returns true if the current session is shapeshifted
 shapeshifter?
+```
+
+## Multi-Tenancy
+
+Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
+
+### Setup
+
+To isolate authentication sessions between different tenants, override the `current_tenant` method:
+
+```rb
+class ApplicationController < ActionController::Base
+  include Veri::Authentication
+
+  with_authentication
+
+  private
+
+  def current_tenant
+    # Option 1: String-based tenancy (e.g., subdomain)
+    request.subdomain
+
+    # Option 2: Model-based tenancy (e.g., organization)
+    Company.find_by(subdomain: request.subdomain)
+  end
+end
+```
+
+By default, Veri assumes a single-tenant setup where `current_tenant` returns `nil`. Tenants can be represented as either a string or an `ActiveRecord` model instance.
+
+### Session Tenant Access
+
+Sessions expose their tenant through the `tenant` method:
+
+```rb
+# Returns the tenant (string, model instance, or nil in single-tenant applications)
+session.tenant
+```
+
+To manage sessions for a specific tenant:
+
+```rb
+# Fetch all sessions for a given tenant
+Veri::Session.in_tenant(tenant)
+
+# Fetch sessions for a specific user within a tenant
+user.sessions.in_tenant(tenant)
+
+# Terminate all sessions for a specific user within a tenant
+user.sessions.in_tenant(tenant).terminate_all
+```
+
+### User Impersonation with Tenants
+
+When using user impersonation in a multi-tenant setup, Veri allows cross-tenant shapeshifting while preserving the original tenant context:
+
+```rb
+# Assume another user's identity across tenants
+session.shapeshift(user, tenant: company)
+
+# Returns the original tenant when shapeshifted
+session.true_tenant
+```
+
+All other session methods work the same way in multi-tenant applications as in single-tenant applications. However, `to_true_identity` will restore both the original user and tenant.
+
+### Orphaned Sessions
+
+When a tenant object is deleted from your database, its associated sessions become orphaned.
+
+To clean up orphaned sessions, use:
+
+```rb
+Veri::Session.prune
+```
+
+### Tenant Migrations
+
+When you rename or remove models used as tenants, you need to update Veri's stored data accordingly. Use these irreversible data migrations:
+
+```rb
+# Rename a tenant class (e.g., when you rename your Organization model to Company)
+migrate_authentication_tenant!("Organization", "Company")
+
+# Remove tenant data (e.g., when you delete the Organization model entirely)
+delete_authentication_tenant!("Organization")
 ```
 
 ## View Helpers

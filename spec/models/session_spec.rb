@@ -299,11 +299,39 @@ RSpec.describe Veri::Session do
     end
   end
 
+  describe "#true_tenant" do
+    subject { session.true_tenant }
+
+    let(:session) { described_class.new(original_tenant:, tenant:) }
+    let(:tenant) { Company.create! }
+
+    context "when original_tenant is present" do
+      let(:original_tenant) { Company.create! }
+
+      it { is_expected.to eq(original_tenant) }
+    end
+
+    context "when original_tenant is nil" do
+      let(:original_tenant) { nil }
+
+      it { is_expected.to eq(tenant) }
+    end
+  end
+
   describe "#shapeshift" do
-    subject { session.shapeshift(user) }
+    subject { session.shapeshift(user, tenant:) }
+
+    let(:session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: Time.current
+      )
+    end
 
     context "when user is not valid" do
-      let(:session) { described_class.new }
+      let(:tenant) { nil }
       let(:user) { nil }
 
       it "raises an error" do
@@ -311,29 +339,86 @@ RSpec.describe Veri::Session do
       end
     end
 
-    context "when user is valid" do
-      let(:session) do
-        described_class.create!(
-          expires_at: 1.hour.from_now,
-          authenticatable: original_user,
-          hashed_token: "foo",
-          last_seen_at: Time.current
-        )
-      end
-      let(:original_user) { User.create! }
+    context "when tenant is invalid" do
+      let(:tenant) { 123 }
       let(:user) { User.create! }
 
-      it "updates the session with the new user and sets shapeshifted_at" do
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`")
+      end
+    end
+
+    context "when session is already shapeshifted" do
+      let(:tenant) { nil }
+      let(:user) { User.create! }
+
+      before { session.shapeshift(User.create!) }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift from a shapeshifted session")
+      end
+    end
+
+    context "when tenant is nil" do
+      let(:tenant) { nil }
+      let(:user) { User.create! }
+      let(:original_user) { session.authenticatable }
+
+      it "updates the session with the new user and no tenant" do
         expect { subject }
           .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
           .and change(session, :original_authenticatable).from(nil).to(original_user)
           .and change(session, :authenticatable).from(original_user).to(user)
+      end
+
+      it "does not change tenant_type and tenant_id" do
+        expect { subject }.not_to(change { [session.reload.tenant_type, session.reload.tenant_id] })
+      end
+    end
+
+    context "when tenant is a string" do
+      let(:tenant) { "subdomain" }
+      let(:user) { User.create! }
+      let(:original_user) { session.authenticatable }
+
+      it "updates the session with the new user and tenant as a string" do
+        expect { subject }
+          .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
+          .and change(session, :original_authenticatable).from(nil).to(original_user)
+          .and change(session, :authenticatable).from(original_user).to(user)
+          .and change(session, :tenant_type).from(nil).to("subdomain")
+      end
+
+      it "does not change tenant_id" do
+        expect { subject }
+          .not_to change(session, :tenant_id)
+      end
+    end
+
+    context "when tenant is an ActiveRecord model" do
+      let(:tenant) { Company.create! }
+      let(:user) { User.create! }
+      let(:original_user) { session.authenticatable }
+
+      it "updates the session with the new user and tenant as a model instance" do
+        expect { subject }
+          .to change(session, :shapeshifted_at).from(nil).to(be_within(3.seconds).of(Time.current))
+          .and change(session, :original_authenticatable).from(nil).to(original_user)
+          .and change(session, :authenticatable).from(original_user).to(user)
+          .and change(session, :tenant_type).from(nil).to(tenant.class.to_s)
+          .and change(session, :tenant_id).from(nil).to(tenant.id)
       end
     end
   end
 
   describe "#to_true_identity" do
     subject { session.to_true_identity }
+
+    let(:original_tenant) { Company.create! }
+    let(:tenant) { Company.create! }
+
+    let(:original_user) { User.create! }
+    let(:user) { User.create! }
 
     let(:session) do
       described_class.create!(
@@ -342,17 +427,22 @@ RSpec.describe Veri::Session do
         original_authenticatable: original_user,
         shapeshifted_at: Time.current,
         hashed_token: "foo",
-        last_seen_at: Time.current
+        last_seen_at: Time.current,
+        tenant:,
+        original_tenant:
       )
     end
-    let(:original_user) { User.create! }
-    let(:user) { User.create! }
 
-    it "reverts the session to the original user and clears shapeshifted_at" do
-      expect { subject }
-        .to change(session, :shapeshifted_at).from(be_within(3.seconds).of(Time.current)).to(nil)
-        .and change(session, :authenticatable).from(user).to(original_user)
-        .and change(session, :original_authenticatable).from(original_user).to(nil)
+    it "reverts the session to the original user, restores tenant and clears shapeshift metadata" do
+      subject
+      session.reload
+
+      expect(session.shapeshifted_at).to be_nil
+      expect(session.authenticatable).to eq(original_user)
+      expect(session.original_authenticatable).to be_nil
+
+      expect(session.tenant).to eq(original_tenant)
+      expect(session.original_tenant).to be_nil
     end
   end
 
@@ -385,6 +475,29 @@ RSpec.describe Veri::Session do
       let(:session) { described_class.new(tenant_type: tenant.class.to_s, tenant_id: tenant.id) }
 
       it { is_expected.to eq(tenant) }
+    end
+  end
+
+  describe "#original_tenant" do
+    subject { session.original_tenant }
+
+    context "when original_tenant_type and original_tenant_id are both nil" do
+      let(:session) { described_class.new(original_tenant_type: nil, original_tenant_id: nil) }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when original_tenant_type is present and original_tenant_id is nil" do
+      let(:session) { described_class.new(original_tenant_type: "subdomain", original_tenant_id: nil) }
+
+      it { is_expected.to eq("subdomain") }
+    end
+
+    context "when original_tenant_type and original_tenant_id are both present" do
+      let(:original_tenant) { Company.create! }
+      let(:session) { described_class.new(original_tenant_type: original_tenant.class.to_s, original_tenant_id: original_tenant.id) }
+
+      it { is_expected.to eq(original_tenant) }
     end
   end
 
@@ -421,56 +534,32 @@ RSpec.describe Veri::Session do
   describe ".prune" do
     subject { described_class.prune }
 
-    let!(:session1) do
+    let(:tenant) { Company.create! }
+    let!(:session) do
       described_class.create!(
         expires_at: 1.hour.from_now,
         authenticatable: User.create!,
         hashed_token: "foo",
-        last_seen_at: 10.minutes.ago
-      )
-    end
-    let!(:session2) do
-      described_class.create!(
-        expires_at: 1.hour.from_now,
-        authenticatable: User.create!,
-        hashed_token: "bar",
-        last_seen_at: 3.minutes.ago,
-        tenant_type: "subdomain",
-        tenant_id: nil
+        last_seen_at: 10.minutes.ago,
+        tenant:
       )
     end
 
     before do
-      Array.new(3) do |i|
-        described_class.create!(
-          expires_at: 1.hour.ago,
-          authenticatable: User.create!,
-          hashed_token: "foo#{i}",
-          last_seen_at: 10.minutes.ago
-        )
-        described_class.create!(
-          expires_at: 1.hour.from_now,
-          authenticatable: User.create!,
-          hashed_token: "bar#{i}",
-          last_seen_at: 10.minutes.ago,
-          tenant_type: "Company",
-          tenant_id: 42
-        )
-      end
+      described_class.create!(
+        expires_at: 1.hour.ago,
+        authenticatable: User.create!,
+        hashed_token: "bar",
+        last_seen_at: Time.current,
+        tenant: Company.create!
+      )
     end
 
-    it "deletes all expired sessions and sessions with missing tenants" do
-      expect { subject }.to change(described_class, :count).from(8).to(2)
-      expect(described_class.where(id: [session1.id, session2.id])).to all(be_persisted)
-    end
-
-    context "when inactive session lifetime is set" do
-      before { Veri::Configuration.configure { _1.inactive_session_lifetime = 5.minutes } }
-
-      it "deletes sessions that are both expired and inactive" do
-        expect { subject }.to change(described_class, :count).from(8).to(1)
-        expect(described_class.where(id: session2.id)).to all(be_persisted)
-      end
+    it "deletes orphaned tenant sessions" do
+      tenant.destroy!
+      expect { subject }
+        .to change { described_class.exists?(id: session.id) }.from(true).to(false)
+        .and change(described_class, :count).from(2).to(1)
     end
   end
 

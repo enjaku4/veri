@@ -1,12 +1,12 @@
 module Veri
   module Inputs
-    class Tenant < Base
+    class Tenant < Veri::Inputs::Base
       def resolve
         case tenant = process
         when nil
           { tenant_type: nil, tenant_id: nil }
         when String
-          { tenant_type: tenant.to_s, tenant_id: nil }
+          { tenant_type: tenant, tenant_id: nil }
         when ActiveRecord::Base
           raise_error unless tenant.persisted?
           { tenant_type: tenant.class.to_s, tenant_id: tenant.public_send(tenant.class.primary_key) }
@@ -17,15 +17,14 @@ module Veri
 
       private
 
-      def type
+      def processor
         -> {
-          self.class::Strict::String.constrained(min_size: 1) |
-            self.class::Instance(ActiveRecord::Base) |
-            self.class::Hash.schema(
-              tenant_type: self.class::Strict::String | self.class::Nil,
-              tenant_id: self.class::Strict::String | self.class::Strict::Integer | self.class::Nil
-            ) |
-            self.class::Nil
+          return @value if @value.nil?
+          return @value if @value.is_a?(String) && @value.present?
+          return @value if @value.is_a?(ActiveRecord::Base)
+          return @value if @value in { tenant_type: String | nil, tenant_id: String | Integer | nil }
+
+          raise_error
         }
       end
     end
