@@ -31,6 +31,7 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Getting Help and Contributing](#getting-help-and-contributing)
   - [License](#license)
   - [Code of Conduct](#code-of-conduct)
+  - [Old Versions](#old-versions)
 
 ## Installation
 
@@ -509,3 +510,9 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the Veri project is expected to follow the [code of conduct](https://github.com/enjaku4/veri/blob/main/CODE_OF_CONDUCT.md).
+
+## Old Versions
+
+Only the latest major version is supported. Older versions are obsolete and not maintained, but their READMEs are available here for reference:
+
+[v1.x.x](https://github.com/enjaku4/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
