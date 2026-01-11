@@ -25,9 +25,7 @@ module Veri
     end
 
     def current_user
-      user_model = Veri::Configuration.user_model
-      primary_key = user_model.primary_key
-      @current_user ||= current_session ? user_model.find_by(primary_key => current_session.authenticatable_id) : nil
+      @current_user ||= current_session&.authenticatable
     end
 
     def current_session
