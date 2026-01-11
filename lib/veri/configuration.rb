@@ -17,7 +17,6 @@ module Veri
       pbkdf2: Veri::Password::Pbkdf2,
       scrypt: Veri::Password::SCrypt
     }.freeze
-    private_constant :HASHERS
 
     def hashing_algorithm=(value)
       @hashing_algorithm = Veri::Inputs::HashingAlgorithm.new(
@@ -60,7 +59,7 @@ module Veri
     end
 
     def hasher
-      HASHERS.fetch(hashing_algorithm) { raise Veri::Error, "Invalid hashing algorithm: #{hashing_algorithm}" }
+      HASHERS.fetch(hashing_algorithm)
     end
 
     def user_model
