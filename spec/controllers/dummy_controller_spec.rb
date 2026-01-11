@@ -77,7 +77,7 @@ RSpec.describe DummyController, type: :controller do
 
     it "deletes the auth cookie" do
       travel_to 2.hours.from_now do
-        expect { get :index }.to change { controller.send(:cookies).encrypted["auth_4333b114_token"] }.from(be_present).to(be_nil)
+        expect { get :index }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
       end
     end
 
@@ -124,7 +124,7 @@ RSpec.describe DummyController, type: :controller do
 
     it "deletes the auth cookie" do
       travel_to 2.hours.from_now do
-        expect { get :index }.to change { controller.send(:cookies).encrypted["auth_4333b114_token"] }.from(be_present).to(be_nil)
+        expect { get :index }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
       end
     end
 
@@ -167,7 +167,7 @@ RSpec.describe DummyController, type: :controller do
     end
 
     it "deletes the auth cookie" do
-      expect { get :index }.to change { controller.send(:cookies).encrypted["auth_4333b114_token"] }.from(be_present).to(be_nil)
+      expect { get :index }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
     end
 
     it "does not set the return path if request format is HTML" do

@@ -1,4 +1,4 @@
-require "digest/sha2"
+require "zlib"
 
 module Veri
   module Authentication
@@ -30,7 +30,8 @@ module Veri
 
     def current_session
       token = cookies.encrypted["#{auth_cookie_prefix}_token"]
-      @current_session ||= token ? Session.find_by(hashed_token: Digest::SHA256.hexdigest(token), **resolved_tenant) : nil
+
+      @current_session ||= Session.lookup(token, resolved_tenant)
     end
 
     def log_in(authenticatable)
@@ -53,7 +54,7 @@ module Veri
     end
 
     def logged_in?
-      current_user.present?
+      current_session.present?
     end
 
     def return_path
@@ -100,7 +101,7 @@ module Veri
     end
 
     def auth_cookie_prefix
-      @auth_cookie_prefix ||= "auth_#{Digest::SHA2.hexdigest(Marshal.dump(resolved_tenant))[0..7]}"
+      @auth_cookie_prefix ||= "auth_#{Zlib.crc32(Marshal.dump(resolved_tenant))}"
     end
   end
 end

@@ -1,3 +1,4 @@
+require "digest"
 require "user_agent_parser"
 
 module Veri
@@ -106,7 +107,7 @@ module Veri
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
         new(
-          hashed_token: Digest::SHA256.hexdigest(token),
+          hashed_token: digest_token(token),
           expires_at:,
           authenticatable: user,
           **resolved_tenant
@@ -126,6 +127,18 @@ module Veri
       end
 
       alias terminate_all delete_all
+
+      def lookup(token, resolved_tenant)
+        return nil if token.blank?
+
+        find_by(hashed_token: digest_token(token), **resolved_tenant)
+      end
+
+      private
+
+      def digest_token(token)
+        Digest::SHA256.hexdigest(token)
+      end
     end
 
     private
