@@ -1,3 +1,9 @@
+## v2.0.1
+
+### Misc
+
+- Minor performance improvements and internal refactoring
+
 ## v2.0.0
 
 ### Breaking
