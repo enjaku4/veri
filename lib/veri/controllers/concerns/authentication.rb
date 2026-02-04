@@ -54,7 +54,7 @@ module Veri
     end
 
     def logged_in?
-      current_session.present?
+      current_user.present?
     end
 
     def return_path

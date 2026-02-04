@@ -142,6 +142,16 @@ RSpec.describe Veri::Authentication do
     context "when user is not logged in" do
       it { is_expected.to be false }
     end
+
+    context "when session exists but user is missing" do
+      before do
+        user = User.create!
+        controller.log_in(user)
+        user.destroy!
+      end
+
+      it { is_expected.to be false }
+    end
   end
 
   describe "#return_path" do
