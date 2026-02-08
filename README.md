@@ -416,7 +416,7 @@ Veri::Session.prune
 
 Or, for a specific user:
 
-```
+```rb
 user.sessions.prune
 ```
 
