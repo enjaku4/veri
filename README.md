@@ -414,6 +414,12 @@ To clean up orphaned sessions, use:
 Veri::Session.prune
 ```
 
+Or, for a specific user:
+
+```
+user.sessions.prune
+```
+
 ### Tenant Migrations
 
 When you rename or remove models used as tenants, you need to update Veri's stored data accordingly. Use these irreversible data migrations:
