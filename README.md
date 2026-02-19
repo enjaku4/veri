@@ -70,10 +70,14 @@ Configure Veri in an initializer if customization is needed:
 ```rb
 # These are the default values; you can change them as needed
 Veri.configure do |config|
-  config.hashing_algorithm = :argon2       # Password hashing algorithm (:argon2, :bcrypt, :pbkdf2, or :scrypt)
-  config.inactive_session_lifetime = nil   # Session inactivity timeout (nil means sessions never expire due to inactivity)
-  config.total_session_lifetime = 14.days  # Maximum session duration regardless of activity
-  config.user_model_name = "User"          # Your user model name
+  # Password hashing algorithm (:argon2, :bcrypt, :pbkdf2, or :scrypt)
+  config.hashing_algorithm = :argon2
+  # Session inactivity timeout (nil means sessions never expire due to inactivity)
+  config.inactive_session_lifetime = nil
+  # Maximum session duration regardless of activity
+  config.total_session_lifetime = 14.days
+  # Your user model name
+  config.user_model_name = "User"
 end
 ```
 
@@ -105,11 +109,13 @@ Include the authentication module in your controllers and configure protection:
 class ApplicationController < ActionController::Base
   include Veri::Authentication
 
-  with_authentication # Require authentication by default
+  # Require authentication by default
+  with_authentication
 end
 
 class PicturesController < ApplicationController
-  skip_authentication only: [:index, :show] # Allow public access to index and show actions
+  # Allow public access to index and show actions
+  skip_authentication only: [:index, :show]
 end
 ```
 
