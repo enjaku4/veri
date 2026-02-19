@@ -173,7 +173,7 @@ current_user
 # Returns true if user is authenticated
 logged_in?
 
-# Authenticates user and creates session, returns true on success or false if account is locked
+# Authenticates user, returns true on success or false if account is locked
 log_in(user)
 
 # Terminates current session
