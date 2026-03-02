@@ -123,6 +123,9 @@ Style/Lambda:
 Style/MutableConstant:
   Enabled: false
 
+Style/OneClassPerFile:
+  Enabled: false
+
 Style/ParallelAssignment:
   Enabled: false
 
