@@ -1,3 +1,9 @@
+## v2.0.2
+
+### Misc
+
+- Clarified error message for non-existent user model
+
 ## v2.0.1
 
 ### Misc
