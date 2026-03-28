@@ -66,7 +66,7 @@ module Veri
       Veri::Inputs::Model.new(
         user_model_name,
         error: Veri::ConfigurationError,
-        message: "Invalid user model name `#{user_model_name}`, expected an ActiveRecord model name as a string"
+        message: "Invalid user model name `#{user_model_name}`, model does not exist"
       ).process
     end
 
