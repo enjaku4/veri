@@ -76,7 +76,7 @@ RSpec.describe Veri do
           it "raises an error" do
             expect { config.user_model }.to raise_error(
               Veri::ConfigurationError,
-              "Invalid user model name `Foo`, expected an ActiveRecord model name as a string"
+              "Invalid user model name `Foo`, model does not exist"
             )
           end
         end
@@ -87,7 +87,7 @@ RSpec.describe Veri do
           it "raises an error" do
             expect { config.user_model }.to raise_error(
               Veri::ConfigurationError,
-              "Invalid user model name `Veri`, expected an ActiveRecord model name as a string"
+              "Invalid user model name `Veri`, model does not exist"
             )
           end
         end
