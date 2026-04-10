@@ -515,8 +515,8 @@ Found a bug? Please [create an issue](https://github.com/enjaku4/veri/issues) wi
 
 ### Contributing Code
 Ready to contribute? You can:
-- Fix bugs by submitting pull requests
-- Improve documentation
+- Fix bugs or improve existing code
+- Expand or clarify documentation
 - Add new features (please discuss first in the [discussions section](https://github.com/enjaku4/veri/discussions))
 
 Before contributing, please read the [contributing guidelines](https://github.com/enjaku4/veri/blob/main/CONTRIBUTING.md)
@@ -531,6 +531,6 @@ Everyone interacting in the Veri project is expected to follow the [code of cond
 
 ## Old Versions
 
-Only the latest major version is supported. Older versions are obsolete and not maintained, but their READMEs are available here for reference:
+Only the latest major version is actively maintained. READMEs for older versions are available here for reference:
 
 [v1.x.x](https://github.com/enjaku4/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
