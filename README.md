@@ -502,24 +502,26 @@ end
 ## Getting Help and Contributing
 
 ### Getting Help
+
 Have a question or need assistance? Open a discussion in the [discussions section](https://github.com/enjaku4/veri/discussions) for:
+
 - Usage questions
 - Implementation guidance
-- Feature suggestions
+- Open-ended ideas or suggestions
 
-### Reporting Issues
-Found a bug? Please [create an issue](https://github.com/enjaku4/veri/issues) with:
+### Issues
+
+[Issues](https://github.com/enjaku4/veri/issues) track bugs, planned features, and other work. When reporting a bug, please include:
+
 - A clear description of the problem
 - Steps to reproduce the issue
-- Your environment details (Rails version, Ruby version, etc.)
+- Your environment details (Rails and Ruby versions, OS, etc.)
 
 ### Contributing Code
-Ready to contribute? You can:
-- Fix bugs or improve existing code
-- Expand or clarify documentation
-- Add new features (please discuss first in the [discussions section](https://github.com/enjaku4/veri/discussions))
 
-Before contributing, please read the [contributing guidelines](https://github.com/enjaku4/veri/blob/main/CONTRIBUTING.md)
+Any open issue is free to pick up or discuss. Check the [project board](https://github.com/users/enjaku4/projects/13) or [issues tab](https://github.com/enjaku4/veri/issues).
+
+Before contributing, please read the [contributing guidelines](https://github.com/enjaku4/veri/blob/main/CONTRIBUTING.md).
 
 ## License
 
