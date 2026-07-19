@@ -162,6 +162,35 @@ RSpec.describe Veri::Railtie do
         end
       end
     end
+
+    describe "authenticatable associations declaration" do
+      let(:server_running) { false }
+      let(:table_exists) { false }
+      let(:user_model) { class_double(Client) }
+
+      before do
+        Veri::Configuration.user_model_name = "Client"
+        allow(user_model).to receive(:<).with(Veri::Authenticatable).and_return(true)
+        allow(Veri::Configuration).to receive(:user_model).and_return(user_model)
+      end
+
+      after do
+        Veri::Configuration.reset_to_defaults!
+        DummyApplication.config.to_prepare_blocks.each(&:call)
+      end
+
+      it "declares the associations with the user model configured in the initializer" do
+        subject
+        expect(Veri::Session.reflect_on_association(:authenticatable).klass).to eq(Client)
+        expect(Veri::Session.reflect_on_association(:original_authenticatable).klass).to eq(Client)
+      end
+
+      it "re-declares the associations on each run without errors or stale classes" do
+        expect { 2.times { DummyApplication.config.to_prepare_blocks.each(&:call) } }.not_to raise_error
+        expect(Veri::Session.reflect_on_association(:authenticatable).klass).to eq(Client)
+        expect(Veri::Session.reflect_on_association(:original_authenticatable).klass).to eq(Client)
+      end
+    end
   end
 
   context "extend_migration_helpers initializer" do
