@@ -410,6 +410,8 @@ session.shapeshift(user, tenant: company)
 session.true_tenant
 ```
 
+The `tenant:` argument always becomes the session's tenant: omitting it means no tenant. In a multi-tenant application, always pass it explicitly.
+
 All other session methods work the same way in multi-tenant applications as in single-tenant applications. However, `to_true_identity` will restore both the original user and tenant.
 
 ### Orphaned Sessions
