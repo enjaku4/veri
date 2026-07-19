@@ -81,6 +81,8 @@ Veri.configure do |config|
 end
 ```
 
+The hashing algorithm can be changed at any time: existing passwords are verified with the algorithm they were hashed with and are automatically re-hashed with the configured algorithm on the next successful login.
+
 ## Password Management
 
 Your user model is automatically extended with password management methods:
