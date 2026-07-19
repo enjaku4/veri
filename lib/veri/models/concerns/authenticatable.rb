@@ -30,7 +30,10 @@ module Veri
     end
 
     def lock!
-      update!(locked: true, locked_at: Time.current)
+      transaction do
+        update!(locked: true, locked_at: Time.current)
+        sessions.terminate_all
+      end
     end
 
     def unlock!

@@ -49,6 +49,33 @@ RSpec.describe Veri::Authentication do
     context "when user is not logged in" do
       it { is_expected.to be_nil }
     end
+
+    context "when the session is expired" do
+      let(:user) { User.create! }
+
+      before { controller.log_in(user) }
+
+      it "returns nil" do
+        travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
+          expect(subject).to be_nil
+        end
+      end
+    end
+
+    context "when the session is inactive" do
+      let(:user) { User.create! }
+
+      before do
+        Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
+        controller.log_in(user)
+      end
+
+      it "returns nil" do
+        travel_to(2.hours.from_now) do
+          expect(subject).to be_nil
+        end
+      end
+    end
   end
 
   describe "#current_session" do
@@ -151,6 +178,29 @@ RSpec.describe Veri::Authentication do
       end
 
       it { is_expected.to be false }
+    end
+
+    context "when the session is expired" do
+      before { controller.log_in(User.create!) }
+
+      it "returns false" do
+        travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
+          expect(subject).to be false
+        end
+      end
+    end
+
+    context "when the session is inactive" do
+      before do
+        Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
+        controller.log_in(User.create!)
+      end
+
+      it "returns false" do
+        travel_to(2.hours.from_now) do
+          expect(subject).to be false
+        end
+      end
     end
   end
 

@@ -69,9 +69,9 @@ RSpec.describe DummyController, type: :controller do
       end
     end
 
-    it "terminates the session" do
+    it "keeps the session" do
       travel_to 2.hours.from_now do
-        expect { get :index }.to change(Veri::Session, :count).from(1).to(0)
+        expect { get :index }.not_to change(Veri::Session, :count)
       end
     end
 
@@ -116,9 +116,9 @@ RSpec.describe DummyController, type: :controller do
       end
     end
 
-    it "terminates the session" do
+    it "keeps the session" do
       travel_to 2.hours.from_now do
-        expect { get :index }.to change(Veri::Session, :count).from(1).to(0)
+        expect { get :index }.not_to change(Veri::Session, :count)
       end
     end
 
@@ -170,9 +170,9 @@ RSpec.describe DummyController, type: :controller do
       expect { get :index }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
     end
 
-    it "does not set the return path if request format is HTML" do
+    it "sets the return path if request format is HTML" do
       get :index
-      expect(controller.return_path).to be_nil
+      expect(controller.return_path).to eq(request.fullpath)
     end
 
     it "does not set the return path if request format is not HTML" do

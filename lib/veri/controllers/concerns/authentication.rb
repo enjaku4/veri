@@ -31,7 +31,7 @@ module Veri
     def current_session
       token = cookies.encrypted["#{auth_cookie_prefix}_token"]
 
-      @current_session ||= Session.lookup(token, resolved_tenant)
+      @current_session ||= Session.find_active(token, resolved_tenant)
     end
 
     def log_in(authenticatable)
@@ -68,14 +68,8 @@ module Veri
     private
 
     def with_authentication
-      if logged_in? && current_session.active?
-        if current_user.locked?
-          log_out
-          when_unauthenticated
-        else
-          current_session.update_info(request)
-        end
-
+      if logged_in? && !current_user.locked?
+        current_session.update_info(request)
         return
       end
 

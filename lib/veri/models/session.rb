@@ -126,10 +126,12 @@ module Veri
 
       alias terminate_all delete_all
 
-      def lookup(token, resolved_tenant)
+      def find_active(token, resolved_tenant)
         return nil if token.blank?
 
-        find_by(hashed_token: digest_token(token), **resolved_tenant)
+        session = find_by(hashed_token: digest_token(token), **resolved_tenant)
+
+        session&.active? ? session : nil
       end
 
       private

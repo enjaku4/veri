@@ -531,6 +531,58 @@ RSpec.describe Veri::Session do
     end
   end
 
+  describe ".find_active" do
+    subject { described_class.find_active(token, tenant) }
+
+    let(:tenant) { { tenant_type: nil, tenant_id: nil } }
+    let(:user) { User.create! }
+    let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
+    let(:token) { described_class.establish(user, request, tenant) }
+
+    context "when token is blank" do
+      let(:token) { nil }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when no session matches the token" do
+      let(:token) { "unknown" }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when the session is active" do
+      it "returns the session" do
+        expect(subject).to eq(user.sessions.take)
+      end
+    end
+
+    context "when the session is expired" do
+      before { token }
+
+      it "returns nil and keeps the session" do
+        travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
+          expect(subject).to be_nil
+          expect(described_class.count).to eq(1)
+        end
+      end
+    end
+
+    context "when the session is inactive" do
+      before do
+        Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
+        token
+      end
+
+      it "returns nil and keeps the session" do
+        travel_to(2.hours.from_now) do
+          expect(subject).to be_nil
+          expect(described_class.count).to eq(1)
+        end
+      end
+    end
+  end
+
   describe ".prune" do
     subject { described_class.prune }
 

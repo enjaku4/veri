@@ -69,9 +69,9 @@ RSpec.describe ApiController, type: :controller do
       end
     end
 
-    it "terminates the session" do
+    it "keeps the session" do
       travel_to 2.hours.from_now do
-        expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+        expect { post :create, format: :json }.not_to change(Veri::Session, :count)
       end
     end
 
@@ -116,9 +116,9 @@ RSpec.describe ApiController, type: :controller do
       end
     end
 
-    it "terminates the session" do
+    it "keeps the session" do
       travel_to 2.hours.from_now do
-        expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+        expect { post :create, format: :json }.not_to change(Veri::Session, :count)
       end
     end
 

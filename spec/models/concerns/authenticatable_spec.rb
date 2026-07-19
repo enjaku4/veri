@@ -113,6 +113,19 @@ RSpec.describe Veri::Authenticatable do
         .to change(user, :locked).from(false).to(true)
         .and change(user, :locked_at).from(nil).to be_within(1.second).of(Time.current)
     end
+
+    it "terminates all sessions of the user" do
+      2.times do
+        Veri::Session.create!(
+          hashed_token: SecureRandom.hex,
+          expires_at: 1.hour.from_now,
+          last_seen_at: Time.current,
+          authenticatable: user
+        )
+      end
+
+      expect { subject }.to change(user.sessions, :count).from(2).to(0)
+    end
   end
 
   describe "#unlock!" do
