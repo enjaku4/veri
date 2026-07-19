@@ -129,6 +129,16 @@ RSpec.describe Veri::Authentication do
         expect(controller.current_user).to be_nil
       end
     end
+
+    context "when current user was read before logging in" do
+      before { controller.current_user }
+
+      it "returns the logged in user within the same request" do
+        subject
+        expect(controller.current_user).to eq(user)
+        expect(controller.logged_in?).to be true
+      end
+    end
   end
 
   describe "#log_out" do
@@ -148,6 +158,14 @@ RSpec.describe Veri::Authentication do
 
     it "deletes the veri_token cookie" do
       expect { subject }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
+    end
+
+    it "resets the current user and session within the same request" do
+      expect(controller.current_user).to eq(user)
+      subject
+      expect(controller.current_user).to be_nil
+      expect(controller.current_session).to be_nil
+      expect(controller.logged_in?).to be false
     end
   end
 

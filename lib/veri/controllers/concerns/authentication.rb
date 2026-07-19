@@ -45,12 +45,14 @@ module Veri
       token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
 
       cookies.encrypted.permanent["#{auth_cookie_prefix}_token"] = { value: token, httponly: true }
+      reset_memoization
       true
     end
 
     def log_out
       current_session&.terminate
       cookies.delete("#{auth_cookie_prefix}_token")
+      reset_memoization
     end
 
     def logged_in?
@@ -96,6 +98,10 @@ module Veri
 
     def auth_cookie_prefix
       @auth_cookie_prefix ||= "auth_#{Zlib.crc32(Marshal.dump(resolved_tenant))}"
+    end
+
+    def reset_memoization
+      @current_user = @current_session = nil
     end
   end
 end
