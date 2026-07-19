@@ -81,6 +81,8 @@ Veri.configure do |config|
 end
 ```
 
+The hashing algorithm can be changed at any time: existing passwords are verified with the algorithm they were hashed with and are automatically re-hashed with the configured algorithm on the next successful login.
+
 ## Password Management
 
 Your user model is automatically extended with password management methods:
@@ -407,6 +409,8 @@ session.shapeshift(user, tenant: company)
 # Returns the original tenant when shapeshifted
 session.true_tenant
 ```
+
+The `tenant:` argument always becomes the session's tenant: omitting it means no tenant. In a multi-tenant application, always pass it explicitly.
 
 All other session methods work the same way in multi-tenant applications as in single-tenant applications. However, `to_true_identity` will restore both the original user and tenant.
 

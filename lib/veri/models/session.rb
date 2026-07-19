@@ -5,8 +5,6 @@ module Veri
   class Session < ActiveRecord::Base
     self.table_name = "veri_sessions"
 
-    belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
-    belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
     belongs_to :original_tenant, polymorphic: true, optional: true
 
@@ -128,10 +126,12 @@ module Veri
 
       alias terminate_all delete_all
 
-      def lookup(token, resolved_tenant)
+      def find_active(token, resolved_tenant)
         return nil if token.blank?
 
-        find_by(hashed_token: digest_token(token), **resolved_tenant)
+        session = find_by(hashed_token: digest_token(token), **resolved_tenant)
+
+        session&.active? ? session : nil
       end
 
       private

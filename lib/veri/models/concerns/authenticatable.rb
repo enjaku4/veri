@@ -23,14 +23,26 @@ module Veri
     end
 
     def verify_password(password)
-      hasher.verify(
-        Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process,
-        hashed_password
-      )
+      processed_password = Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process
+
+      return false if hashed_password.blank?
+
+      stored_hasher = Veri::Configuration::HASHERS.values.find { _1.match?(hashed_password) }
+
+      raise Veri::Error, "Unrecognized password hash format" unless stored_hasher
+
+      return false unless stored_hasher.verify(processed_password, hashed_password)
+
+      update_column(:hashed_password, hasher.create(processed_password)) unless stored_hasher == hasher
+
+      true
     end
 
     def lock!
-      update!(locked: true, locked_at: Time.current)
+      transaction do
+        update!(locked: true, locked_at: Time.current)
+        sessions.terminate_all
+      end
     end
 
     def unlock!

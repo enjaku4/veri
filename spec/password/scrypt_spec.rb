@@ -20,4 +20,16 @@ RSpec.describe Veri::Password::SCrypt do
       expect(described_class.verify("wrong_password", hashed_password)).to be false
     end
   end
+
+  describe ".match?" do
+    it "matches its own hash format" do
+      expect(described_class.match?("400$8$1b$deadbeef$cafebabe")).to be true
+    end
+
+    it "does not match other hash formats" do
+      expect(described_class.match?("$argon2id$v=19$m=65536,t=2,p=1$c2FsdA$aGFzaA")).to be false
+      expect(described_class.match?("$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW")).to be false
+      expect(described_class.match?("sha512$210000$64$c2FsdA==$aGFzaA==")).to be false
+    end
+  end
 end

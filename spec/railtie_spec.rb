@@ -162,6 +162,64 @@ RSpec.describe Veri::Railtie do
         end
       end
     end
+
+    describe "missing user model handling" do
+      let(:table_exists) { false }
+
+      before { Veri::Configuration.user_model_name = "NonExistentModel" }
+
+      after do
+        Veri::Configuration.reset_to_defaults!
+        DummyApplication.config.to_prepare_blocks.each(&:call)
+      end
+
+      context "when server is running" do
+        let(:server_running) { true }
+
+        it "raises a configuration error" do
+          expect { subject }.to raise_error(
+            Veri::ConfigurationError, "Invalid user model name `NonExistentModel`, model does not exist"
+          )
+        end
+      end
+
+      context "when server is not running" do
+        let(:server_running) { false }
+
+        it "skips authenticatable module inclusion and does not raise an error" do
+          expect { subject }.not_to raise_error
+        end
+      end
+    end
+
+    describe "authenticatable associations declaration" do
+      let(:server_running) { false }
+      let(:table_exists) { false }
+      let(:user_model) { class_double(Client) }
+
+      before do
+        Veri::Configuration.user_model_name = "Client"
+        allow(user_model).to receive(:<).with(Veri::Authenticatable).and_return(true)
+        allow(Veri::Configuration).to receive(:user_model).and_return(user_model)
+      end
+
+      after do
+        Veri::Configuration.reset_to_defaults!
+        DummyApplication.config.to_prepare_blocks.each(&:call)
+      end
+
+      it "declares the associations with the user model configured in the initializer" do
+        subject
+        expect(Veri::Session.reflect_on_association(:authenticatable).klass).to eq(Client)
+        expect(Veri::Session.reflect_on_association(:original_authenticatable).klass).to eq(Client)
+      end
+
+      it "re-declares the associations on each run without errors or stale classes" do
+        expect { 2.times { DummyApplication.config.to_prepare_blocks.each(&:call) } }.not_to raise_error
+        expect(Veri::Session.reflect_on_association(:authenticatable).klass).to eq(Client)
+        expect(Veri::Session.reflect_on_association(:original_authenticatable).klass).to eq(Client)
+      end
+    end
   end
 
   context "extend_migration_helpers initializer" do

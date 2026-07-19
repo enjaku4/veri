@@ -22,8 +22,16 @@ module Veri
           end
         end
 
-        user_model = Veri::Configuration.user_model
-        user_model.include Veri::Authenticatable unless user_model < Veri::Authenticatable
+        begin
+          user_model = Veri::Configuration.user_model
+          user_model.include Veri::Authenticatable unless user_model < Veri::Authenticatable
+        rescue Veri::ConfigurationError
+          raise if Veri::Railtie.server_running?
+        end
+
+        Veri::Session.belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
+        Veri::Session.belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name,
+                                                            optional: true
       end
     end
 

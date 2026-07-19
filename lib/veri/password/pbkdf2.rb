@@ -42,6 +42,10 @@ module Veri
 
         OpenSSL.fixed_length_secure_compare(recalculated_hash, hash)
       end
+
+      def match?(hashed_password)
+        hashed_password.start_with?("#{DIGEST}$")
+      end
     end
   end
 end

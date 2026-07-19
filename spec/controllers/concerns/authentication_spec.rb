@@ -49,6 +49,33 @@ RSpec.describe Veri::Authentication do
     context "when user is not logged in" do
       it { is_expected.to be_nil }
     end
+
+    context "when the session is expired" do
+      let(:user) { User.create! }
+
+      before { controller.log_in(user) }
+
+      it "returns nil" do
+        travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
+          expect(subject).to be_nil
+        end
+      end
+    end
+
+    context "when the session is inactive" do
+      let(:user) { User.create! }
+
+      before do
+        Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
+        controller.log_in(user)
+      end
+
+      it "returns nil" do
+        travel_to(2.hours.from_now) do
+          expect(subject).to be_nil
+        end
+      end
+    end
   end
 
   describe "#current_session" do
@@ -102,6 +129,32 @@ RSpec.describe Veri::Authentication do
         expect(controller.current_user).to be_nil
       end
     end
+
+    context "when the request is over HTTPS" do
+      before { controller.request = ActionDispatch::TestRequest.create("HTTPS" => "on") }
+
+      it "sets the secure flag on the auth cookie" do
+        subject
+        expect(controller.send(:cookies).instance_variable_get(:@set_cookies)["veri_token"][:secure]).to be true
+      end
+    end
+
+    context "when the request is over HTTP" do
+      it "does not set the secure flag on the auth cookie" do
+        subject
+        expect(controller.send(:cookies).instance_variable_get(:@set_cookies)["veri_token"][:secure]).to be false
+      end
+    end
+
+    context "when current user was read before logging in" do
+      before { controller.current_user }
+
+      it "returns the logged in user within the same request" do
+        subject
+        expect(controller.current_user).to eq(user)
+        expect(controller.logged_in?).to be true
+      end
+    end
   end
 
   describe "#log_out" do
@@ -120,7 +173,15 @@ RSpec.describe Veri::Authentication do
     end
 
     it "deletes the veri_token cookie" do
-      expect { subject }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
+      expect { subject }.to change { controller.send(:cookies).encrypted["veri_token"] }.from(be_present).to(be_nil)
+    end
+
+    it "resets the current user and session within the same request" do
+      expect(controller.current_user).to eq(user)
+      subject
+      expect(controller.current_user).to be_nil
+      expect(controller.current_session).to be_nil
+      expect(controller.logged_in?).to be false
     end
   end
 
@@ -152,6 +213,29 @@ RSpec.describe Veri::Authentication do
 
       it { is_expected.to be false }
     end
+
+    context "when the session is expired" do
+      before { controller.log_in(User.create!) }
+
+      it "returns false" do
+        travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
+          expect(subject).to be false
+        end
+      end
+    end
+
+    context "when the session is inactive" do
+      before do
+        Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
+        controller.log_in(User.create!)
+      end
+
+      it "returns false" do
+        travel_to(2.hours.from_now) do
+          expect(subject).to be false
+        end
+      end
+    end
   end
 
   describe "#return_path" do
@@ -162,7 +246,7 @@ RSpec.describe Veri::Authentication do
     before { controller.request = ActionDispatch::TestRequest.create }
 
     context "when return_path is set in cookies" do
-      before { controller.send(:cookies).signed["auth_1636268426_return_path"] = "/some/path" }
+      before { controller.send(:cookies).signed["veri_return_path"] = "/some/path" }
 
       it "returns the return path from the session" do
         expect(subject).to eq("/some/path")

@@ -69,15 +69,15 @@ RSpec.describe ApiController, type: :controller do
       end
     end
 
-    it "terminates the session" do
+    it "keeps the session" do
       travel_to 2.hours.from_now do
-        expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+        expect { post :create, format: :json }.not_to change(Veri::Session, :count)
       end
     end
 
     it "deletes the auth cookie" do
       travel_to 2.hours.from_now do
-        expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
+        expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["veri_token"] }.from(be_present).to(be_nil)
       end
     end
 
@@ -116,15 +116,15 @@ RSpec.describe ApiController, type: :controller do
       end
     end
 
-    it "terminates the session" do
+    it "keeps the session" do
       travel_to 2.hours.from_now do
-        expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+        expect { post :create, format: :json }.not_to change(Veri::Session, :count)
       end
     end
 
     it "deletes the auth cookie" do
       travel_to 2.hours.from_now do
-        expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
+        expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["veri_token"] }.from(be_present).to(be_nil)
       end
     end
 
@@ -167,7 +167,7 @@ RSpec.describe ApiController, type: :controller do
     end
 
     it "deletes the auth cookie" do
-      expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
+      expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["veri_token"] }.from(be_present).to(be_nil)
     end
 
     it "does not set the return path if request format is HTML" do
