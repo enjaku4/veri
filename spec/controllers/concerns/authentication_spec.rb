@@ -130,6 +130,22 @@ RSpec.describe Veri::Authentication do
       end
     end
 
+    context "when the request is over HTTPS" do
+      before { controller.request = ActionDispatch::TestRequest.create("HTTPS" => "on") }
+
+      it "sets the secure flag on the auth cookie" do
+        subject
+        expect(controller.send(:cookies).instance_variable_get(:@set_cookies)["veri_token"][:secure]).to be true
+      end
+    end
+
+    context "when the request is over HTTP" do
+      it "does not set the secure flag on the auth cookie" do
+        subject
+        expect(controller.send(:cookies).instance_variable_get(:@set_cookies)["veri_token"][:secure]).to be false
+      end
+    end
+
     context "when current user was read before logging in" do
       before { controller.current_user }
 

@@ -42,7 +42,7 @@ module Veri
 
       token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
 
-      cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true }
+      cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true, secure: request.ssl? }
       reset_memoization
       true
     end
