@@ -4,6 +4,8 @@
 
 - Fixed authentication raising `NameError` when the configured user model is not named `User`
 - Fixed Rails commands failing when the configured user model class does not exist yet
+- Fixed expired and inactive sessions still appearing as logged in on pages that don't require authentication
+- Fixed locking a user not terminating their sessions until their next request
 
 ## v2.0.2
 
