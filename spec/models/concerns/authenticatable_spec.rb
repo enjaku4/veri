@@ -92,6 +92,15 @@ RSpec.describe Veri::Authenticatable do
       end
     end
 
+    context "when the user has no password" do
+      let(:user) { User.create!(hashed_password: nil) }
+      let(:password) { "some_password" }
+
+      it "returns false" do
+        expect(subject).to be false
+      end
+    end
+
     context "when the password is correct" do
       let(:password) { "correct_password" }
 

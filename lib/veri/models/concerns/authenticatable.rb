@@ -23,10 +23,11 @@ module Veri
     end
 
     def verify_password(password)
-      hasher.verify(
-        Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process,
-        hashed_password
-      )
+      processed_password = Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process
+
+      return false if hashed_password.blank?
+
+      hasher.verify(processed_password, hashed_password)
     end
 
     def lock!
