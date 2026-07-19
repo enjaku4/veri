@@ -163,6 +163,35 @@ RSpec.describe Veri::Railtie do
       end
     end
 
+    describe "missing user model handling" do
+      let(:table_exists) { false }
+
+      before { Veri::Configuration.user_model_name = "NonExistentModel" }
+
+      after do
+        Veri::Configuration.reset_to_defaults!
+        DummyApplication.config.to_prepare_blocks.each(&:call)
+      end
+
+      context "when server is running" do
+        let(:server_running) { true }
+
+        it "raises a configuration error" do
+          expect { subject }.to raise_error(
+            Veri::ConfigurationError, "Invalid user model name `NonExistentModel`, model does not exist"
+          )
+        end
+      end
+
+      context "when server is not running" do
+        let(:server_running) { false }
+
+        it "skips authenticatable module inclusion and does not raise an error" do
+          expect { subject }.not_to raise_error
+        end
+      end
+    end
+
     describe "authenticatable associations declaration" do
       let(:server_running) { false }
       let(:table_exists) { false }
