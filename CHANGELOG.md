@@ -3,6 +3,7 @@
 ### Bugs
 
 - Fixed authentication raising `NameError` when the configured user model is not named `User`
+- Fixed Rails commands failing when the configured user model class does not exist yet
 
 ## v2.0.2
 
