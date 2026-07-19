@@ -1,5 +1,3 @@
-require "zlib"
-
 module Veri
   module Authentication
     extend ActiveSupport::Concern
@@ -29,7 +27,7 @@ module Veri
     end
 
     def current_session
-      token = cookies.encrypted["#{auth_cookie_prefix}_token"]
+      token = cookies.encrypted["veri_token"]
 
       @current_session ||= Session.find_active(token, resolved_tenant)
     end
@@ -44,14 +42,14 @@ module Veri
 
       token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
 
-      cookies.encrypted.permanent["#{auth_cookie_prefix}_token"] = { value: token, httponly: true }
+      cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true }
       reset_memoization
       true
     end
 
     def log_out
       current_session&.terminate
-      cookies.delete("#{auth_cookie_prefix}_token")
+      cookies.delete("veri_token")
       reset_memoization
     end
 
@@ -60,7 +58,7 @@ module Veri
     end
 
     def return_path
-      cookies.signed["#{auth_cookie_prefix}_return_path"]
+      cookies.signed["veri_return_path"]
     end
 
     def shapeshifter?
@@ -77,7 +75,7 @@ module Veri
 
       log_out
 
-      cookies.signed["#{auth_cookie_prefix}_return_path"] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
+      cookies.signed["veri_return_path"] = { value: request.fullpath, expires: 15.minutes.from_now } if request.get? && request.format.html?
 
       when_unauthenticated
     end
@@ -94,10 +92,6 @@ module Veri
         error: Veri::InvalidTenantError,
         message: "Expected a string, an ActiveRecord model instance, or nil, got `#{current_tenant.inspect}`"
       ).resolve
-    end
-
-    def auth_cookie_prefix
-      @auth_cookie_prefix ||= "auth_#{Zlib.crc32(Marshal.dump(resolved_tenant))}"
     end
 
     def reset_memoization

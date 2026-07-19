@@ -157,7 +157,7 @@ RSpec.describe Veri::Authentication do
     end
 
     it "deletes the veri_token cookie" do
-      expect { subject }.to change { controller.send(:cookies).encrypted["auth_1636268426_token"] }.from(be_present).to(be_nil)
+      expect { subject }.to change { controller.send(:cookies).encrypted["veri_token"] }.from(be_present).to(be_nil)
     end
 
     it "resets the current user and session within the same request" do
@@ -230,7 +230,7 @@ RSpec.describe Veri::Authentication do
     before { controller.request = ActionDispatch::TestRequest.create }
 
     context "when return_path is set in cookies" do
-      before { controller.send(:cookies).signed["auth_1636268426_return_path"] = "/some/path" }
+      before { controller.send(:cookies).signed["veri_return_path"] = "/some/path" }
 
       it "returns the return path from the session" do
         expect(subject).to eq("/some/path")
