@@ -27,7 +27,15 @@ module Veri
 
       return false if hashed_password.blank?
 
-      hasher.verify(processed_password, hashed_password)
+      stored_hasher = Veri::Configuration::HASHERS.values.find { _1.match?(hashed_password) }
+
+      raise Veri::Error, "Unrecognized password hash format" unless stored_hasher
+
+      return false unless stored_hasher.verify(processed_password, hashed_password)
+
+      update_column(:hashed_password, hasher.create(processed_password)) unless stored_hasher == hasher
+
+      true
     end
 
     def lock!

@@ -12,6 +12,10 @@ module Veri
       def verify(password, hashed_password)
         ::BCrypt::Password.new(hashed_password) == password
       end
+
+      def match?(hashed_password)
+        hashed_password.start_with?("$2")
+      end
     end
   end
 end

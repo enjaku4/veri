@@ -72,7 +72,7 @@ RSpec.describe Veri::Authenticatable do
   describe "#verify_password" do
     subject { user.verify_password(password) }
 
-    let(:user) { User.create!(hashed_password: "hashed_password") }
+    let(:user) { User.create!(hashed_password: "$argon2id$hashed_password") }
 
     context "when the password is invalid" do
       let(:password) { nil }
@@ -108,6 +108,48 @@ RSpec.describe Veri::Authenticatable do
 
       it "returns true" do
         expect(subject).to be true
+      end
+
+      it "does not re-hash the password" do
+        expect { subject }.not_to(change { user.reload.hashed_password })
+      end
+    end
+
+    context "when the stored hash was created with a different algorithm" do
+      let(:user) { User.create!(hashed_password: Veri::Password::BCrypt.create("secure_password")) }
+
+      before { Veri::Configuration.configure { _1.hashing_algorithm = :pbkdf2 } }
+
+      context "when the password is correct" do
+        let(:password) { "secure_password" }
+
+        it "verifies with the stored algorithm and re-hashes with the configured one" do
+          expect(subject).to be true
+          expect(user.reload.hashed_password).to start_with("sha512$")
+          expect(user.verify_password(password)).to be true
+        end
+
+        it "does not change password_updated_at" do
+          expect { subject }.not_to(change { user.reload.password_updated_at })
+        end
+      end
+
+      context "when the password is incorrect" do
+        let(:password) { "wrong_password" }
+
+        it "returns false and keeps the stored hash" do
+          expect(subject).to be false
+          expect(user.reload.hashed_password).to start_with("$2")
+        end
+      end
+    end
+
+    context "when the stored hash format is unrecognized" do
+      let(:user) { User.create!(hashed_password: "garbage") }
+      let(:password) { "secure_password" }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Unrecognized password hash format")
       end
     end
   end

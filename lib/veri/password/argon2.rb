@@ -12,6 +12,10 @@ module Veri
       def verify(password, hashed_password)
         ::Argon2::Password.verify_password(password, hashed_password)
       end
+
+      def match?(hashed_password)
+        hashed_password.start_with?("$argon2")
+      end
     end
   end
 end
