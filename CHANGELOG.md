@@ -1,3 +1,9 @@
+## v2.0.3
+
+### Bugs
+
+- Fixed authentication raising `NameError` when the configured user model is not named `User`
+
 ## v2.0.2
 
 ### Misc
