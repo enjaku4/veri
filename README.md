@@ -418,16 +418,10 @@ All other session methods work the same way in multi-tenant applications as in s
 
 When a tenant object is deleted from your database, its associated sessions become orphaned.
 
-To clean up orphaned sessions, use:
+Ideally, the application should be designed so that this doesn't happen: whenever a tenant object is deleted, its sessions are terminated as part of the same operation. However, if that wasn't done, you can clean up the orphaned sessions as a fallback:
 
 ```rb
 Veri::Session.prune
-```
-
-Or, for a specific user:
-
-```rb
-user.sessions.prune
 ```
 
 ### Tenant Migrations
