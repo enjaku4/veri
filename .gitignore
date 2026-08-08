@@ -7,7 +7,7 @@
 /pkg/
 /spec/reports/
 /tmp/
-/vendor/bundle/
+/vendor
 Gemfile.lock
 
 # rspec failure tracking
