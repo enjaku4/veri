@@ -93,6 +93,9 @@ user.update_password("password")
 
 # Verify a password
 user.verify_password("password")
+
+# Check if a password is set
+user.password_set?
 ```
 Changing a password does not automatically terminate existing sessions. If you want to invalidate the user's sessions after a password change, do so explicitly:
 
@@ -397,6 +400,40 @@ user.sessions.in_tenant(tenant)
 # Terminate all sessions for a specific user within a tenant
 user.sessions.in_tenant(tenant).terminate_all
 ```
+
+### Switching Tenants
+
+A session belongs to one tenant, and a browser holds one session per host. A user is therefore logged in to one tenant at a time, unless your tenants live on separate subdomains, where each subdomain keeps its own session.
+
+To move a user to another tenant, call `switch_tenant` on their session and make `current_tenant` return the new tenant from then on:
+
+```rb
+class ApplicationController < ActionController::Base
+  include Veri::Authentication
+
+  with_authentication
+
+  private
+
+  def current_tenant
+    # This example keeps the tenant in a cookie; your app can keep it anywhere
+    Company.find_by(id: cookies.signed[:company_id])
+  end
+end
+
+class CompaniesController < ApplicationController
+  def switch
+    company = current_user.companies.find(params[:id])
+
+    current_session.switch_tenant(company)
+    cookies.signed[:company_id] = company.id
+
+    redirect_to root_path, notice: "Switched to #{company.name}"
+  end
+end
+```
+
+The user stays logged in and the session keeps its expiration.
 
 ### User Impersonation with Tenants
 

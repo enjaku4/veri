@@ -22,10 +22,14 @@ module Veri
       )
     end
 
+    def password_set?
+      hashed_password.present?
+    end
+
     def verify_password(password)
       processed_password = Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process
 
-      return false if hashed_password.blank?
+      return false unless password_set?
 
       stored_hasher = Veri::Configuration::HASHERS.values.find { _1.match?(hashed_password) }
 

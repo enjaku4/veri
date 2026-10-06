@@ -1,3 +1,14 @@
+## v2.1.0
+
+### Features
+
+- Added `Veri::Session#switch_tenant` method to move a session to another tenant
+- Added `password_set?` method to check whether a user has a password
+
+### Bugs
+
+- Fixed `log_in` using the previous tenant when `current_tenant` changes within the same request
+
 ## v2.0.3
 
 ### Bugs

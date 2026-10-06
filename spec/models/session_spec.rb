@@ -318,6 +318,76 @@ RSpec.describe Veri::Session do
     end
   end
 
+  describe "#switch_tenant" do
+    subject { session.switch_tenant(tenant) }
+
+    let(:session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        authenticatable: User.create!,
+        hashed_token: "foo",
+        last_seen_at: Time.current,
+        tenant: Company.create!
+      )
+    end
+
+    context "when tenant is invalid" do
+      let(:tenant) { 123 }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`")
+      end
+    end
+
+    context "when tenant is nil" do
+      let(:tenant) { nil }
+
+      it "removes the tenant from the session" do
+        subject
+        expect(session.reload).to have_attributes(tenant_type: nil, tenant_id: nil)
+      end
+    end
+
+    context "when tenant is a string" do
+      let(:tenant) { "subdomain" }
+
+      it "moves the session to the tenant" do
+        subject
+        expect(session.reload).to have_attributes(tenant_type: "subdomain", tenant_id: nil)
+      end
+    end
+
+    context "when tenant is an ActiveRecord model" do
+      let(:tenant) { Company.create! }
+
+      it "moves the session to the tenant" do
+        subject
+        expect(session.reload.tenant).to eq(tenant)
+      end
+
+      it "does not change the user or the expiration" do
+        expect { subject }.not_to(change { [session.reload.authenticatable, session.reload.expires_at] })
+      end
+    end
+
+    context "when the session is shapeshifted" do
+      let(:tenant) { Company.create! }
+      let(:original_tenant) { session.tenant }
+      let(:original_user) { session.authenticatable }
+
+      before do
+        original_tenant
+        original_user
+        session.shapeshift(User.create!, tenant: Company.create!)
+      end
+
+      it "keeps the original identity and tenant" do
+        subject
+        expect(session.reload).to have_attributes(tenant:, true_tenant: original_tenant, true_identity: original_user)
+      end
+    end
+  end
+
   describe "#shapeshift" do
     subject { session.shapeshift(user, tenant:) }
 

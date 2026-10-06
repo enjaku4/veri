@@ -87,10 +87,12 @@ module Veri
     def current_tenant = nil
 
     def resolved_tenant
-      @resolved_tenant ||= Veri::Inputs::Tenant.new(
-        current_tenant,
+      tenant = current_tenant
+
+      Veri::Inputs::Tenant.new(
+        tenant,
         error: Veri::InvalidTenantError,
-        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{current_tenant.inspect}`"
+        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{tenant.inspect}`"
       ).resolve
     end
 

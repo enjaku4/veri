@@ -91,6 +91,16 @@ module Veri
       )
     end
 
+    def switch_tenant(tenant)
+      update!(
+        **Veri::Inputs::Tenant.new(
+          tenant,
+          error: Veri::InvalidTenantError,
+          message: "Expected a string, an ActiveRecord model instance, or nil, got `#{tenant.inspect}`"
+        ).resolve
+      )
+    end
+
     def tenant
       resolve_tenant(tenant_type, tenant_id) { super }
     end
