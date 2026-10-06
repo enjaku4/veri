@@ -155,6 +155,49 @@ RSpec.describe Veri::Authentication do
         expect(controller.logged_in?).to be true
       end
     end
+
+    context "when the tenant changes after logging out within the same request" do
+      let(:company) { Company.create! }
+      let(:another_company) { Company.create! }
+
+      before do
+        tenant = company
+        allow(controller).to receive(:current_tenant) { tenant }
+
+        controller.log_in(user)
+        controller.log_out
+        tenant = another_company
+      end
+
+      it "logs in the user to the new tenant" do
+        subject
+        expect(controller.current_session.tenant).to eq(another_company)
+      end
+    end
+
+    context "when the tenant changes after it was read within the same request" do
+      let(:company) { Company.create! }
+      let(:another_company) { Company.create! }
+
+      before do
+        tenant = company
+        allow(controller).to receive(:current_tenant) { tenant }
+
+        controller.current_user
+        tenant = another_company
+      end
+
+      it "logs in the user to the new tenant" do
+        subject
+        expect(controller.current_session.tenant).to eq(another_company)
+      end
+    end
+
+    it "reads the current tenant once" do
+      allow(controller).to receive(:current_tenant).and_call_original
+      subject
+      expect(controller).to have_received(:current_tenant).once
+    end
   end
 
   describe "#log_out" do

@@ -69,6 +69,22 @@ RSpec.describe Veri::Authenticatable do
     end
   end
 
+  describe "#password_set?" do
+    subject { user.password_set? }
+
+    context "when the user has a password" do
+      let(:user) { User.create!(hashed_password: "$argon2id$hashed_password") }
+
+      it { is_expected.to be true }
+    end
+
+    context "when the user has no password" do
+      let(:user) { User.create! }
+
+      it { is_expected.to be false }
+    end
+  end
+
   describe "#verify_password" do
     subject { user.verify_password(password) }
 

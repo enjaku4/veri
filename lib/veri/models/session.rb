@@ -60,11 +60,7 @@ module Veri
     def shapeshift(user, tenant: nil)
       raise Veri::Error, "Cannot shapeshift from a shapeshifted session" if shapeshifted?
 
-      resolved_tenant = Veri::Inputs::Tenant.new(
-        tenant,
-        error: Veri::InvalidTenantError,
-        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{tenant.inspect}`"
-      ).resolve
+      resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
 
       update!(
         shapeshifted_at: Time.current,
@@ -72,10 +68,7 @@ module Veri
         original_tenant_type: tenant_type,
         original_tenant_id: tenant_id,
         **resolved_tenant,
-        authenticatable: Veri::Inputs::Authenticatable.new(
-          user,
-          message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{user.inspect}`"
-        ).process
+        authenticatable: Veri::Inputs::Authenticatable.new(user).process
       )
     end
 
@@ -89,6 +82,10 @@ module Veri
         original_tenant_id: nil,
         original_authenticatable: nil
       )
+    end
+
+    def switch_tenant(tenant)
+      update!(**Veri::Inputs::Tenant.new(tenant).resolve)
     end
 
     def tenant

@@ -33,10 +33,7 @@ module Veri
     end
 
     def log_in(authenticatable)
-      processed_authenticatable = Veri::Inputs::Authenticatable.new(
-        authenticatable,
-        message: "Expected an instance of #{Veri::Configuration.user_model_name}, got `#{authenticatable.inspect}`"
-      ).process
+      processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
 
       return false if processed_authenticatable.locked?
 
@@ -87,11 +84,7 @@ module Veri
     def current_tenant = nil
 
     def resolved_tenant
-      @resolved_tenant ||= Veri::Inputs::Tenant.new(
-        current_tenant,
-        error: Veri::InvalidTenantError,
-        message: "Expected a string, an ActiveRecord model instance, or nil, got `#{current_tenant.inspect}`"
-      ).resolve
+      Veri::Inputs::Tenant.new(current_tenant).resolve
     end
 
     def reset_memoization
