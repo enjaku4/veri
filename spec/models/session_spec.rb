@@ -2,6 +2,14 @@ RSpec.describe Veri::Session do
   describe ".in_tenant" do
     subject { described_class.in_tenant(tenant) }
 
+    context "when tenant is invalid" do
+      let(:tenant) { 123 }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`")
+      end
+    end
+
     context "when tenant is a string" do
       let(:tenant) { "subdomain" }
 

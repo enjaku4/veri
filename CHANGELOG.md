@@ -8,6 +8,7 @@
 ### Bugs
 
 - Fixed `log_in` using the previous tenant when `current_tenant` changes within the same request
+- Fixed `Veri::Session.in_tenant` raising an error without a message when given an invalid tenant
 
 ## v2.0.3
 

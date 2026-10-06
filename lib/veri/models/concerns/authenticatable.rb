@@ -16,7 +16,7 @@ module Veri
     def update_password(password)
       update!(
         hashed_password: hasher.create(
-          Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process
+          Veri::Inputs::NonEmptyString.new(password).process
         ),
         password_updated_at: Time.current
       )
@@ -27,7 +27,7 @@ module Veri
     end
 
     def verify_password(password)
-      processed_password = Veri::Inputs::NonEmptyString.new(password, message: "Expected a non-empty string, got `#{password.inspect}`").process
+      processed_password = Veri::Inputs::NonEmptyString.new(password).process
 
       return false unless password_set?
 

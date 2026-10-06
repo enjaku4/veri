@@ -17,6 +17,9 @@ module Veri
 
       private
 
+      def default_error = Veri::InvalidTenantError
+      def default_message = "Expected a string, an ActiveRecord model instance, or nil, got `#{@value.inspect}`"
+
       def processor
         -> {
           return @value if @value.nil?
