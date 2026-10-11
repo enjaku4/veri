@@ -9,7 +9,7 @@ plugins:
   - rubocop-thread_safety
 
 AllCops:
-  TargetRailsVersion: 8.0
+  TargetRailsVersion: 8.1
   TargetRubyVersion: 3.3
   NewCops: enable
 

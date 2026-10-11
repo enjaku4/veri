@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "argon2", "~> 2.0"
   spec.add_dependency "bcrypt", "~> 3.0"
-  spec.add_dependency "rails", ">= 8.0", "< 8.2"
+  spec.add_dependency "rails", ">= 8.1", "< 8.2"
   spec.add_dependency "scrypt", "~> 3.0"
   spec.add_dependency "user_agent_parser", "~> 2.0"
 end
