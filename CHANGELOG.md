@@ -4,7 +4,7 @@
 
 ### Breaking
 
-- Dropped support for Rails 7.2
+- Dropped support for Rails 8.0 and earlier
 - Dropped support for Ruby 3.2
 
 ## v2.1.0
