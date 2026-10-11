@@ -1,3 +1,5 @@
+<!--TODO: v3-->
+
 # Veri: Minimal Authentication for Rails
 
 [![Gem Version](https://badge.fury.io/rb/veri.svg)](http://badge.fury.io/rb/veri)
