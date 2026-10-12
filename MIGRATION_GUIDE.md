@@ -43,3 +43,16 @@ Account locking is now called suspension, because `lock!` overrode Active Record
 | `locked_at` column | `suspended_at` column |
 
 The behavior is unchanged.
+
+## Sessions Terminated on Password Update
+
+`update_password` now terminates all of the user's sessions, including the current one. To keep the user signed in, log them in again or opt out of session termination:
+
+```rb
+# Update a password and keep the user signed in
+user.update_password(new_password)
+log_in(user)
+
+# Update a password without terminating sessions
+user.update_password(new_password, terminate_sessions: false)
+```
