@@ -1,4 +1,5 @@
 <!--TODO: v3-->
+<!--TODO: migration guide-->
 
 ## v3.0.0
 
@@ -7,10 +8,12 @@
 - Dropped support for Rails 8.0 and earlier
 - Dropped support for Ruby 3.2
 - Changed `user_agent` column in `veri_sessions` table from string to text
+- Renamed account locking to suspension
 
 ### Bugs
 
 - Fixed Rails commands failing when the user model cannot be loaded
+- Fixed `lock!` overriding Active Record's row locking method of the same name
 
 ## v2.1.0
 
