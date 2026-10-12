@@ -37,7 +37,7 @@ else
   load "#{File.dirname(__FILE__)}/support/id_schema.rb"
 end
 
-require "#{File.dirname(__FILE__)}/support/application"
+require_relative "support/application"
 
 if ENV["UUID_TESTS"]
   require "securerandom"
