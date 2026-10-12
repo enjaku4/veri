@@ -32,7 +32,7 @@ ActiveRecord::Schema.define do
     t.datetime "shapeshifted_at"
     t.datetime "last_seen_at", null: false
     t.string "ip_address"
-    t.string "user_agent"
+    t.text "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "tenant_type"

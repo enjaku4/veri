@@ -24,7 +24,7 @@ RSpec.describe Veri::AuthenticationGenerator do
             t.datetime :shapeshifted_at
             t.datetime :last_seen_at, null: false
             t.string :ip_address
-            t.string :user_agent
+            t.text :user_agent
 
             t.timestamps
           end

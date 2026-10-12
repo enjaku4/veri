@@ -6,6 +6,7 @@
 
 - Dropped support for Rails 8.0 and earlier
 - Dropped support for Ruby 3.2
+- Changed `user_agent` column in `veri_sessions` table from string to text
 
 ### Bugs
 
