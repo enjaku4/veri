@@ -1,0 +1,45 @@
+<!--TODO: discussion-->
+
+# Migration guide to version 3.0.0
+
+Veri v3.0.0 includes several breaking changes. This guide helps you migrate your app from Veri v2.x.x.
+
+If you're new to Veri, simply install the latest version and follow the README instructions.
+
+## Database Migration
+
+Run this migration, replacing `users` with your user table name if it's different:
+
+```rb
+class MigrateVeriToV3 < ActiveRecord::Migration[8.1]
+  def up
+    change_column :veri_sessions, :user_agent, :text
+
+    rename_column :users, :locked, :suspended
+    rename_column :users, :locked_at, :suspended_at
+
+    execute "UPDATE users SET hashed_password = CONCAT('argon2:', hashed_password) WHERE hashed_password LIKE '$argon2%'"
+    execute "UPDATE users SET hashed_password = CONCAT('bcrypt:', hashed_password) WHERE hashed_password LIKE '$2%'"
+    execute "UPDATE users SET hashed_password = CONCAT('pbkdf2:', hashed_password) WHERE hashed_password LIKE 'sha512$%'"
+    execute "UPDATE users SET hashed_password = CONCAT('scrypt:', hashed_password) WHERE hashed_password NOT LIKE '%:%'"
+  end
+end
+```
+
+This migration updates the database to be compatible with Veri v3. It changes the `user_agent` column type to `text`, renames the `locked` and `locked_at` columns, and adds an algorithm marker to each stored password hash.
+
+## Account Locking Renamed to Suspension
+
+Account locking is now called suspension, because `lock!` overrode Active Record's row locking method of the same name. Replace any usages of the old methods with their new counterparts:
+
+| Old | New |
+|---|---|
+| `user.lock!` | `user.suspend!` |
+| `user.unlock!` | `user.unsuspend!` |
+| `user.locked?` | `user.suspended?` |
+| `User.locked` | `User.suspended` |
+| `User.unlocked` | `User.unsuspended` |
+| `locked` column | `suspended` column |
+| `locked_at` column | `suspended_at` column |
+
+The behavior is unchanged.
