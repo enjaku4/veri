@@ -10,6 +10,7 @@
 - Changed `user_agent` column in `veri_sessions` table from string to text
 - Renamed account locking to suspension
 - Added algorithm markers to stored password hashes
+- `update_password` now terminates all sessions of the user by default
 
 ### Bugs
 
