@@ -99,11 +99,15 @@ user.verify_password("password")
 # Check if a password is set
 user.password_set?
 ```
-Changing a password does not automatically terminate existing sessions. If you want to invalidate the user's sessions after a password change, do so explicitly:
+Updating a password terminates all of the user's sessions, including the current one. To keep the user signed in, log them in again or opt out of session termination:
 
 ```rb
+# Update a password and keep the user signed in
 user.update_password(new_password)
-user.sessions.terminate_all
+log_in(user)
+
+# Update a password without terminating sessions
+user.update_password(new_password, terminate_sessions: false)
 ```
 
 ## Controller Integration
