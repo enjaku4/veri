@@ -13,7 +13,7 @@ Veri supports multi-tenancy, granular session management, multiple password hash
 
 **Example of Usage:**
 
-Consider a multi-tenant SaaS application where users need to manage their active sessions across devices and browsers, terminating specific sessions remotely when needed. Administrators require similar capabilities in their admin panel, with additional powers to lock accounts and temporarily assume user identities for troubleshooting. You can build all this easily with Veri.
+Consider a multi-tenant SaaS application where users need to manage their active sessions across devices and browsers, terminating specific sessions remotely when needed. Administrators require similar capabilities in their admin panel, with additional powers to suspend accounts and temporarily assume user identities for troubleshooting. You can build all this easily with Veri.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Password Management](#password-management)
   - [Controller Integration](#controller-integration)
   - [Authentication Sessions](#authentication-sessions)
-  - [Account Lockout](#account-lockout)
+  - [Account Suspension](#account-suspension)
   - [User Impersonation](#user-impersonation)
   - [Multi-Tenancy](#multi-tenancy)
   - [View Helpers](#view-helpers)
@@ -180,7 +180,7 @@ current_user
 # Returns true if user is authenticated
 logged_in?
 
-# Authenticates user, returns true on success or false if account is locked
+# Authenticates user, returns true on success or false if account is suspended
 log_in(user)
 
 # Terminates current session
@@ -285,28 +285,28 @@ user.sessions.inactive.terminate_all
 Veri::Session.expired.terminate_all
 ```
 
-## Account Lockout
+## Account Suspension
 
-Veri provides account lockout functionality to temporarily disable user accounts.
+Veri provides account suspension functionality to temporarily disable user accounts.
 
 ```rb
-# Lock a user account
-user.lock!
+# Suspend a user account
+user.suspend!
 
-# Unlock a user account
-user.unlock!
+# Unsuspend a user account
+user.unsuspend!
 
-# Check if account is locked
-user.locked?
+# Check if account is suspended
+user.suspended?
 
-# Fetch locked users
-User.locked
+# Fetch suspended users
+User.suspended
 
-# Fetch unlocked users
-User.unlocked
+# Fetch unsuspended users
+User.unsuspended
 ```
 
-When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
+When an account is suspended, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
 
 ## User Impersonation
 
