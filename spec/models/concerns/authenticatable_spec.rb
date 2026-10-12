@@ -47,12 +47,29 @@ RSpec.describe Veri::Authenticatable do
     subject { user.update_password(password) }
 
     let(:user) { User.create! }
+    let(:other_user) { User.create! }
+
+    before do
+      [user, user, other_user].each do |authenticatable|
+        Veri::Session.create!(
+          hashed_token: SecureRandom.hex,
+          expires_at: 1.hour.from_now,
+          last_seen_at: Time.current,
+          authenticatable:
+        )
+      end
+    end
 
     context "when the password is invalid" do
       let(:password) { nil }
 
       it "raises an error" do
         expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected a non-empty string, got `nil`")
+      end
+
+      it "does not terminate sessions" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect(Veri::Session.count).to eq(3)
       end
     end
 
@@ -65,6 +82,33 @@ RSpec.describe Veri::Authenticatable do
         expect { subject }
           .to change(user, :hashed_password).from(nil).to("argon2:hashed_password")
           .and change(user, :password_updated_at).from(nil).to be_within(1.second).of(Time.current)
+      end
+
+      it "returns true" do
+        expect(subject).to be true
+      end
+
+      it "terminates all sessions of the user and no one else's" do
+        expect { subject }.to change(user.sessions, :count).from(2).to(0)
+        expect(other_user.sessions.count).to eq(1)
+      end
+
+      context "when terminate_sessions is false" do
+        subject { user.update_password(password, terminate_sessions: false) }
+
+        it "updates the password and keeps the sessions" do
+          expect { subject }.to change(user, :hashed_password).from(nil).to("argon2:hashed_password")
+          expect(user.sessions.count).to eq(2)
+        end
+      end
+
+      context "when the user is a new record" do
+        let(:new_user) { User.new }
+
+        it "saves the user with the password" do
+          expect(new_user.update_password(password)).to be true
+          expect(new_user.reload.hashed_password).to eq("argon2:hashed_password")
+        end
       end
     end
   end
@@ -147,6 +191,17 @@ RSpec.describe Veri::Authenticatable do
 
         it "does not change password_updated_at" do
           expect { subject }.not_to(change { user.reload.password_updated_at })
+        end
+
+        it "does not terminate sessions" do
+          Veri::Session.create!(
+            hashed_token: SecureRandom.hex,
+            expires_at: 1.hour.from_now,
+            last_seen_at: Time.current,
+            authenticatable: user
+          )
+
+          expect { subject }.not_to(change { user.sessions.count })
         end
       end
 

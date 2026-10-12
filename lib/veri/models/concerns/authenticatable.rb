@@ -13,11 +13,13 @@ module Veri
       scope :unsuspended, -> { where(suspended: false) }
     end
 
-    def update_password(password)
-      update!(
-        hashed_password: hash_password(Veri::Inputs::NonEmptyString.new(password).process),
-        password_updated_at: Time.current
-      )
+    def update_password(password, terminate_sessions: true)
+      hashed_password = hash_password(Veri::Inputs::NonEmptyString.new(password).process)
+
+      transaction do
+        sessions.terminate_all if terminate_sessions
+        update!(hashed_password:, password_updated_at: Time.current)
+      end
     end
 
     def password_set?
