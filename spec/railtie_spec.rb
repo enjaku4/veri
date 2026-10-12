@@ -1,212 +1,39 @@
 RSpec.describe Veri::Railtie do
-  describe ".server_running?" do
-    context "when Rails::Server is defined" do
-      before { stub_const("Rails::Server", Class.new) }
-
-      it "returns true" do
-        expect(described_class.server_running?).to be true
-      end
-    end
-
-    context "when Rails::Server is not defined" do
-      it "returns false" do
-        expect(described_class.server_running?).to be false
-      end
-    end
-  end
-
-  describe ".table_exists?" do
-    let(:connection) { instance_double(ActiveRecord::ConnectionAdapters::AbstractAdapter) }
-
-    before do
-      allow(ActiveRecord::Base).to receive(:connection).and_return(connection)
-    end
-
-    context "when veri_sessions table exists" do
-      before do
-        allow(connection).to receive(:data_source_exists?).with("veri_sessions").and_return(true)
-      end
-
-      it "returns true" do
-        expect(described_class.table_exists?).to be true
-      end
-    end
-
-    context "when veri_sessions table does not exist" do
-      before do
-        allow(connection).to receive(:data_source_exists?).with("veri_sessions").and_return(false)
-      end
-
-      it "returns false" do
-        expect(described_class.table_exists?).to be false
-      end
-    end
-
-    context "when database does not exist" do
-      before do
-        allow(connection).to receive(:data_source_exists?).with("veri_sessions").and_raise(ActiveRecord::NoDatabaseError)
-      end
-
-      it "returns false" do
-        expect(described_class.table_exists?).to be false
-      end
-    end
-
-    context "when connection is not established" do
-      before do
-        allow(connection).to receive(:data_source_exists?).with("veri_sessions").and_raise(ActiveRecord::ConnectionNotEstablished)
-      end
-
-      it "returns false" do
-        expect(described_class.table_exists?).to be false
-      end
-    end
-  end
-
   context "to_prepare initializer" do
     subject { DummyApplication.config.to_prepare_blocks.each(&:call) }
 
-    before do
-      allow(described_class).to receive_messages(server_running?: server_running, table_exists?: table_exists)
+    after do
+      Veri::Configuration.reset_to_defaults!
+      DummyApplication.config.to_prepare_blocks.each(&:call)
     end
 
-    describe "tenant class checking" do
-      context "when server is running and table exists" do
-        let(:server_running) { true }
-        let(:table_exists) { true }
+    it "does not query the database" do
+      queries = []
 
-        before do
-          Veri::Session.create!(
-            tenant_type:,
-            tenant_id:,
-            hashed_token: "foo",
-            expires_at: 1.hour.from_now,
-            authenticatable: User.create!,
-            last_seen_at: 1.hour.ago
-          )
-        end
+      ActiveSupport::Notifications.subscribed(-> (*, payload) { queries << payload[:sql] }, "sql.active_record") { subject }
 
-        context "when all tenants exist" do
-          let(:tenant_type) { "Company" }
-          let(:tenant_id) { 1 }
-
-          it "does not raise an error" do
-            expect { subject }.not_to raise_error
-          end
-        end
-
-        context "when a tenant class does not exist" do
-          let(:tenant_type) { "NonExistentClass" }
-          let(:tenant_id) { 1 }
-
-          it "raises a Veri::Error" do
-            expect { subject }.to raise_error(
-              Veri::Error, "Tenant not found: class `NonExistentClass` may have been renamed or deleted"
-            )
-          end
-        end
-      end
-
-      context "when server is not running" do
-        let(:server_running) { false }
-        let(:table_exists) { true }
-
-        before do
-          Veri::Session.create!(
-            tenant_type: "NonExistentClass",
-            tenant_id: 1,
-            hashed_token: "foo",
-            expires_at: 1.hour.from_now,
-            authenticatable: User.create!,
-            last_seen_at: 1.hour.ago
-          )
-        end
-
-        it "skips tenant class checking and does not raise an error" do
-          expect { subject }.not_to raise_error
-        end
-      end
-
-      context "when table does not exist" do
-        let(:server_running) { true }
-        let(:table_exists) { false }
-
-        it "skips tenant class checking and does not raise an error" do
-          expect { subject }.not_to raise_error
-        end
-      end
+      expect(queries).to be_empty
     end
 
-    describe "authenticatable module inclusion" do
-      let(:server_running) { true }
-      let(:table_exists) { true }
-      let(:user_model) { class_double(User) }
-
-      before { allow(Veri::Configuration).to receive(:user_model).and_return(user_model) }
-
-      context "when user model already includes Veri::Authenticatable" do
-        before { allow(user_model).to receive(:<).with(Veri::Authenticatable).and_return(true) }
-
-        it "does not include Veri::Authenticatable again" do
-          expect(user_model).not_to receive(:include).with(Veri::Authenticatable)
-          subject
-        end
-      end
-
-      context "when user model does not include Veri::Authenticatable" do
-        before { allow(user_model).to receive(:<).with(Veri::Authenticatable).and_return(false) }
-
-        it "includes Veri::Authenticatable in the user model" do
-          expect(user_model).to receive(:include).with(Veri::Authenticatable)
-          subject
-        end
-      end
-    end
-
-    describe "missing user model handling" do
-      let(:table_exists) { false }
-
+    context "when the configured user model does not exist" do
       before { Veri::Configuration.user_model_name = "NonExistentModel" }
 
-      after do
-        Veri::Configuration.reset_to_defaults!
-        DummyApplication.config.to_prepare_blocks.each(&:call)
+      it "does not raise an error" do
+        expect { subject }.not_to raise_error
       end
+    end
 
-      context "when server is running" do
-        let(:server_running) { true }
+    context "when the configured user model cannot be loaded" do
+      before { Veri::Configuration.user_model_name = "BrokenUser" }
 
-        it "raises a configuration error" do
-          expect { subject }.to raise_error(
-            Veri::ConfigurationError, "Invalid user model name `NonExistentModel`, model does not exist"
-          )
-        end
-      end
-
-      context "when server is not running" do
-        let(:server_running) { false }
-
-        it "skips authenticatable module inclusion and does not raise an error" do
-          expect { subject }.not_to raise_error
-        end
+      it "does not load it" do
+        expect { subject }.not_to raise_error
+        expect { BrokenUser }.to raise_error(RuntimeError, "This model cannot be loaded")
       end
     end
 
     describe "authenticatable associations declaration" do
-      let(:server_running) { false }
-      let(:table_exists) { false }
-      let(:user_model) { class_double(Client) }
-
-      before do
-        Veri::Configuration.user_model_name = "Client"
-        allow(user_model).to receive(:<).with(Veri::Authenticatable).and_return(true)
-        allow(Veri::Configuration).to receive(:user_model).and_return(user_model)
-      end
-
-      after do
-        Veri::Configuration.reset_to_defaults!
-        DummyApplication.config.to_prepare_blocks.each(&:call)
-      end
+      before { Veri::Configuration.user_model_name = "Client" }
 
       it "declares the associations with the user model configured in the initializer" do
         subject
@@ -219,6 +46,16 @@ RSpec.describe Veri::Railtie do
         expect(Veri::Session.reflect_on_association(:authenticatable).klass).to eq(Client)
         expect(Veri::Session.reflect_on_association(:original_authenticatable).klass).to eq(Client)
       end
+    end
+  end
+
+  context "include_authenticatable initializer" do
+    it "includes Veri::Authenticatable in the configured user model when it is autoloaded" do
+      expect(User.ancestors).to include(Veri::Authenticatable)
+    end
+
+    it "does not include Veri::Authenticatable in other autoloaded models" do
+      expect(Company.ancestors).not_to include(Veri::Authenticatable)
     end
   end
 

@@ -7,6 +7,10 @@
 - Dropped support for Rails 8.0 and earlier
 - Dropped support for Ruby 3.2
 
+### Bugs
+
+- Fixed Rails commands failing when the user model cannot be loaded
+
 ## v2.1.0
 
 ### Features
