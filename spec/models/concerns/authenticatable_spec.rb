@@ -63,7 +63,7 @@ RSpec.describe Veri::Authenticatable do
 
       it "updates the hashed password and password updated at timestamp" do
         expect { subject }
-          .to change(user, :hashed_password).from(nil).to("hashed_password")
+          .to change(user, :hashed_password).from(nil).to("argon2:hashed_password")
           .and change(user, :password_updated_at).from(nil).to be_within(1.second).of(Time.current)
       end
     end
@@ -73,7 +73,7 @@ RSpec.describe Veri::Authenticatable do
     subject { user.password_set? }
 
     context "when the user has a password" do
-      let(:user) { User.create!(hashed_password: "$argon2id$hashed_password") }
+      let(:user) { User.create!(hashed_password: "argon2:$argon2id$hashed_password") }
 
       it { is_expected.to be true }
     end
@@ -88,7 +88,7 @@ RSpec.describe Veri::Authenticatable do
   describe "#verify_password" do
     subject { user.verify_password(password) }
 
-    let(:user) { User.create!(hashed_password: "$argon2id$hashed_password") }
+    let(:user) { User.create!(hashed_password: "argon2:$argon2id$hashed_password") }
 
     context "when the password is invalid" do
       let(:password) { nil }
@@ -101,7 +101,7 @@ RSpec.describe Veri::Authenticatable do
     context "when the password is incorrect" do
       let(:password) { "wrong_password" }
 
-      before { allow(Veri::Configuration.hasher).to receive(:verify).with(password, user.hashed_password).and_return(false) }
+      before { allow(Veri::Configuration.hasher).to receive(:verify).with(password, "$argon2id$hashed_password").and_return(false) }
 
       it "returns false" do
         expect(subject).to be false
@@ -120,7 +120,7 @@ RSpec.describe Veri::Authenticatable do
     context "when the password is correct" do
       let(:password) { "correct_password" }
 
-      before { allow(Veri::Configuration.hasher).to receive(:verify).with(password, user.hashed_password).and_return(true) }
+      before { allow(Veri::Configuration.hasher).to receive(:verify).with(password, "$argon2id$hashed_password").and_return(true) }
 
       it "returns true" do
         expect(subject).to be true
@@ -132,7 +132,7 @@ RSpec.describe Veri::Authenticatable do
     end
 
     context "when the stored hash was created with a different algorithm" do
-      let(:user) { User.create!(hashed_password: Veri::Password::BCrypt.create("secure_password")) }
+      let(:user) { User.create!(hashed_password: "bcrypt:#{Veri::Password::BCrypt.create("secure_password")}") }
 
       before { Veri::Configuration.configure { _1.hashing_algorithm = :pbkdf2 } }
 
@@ -141,7 +141,7 @@ RSpec.describe Veri::Authenticatable do
 
         it "verifies with the stored algorithm and re-hashes with the configured one" do
           expect(subject).to be true
-          expect(user.reload.hashed_password).to start_with("sha512$")
+          expect(user.reload.hashed_password).to start_with("pbkdf2:sha512$")
           expect(user.verify_password(password)).to be true
         end
 
@@ -155,7 +155,7 @@ RSpec.describe Veri::Authenticatable do
 
         it "returns false and keeps the stored hash" do
           expect(subject).to be false
-          expect(user.reload.hashed_password).to start_with("$2")
+          expect(user.reload.hashed_password).to start_with("bcrypt:$2")
         end
       end
     end
@@ -166,6 +166,32 @@ RSpec.describe Veri::Authenticatable do
 
       it "raises an error" do
         expect { subject }.to raise_error(Veri::Error, "Unrecognized password hash format")
+      end
+    end
+
+    context "when the stored hash has no algorithm marker" do
+      let(:user) { User.create!(hashed_password: Veri::Password::BCrypt.create("secure_password")) }
+      let(:password) { "secure_password" }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Unrecognized password hash format")
+      end
+    end
+
+    Veri::Configuration::HASHERS.each_key do |algorithm|
+      context "with #{algorithm} hashing algorithm" do
+        let(:user) { User.create! }
+
+        before do
+          Veri::Configuration.configure { _1.hashing_algorithm = algorithm }
+          user.update_password("secure_password")
+        end
+
+        it "stores the hash with the algorithm marker and verifies against it" do
+          expect(user.hashed_password).to start_with("#{algorithm}:")
+          expect(user.verify_password("secure_password")).to be true
+          expect(user.verify_password("wrong_password")).to be false
+        end
       end
     end
   end

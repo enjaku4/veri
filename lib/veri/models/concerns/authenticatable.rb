@@ -15,9 +15,7 @@ module Veri
 
     def update_password(password)
       update!(
-        hashed_password: hasher.create(
-          Veri::Inputs::NonEmptyString.new(password).process
-        ),
+        hashed_password: hash_password(Veri::Inputs::NonEmptyString.new(password).process),
         password_updated_at: Time.current
       )
     end
@@ -31,13 +29,14 @@ module Veri
 
       return false unless password_set?
 
-      stored_hasher = Veri::Configuration::HASHERS.values.find { _1.match?(hashed_password) }
+      algorithm, hash = hashed_password.split(":", 2)
+      stored_hasher = Veri::Configuration::HASHERS[algorithm.to_sym]
 
       raise Veri::Error, "Unrecognized password hash format" unless stored_hasher
 
-      return false unless stored_hasher.verify(processed_password, hashed_password)
+      return false unless stored_hasher.verify(processed_password, hash)
 
-      update_column(:hashed_password, hasher.create(processed_password)) unless stored_hasher == hasher
+      update_column(:hashed_password, hash_password(processed_password)) unless stored_hasher == hasher
 
       true
     end
@@ -57,6 +56,10 @@ module Veri
 
     def hasher
       @hasher ||= Veri::Configuration.hasher
+    end
+
+    def hash_password(password)
+      "#{Veri::Configuration.hashing_algorithm}:#{hasher.create(password)}"
     end
   end
 end
