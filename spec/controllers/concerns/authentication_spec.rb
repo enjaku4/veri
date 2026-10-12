@@ -121,8 +121,8 @@ RSpec.describe Veri::Authentication do
       end
     end
 
-    context "when the user account is locked" do
-      let(:user) { User.create!(locked: true) }
+    context "when the user account is suspended" do
+      let(:user) { User.create!(suspended: true) }
 
       it "returns false and does not log in the user" do
         expect(subject).to be false

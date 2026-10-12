@@ -35,7 +35,7 @@ module Veri
     def log_in(authenticatable)
       processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
 
-      return false if processed_authenticatable.locked?
+      return false if processed_authenticatable.suspended?
 
       token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
 
@@ -65,7 +65,7 @@ module Veri
     private
 
     def with_authentication
-      if logged_in? && !current_user.locked?
+      if logged_in? && !current_user.suspended?
         current_session.update_info(request)
         return
       end
