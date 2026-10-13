@@ -290,6 +290,8 @@ user.sessions.inactive.terminate_all
 Veri::Session.expired.terminate_all
 ```
 
+When the current session is terminated, the controller still sees it for the rest of the request, so `logged_in?` stays true until the next request unless you call `log_in` or `log_out`. The same applies when a password update or an account suspension terminates it.
+
 ## Account Suspension
 
 Veri provides account suspension functionality to temporarily disable user accounts.
