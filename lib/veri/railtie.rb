@@ -3,8 +3,10 @@ require "rails/railtie"
 module Veri
   class Railtie < Rails::Railtie
     initializer "veri.include_authenticatable" do
-      Rails.autoloaders.main.on_load do |cpath, klass, _abspath|
-        klass.include Veri::Authenticatable if cpath == Veri::Configuration.user_model_name
+      Rails.autoloaders.each do |autoloader|
+        autoloader.on_load do |cpath, klass, _abspath|
+          klass.include Veri::Authenticatable if cpath == Veri::Configuration.user_model_name
+        end
       end
     end
 
