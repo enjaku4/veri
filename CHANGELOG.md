@@ -11,6 +11,7 @@
 - Renamed account locking to suspension
 - Added algorithm markers to stored password hashes
 - `update_password` now terminates all sessions of the user by default
+- The tenant is now passed to `log_in` and `current_tenant` returns the tenant of the current session
 
 ### Bugs
 
