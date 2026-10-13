@@ -56,3 +56,21 @@ log_in(user)
 # Update a password without terminating sessions
 user.update_password(new_password, terminate_sessions: false)
 ```
+
+## Session as the Source of Truth for the Tenant
+
+The tenant is now passed to `log_in`, and `current_tenant` is a method provided by Veri that returns the tenant of the current session. Remove your `current_tenant` override and pass the tenant when logging in:
+
+```rb
+# Before
+def current_tenant
+  Company.find_by(subdomain: request.subdomain)
+end
+
+log_in(user)
+
+# After
+log_in(user, tenant: Company.find_by(subdomain: request.subdomain))
+```
+
+Veri no longer looks up the session within a tenant, so a session from one tenant is also found on requests for another. If your application relied on that isolation, update its logic to enforce it.
