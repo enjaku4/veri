@@ -102,6 +102,20 @@ RSpec.describe Veri::Authenticatable do
         end
       end
 
+      context "when the hashing algorithm changes after the user has already hashed a password" do
+        before do
+          allow(Veri::Configuration.hasher).to receive(:create).and_call_original
+          user.update_password("old_password")
+          Veri::Configuration.configure { _1.hashing_algorithm = :bcrypt }
+        end
+
+        it "hashes the password with the newly configured algorithm" do
+          subject
+          expect(user.hashed_password).to start_with("bcrypt:$2")
+          expect(user.verify_password(password)).to be true
+        end
+      end
+
       context "when the user is a new record" do
         let(:new_user) { User.new }
 
@@ -191,6 +205,15 @@ RSpec.describe Veri::Authenticatable do
 
         it "does not change password_updated_at" do
           expect { subject }.not_to(change { user.reload.password_updated_at })
+        end
+
+        it "re-hashes with the algorithm configured after the user has already verified a password" do
+          subject
+          Veri::Configuration.configure { _1.hashing_algorithm = :scrypt }
+
+          expect(user.verify_password(password)).to be true
+          expect(user.hashed_password).to start_with("scrypt:")
+          expect(user.verify_password(password)).to be true
         end
 
         it "does not terminate sessions" do

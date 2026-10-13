@@ -38,7 +38,7 @@ module Veri
 
       return false unless stored_hasher.verify(processed_password, hash)
 
-      update_column(:hashed_password, hash_password(processed_password)) unless stored_hasher == hasher
+      update_column(:hashed_password, hash_password(processed_password)) unless stored_hasher == Veri::Configuration.hasher
 
       true
     end
@@ -56,12 +56,10 @@ module Veri
 
     private
 
-    def hasher
-      @hasher ||= Veri::Configuration.hasher
-    end
-
     def hash_password(password)
-      "#{Veri::Configuration.hashing_algorithm}:#{hasher.create(password)}"
+      algorithm = Veri::Configuration.hashing_algorithm
+
+      "#{algorithm}:#{Veri::Configuration::HASHERS.fetch(algorithm).create(password)}"
     end
   end
 end
