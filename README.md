@@ -99,6 +99,7 @@ user.verify_password("password")
 # Check if a password is set
 user.password_set?
 ```
+
 Updating a password terminates all of the user's sessions, including the current one. To keep the user signed in, log them in again or opt out of session termination:
 
 ```rb
@@ -359,7 +360,7 @@ shapeshifter?
 
 ## Multi-Tenancy
 
-Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
+Veri supports multi-tenancy, allowing you to tie authentication sessions to tenants such as organizations, clients, or subdomains.
 
 ### Setup
 
@@ -384,7 +385,7 @@ current_tenant
 
 Since `nil` is a valid tenant, `current_tenant` raises an error when no user is logged in.
 
-Veri finds the session by its cookie alone and doesn't check the tenant. Tenant management and scoping are the responsibility of your application.
+Veri only stores the tenant in the session and returns it. The session itself is found by its cookie alone, whatever its tenant. How your application uses the tenant, if at all, is entirely up to it, so tenant management and scoping are the application's responsibility.
 
 ### Session Tenant Access
 
@@ -570,4 +571,4 @@ Everyone interacting in the Veri project is expected to follow the [code of cond
 
 Only the latest major version is actively maintained. READMEs for older versions are available here for reference:
 
-[v1.x.x](https://github.com/enjaku4/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
+[v2.x.x](https://github.com/enjaku4/veri/blob/e6909d2689c2ae11919fc3d1f3c50c19b2995a91/README.md) | [v1.x.x](https://github.com/enjaku4/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
