@@ -363,27 +363,28 @@ Veri supports multi-tenancy, allowing you to isolate authentication sessions bet
 
 ### Setup
 
-To isolate authentication sessions between different tenants, override the `current_tenant` method:
+Pass the tenant when logging a user in:
 
 ```rb
-class ApplicationController < ActionController::Base
-  include Veri::Authentication
+# Option 1: String-based tenancy (e.g., subdomain)
+log_in(user, tenant: request.subdomain)
 
-  with_authentication
-
-  private
-
-  def current_tenant
-    # Option 1: String-based tenancy (e.g., subdomain)
-    request.subdomain
-
-    # Option 2: Model-based tenancy (e.g., organization)
-    Company.find_by(subdomain: request.subdomain)
-  end
-end
+# Option 2: Model-based tenancy (e.g., organization)
+log_in(user, tenant: company)
 ```
 
-By default, Veri assumes a single-tenant setup where `current_tenant` returns `nil`. Tenants can be represented as either a string or an `ActiveRecord` model instance.
+Tenants can be represented as either a string or an `ActiveRecord` model instance. Without the `tenant:` argument the session has no tenant, which is the single-tenant setup.
+
+Use `current_tenant` in controllers and views to get the tenant of the current session:
+
+```rb
+# Returns the tenant (string, model instance, or nil if the session has no tenant)
+current_tenant
+```
+
+Since `nil` is a valid tenant, `current_tenant` raises an error when no user is logged in.
+
+Veri finds the session by its cookie alone and doesn't check the tenant. Tenant management and scoping are the responsibility of your application.
 
 ### Session Tenant Access
 
@@ -411,35 +412,21 @@ user.sessions.in_tenant(tenant).terminate_all
 
 A session belongs to one tenant, and a browser holds one session per host. A user is therefore logged in to one tenant at a time, unless your tenants live on separate subdomains, where each subdomain keeps its own session.
 
-To move a user to another tenant, call `switch_tenant` on their session and make `current_tenant` return the new tenant from then on:
+To move a user to another tenant, call `switch_tenant` on their session:
 
 ```rb
-class ApplicationController < ActionController::Base
-  include Veri::Authentication
-
-  with_authentication
-
-  private
-
-  def current_tenant
-    # This example keeps the tenant in a cookie; your app can keep it anywhere
-    Company.find_by(id: cookies.signed[:company_id])
-  end
-end
-
 class CompaniesController < ApplicationController
   def switch
     company = current_user.companies.find(params[:id])
 
     current_session.switch_tenant(company)
-    cookies.signed[:company_id] = company.id
 
     redirect_to root_path, notice: "Switched to #{company.name}"
   end
 end
 ```
 
-The user stays logged in and the session keeps its expiration.
+The user stays logged in and the session keeps its expiration. This also covers applications where the tenant is not known at login: log the user in without a tenant and switch once they choose one.
 
 ### User Impersonation with Tenants
 
@@ -459,9 +446,16 @@ All other session methods work the same way in multi-tenant applications as in s
 
 ### Orphaned Sessions
 
-When a tenant object is deleted from your database, its associated sessions become orphaned.
+When a tenant object is deleted from your database, its sessions become orphaned. A user with an orphaned session stays logged in, and `current_tenant` raises `Veri::Error` for them.
 
-Ideally, the application should be designed so that this doesn't happen: whenever a tenant object is deleted, its sessions are terminated as part of the same operation. However, if that wasn't done, you can clean up the orphaned sessions as a fallback:
+Terminate the sessions of a tenant as part of the same operation that deletes it:
+
+```rb
+Veri::Session.in_tenant(company).terminate_all
+company.destroy!
+```
+
+If that wasn't done, clean up the orphaned sessions as a fallback:
 
 ```rb
 Veri::Session.prune
