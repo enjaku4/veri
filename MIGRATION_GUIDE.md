@@ -21,7 +21,7 @@ class MigrateVeriToV3 < ActiveRecord::Migration[8.1]
     execute "UPDATE users SET hashed_password = CONCAT('argon2:', hashed_password) WHERE hashed_password LIKE '$argon2%'"
     execute "UPDATE users SET hashed_password = CONCAT('bcrypt:', hashed_password) WHERE hashed_password LIKE '$2%'"
     execute "UPDATE users SET hashed_password = CONCAT('pbkdf2:', hashed_password) WHERE hashed_password LIKE 'sha512$%'"
-    execute "UPDATE users SET hashed_password = CONCAT('scrypt:', hashed_password) WHERE hashed_password NOT LIKE '%:%'"
+    execute "UPDATE users SET hashed_password = CONCAT('scrypt:', hashed_password) WHERE hashed_password LIKE '%$%$%$%$%' AND hashed_password NOT LIKE '%:%'"
   end
 end
 ```
