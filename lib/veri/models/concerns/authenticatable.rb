@@ -13,13 +13,19 @@ module Veri
       scope :unsuspended, -> { where(suspended: false) }
     end
 
-    def update_password(password, terminate_sessions: true)
+    def update_password(password, terminate_sessions: true, actor: nil)
+      Veri::Events.validate_actor(actor)
+
       hashed_password = hash_password(Veri::Inputs::NonEmptyString.new(password).process)
 
       transaction do
-        sessions.terminate_all if terminate_sessions
+        sessions.terminate_all(actor:) if terminate_sessions
         update!(hashed_password:, password_updated_at: Time.current)
       end
+
+      Veri::Events.publish("change_password") { { user: self, actor: } }
+
+      true
     end
 
     def password_set?
@@ -43,15 +49,27 @@ module Veri
       true
     end
 
-    def suspend!
+    def suspend!(actor: nil)
+      Veri::Events.validate_actor(actor)
+
       transaction do
         update!(suspended: true, suspended_at: Time.current)
-        sessions.terminate_all
+        sessions.terminate_all(actor:)
       end
+
+      Veri::Events.publish("suspend_account") { { user: self, actor: } }
+
+      true
     end
 
-    def unsuspend!
+    def unsuspend!(actor: nil)
+      Veri::Events.validate_actor(actor)
+
       update!(suspended: false, suspended_at: nil)
+
+      Veri::Events.publish("unsuspend_account") { { user: self, actor: } }
+
+      true
     end
 
     private

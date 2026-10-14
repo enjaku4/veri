@@ -30,7 +30,13 @@ module Veri
       last_seen_at < Time.current - inactive_session_lifetime
     end
 
-    alias terminate delete
+    def terminate(actor: nil)
+      Veri::Events.validate_actor(actor)
+
+      delete.tap do
+        Veri::Events.publish("terminate_session") { { session: self, actor: } }
+      end
+    end
 
     def update_info(request)
       update!(
@@ -69,10 +75,16 @@ module Veri
         original_tenant_id: tenant_id,
         **resolved_tenant,
         authenticatable: Veri::Inputs::Authenticatable.new(user).process
-      )
+      ).tap do
+        Veri::Events.publish("start_impersonation") do
+          { session: self, impersonator: original_authenticatable, impersonated_user: authenticatable }
+        end
+      end
     end
 
     def to_true_identity
+      impersonated_user = authenticatable if Veri::Events.enabled?
+
       update!(
         shapeshifted_at: nil,
         authenticatable: original_authenticatable,
@@ -81,11 +93,18 @@ module Veri
         original_tenant_type: nil,
         original_tenant_id: nil,
         original_authenticatable: nil
-      )
+      ).tap do
+        Veri::Events.publish("end_impersonation") { { session: self, impersonator: authenticatable, impersonated_user: } }
+      end
     end
 
     def switch_tenant(tenant)
-      update!(**Veri::Inputs::Tenant.new(tenant).resolve)
+      resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
+      previous_tenant = self.tenant if Veri::Events.enabled?
+
+      update!(**resolved_tenant).tap do
+        Veri::Events.publish("switch_tenant") { { session: self, previous_tenant: } }
+      end
     end
 
     def tenant
@@ -121,7 +140,19 @@ module Veri
         where(id: orphaned_tenant_sessions).delete_all if orphaned_tenant_sessions.any?
       end
 
-      alias terminate_all delete_all
+      def terminate_all(actor: nil)
+        Veri::Events.validate_actor(actor)
+
+        return delete_all unless Veri::Events.enabled?
+
+        in_batches.sum do |batch|
+          sessions = batch.to_a
+
+          batch.delete_all
+          sessions.each { |session| Veri::Events.publish("terminate_session") { { session:, actor: } } }
+          sessions.size
+        end
+      end
 
       def find_active(token)
         return nil if token.blank?
