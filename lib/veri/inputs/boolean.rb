@@ -3,7 +3,7 @@ module Veri
     class Boolean < Veri::Inputs::Base
       private
 
-      def processor = -> { [true, false].include?(@value) ? @value : raise_error }
+      def validate_and_normalize = [true, false].include?(@value) ? @value : raise_error
     end
   end
 end
