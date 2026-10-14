@@ -120,12 +120,15 @@ module Veri
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
-        new(
+        session = new(
           hashed_token: digest_token(token),
           expires_at:,
           authenticatable: user,
           **resolved_tenant
-        ).update_info(request)
+        )
+        session.update_info(request)
+
+        Veri::Events.publish("establish_session") { { session: } }
 
         token
       end

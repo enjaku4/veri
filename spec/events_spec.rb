@@ -45,10 +45,10 @@ RSpec.describe Veri::Events do
   context "when events are enabled" do
     before { Veri::Configuration.configure { _1.events_enabled = true } }
 
-    it "publishes log_in with the new session" do
+    it "publishes establish_session with the new session on log_in" do
       events = published { controller.log_in(user, tenant: "acme") }
 
-      expect(events).to eq([["log_in.veri", { session: user.sessions.take }]])
+      expect(events).to eq([["establish_session.veri", { session: user.sessions.take }]])
     end
 
     it "publishes terminate_session on log_out with the session owner as the actor" do

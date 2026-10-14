@@ -48,7 +48,6 @@ module Veri
 
       cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true, secure: request.ssl? }
       reset_memoized_session
-      Veri::Events.publish("log_in") { { session: current_session } }
       true
     end
 
