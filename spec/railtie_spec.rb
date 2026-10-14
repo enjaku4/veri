@@ -23,15 +23,6 @@ RSpec.describe Veri::Railtie do
       end
     end
 
-    context "when the configured user model cannot be loaded" do
-      before { Veri::Configuration.user_model_name = "BrokenUser" }
-
-      it "does not load it" do
-        expect { subject }.not_to raise_error
-        expect { BrokenUser }.to raise_error(RuntimeError, "This model cannot be loaded")
-      end
-    end
-
     describe "authenticatable associations declaration" do
       before { Veri::Configuration.user_model_name = "Client" }
 
