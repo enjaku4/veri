@@ -148,12 +148,14 @@ module Veri
 
         return delete_all unless Veri::Events.enabled?
 
-        in_batches.sum do |batch|
-          sessions = batch.to_a
+        transaction do
+          in_batches.sum do |batch|
+            sessions = batch.to_a
 
-          batch.delete_all
-          sessions.each { |session| Veri::Events.publish("terminate_session") { { session:, actor: } } }
-          sessions.size
+            batch.delete_all
+            sessions.each { |session| Veri::Events.publish("terminate_session") { { session:, actor: } } }
+            sessions.size
+          end
         end
       end
 

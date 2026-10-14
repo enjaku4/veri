@@ -96,6 +96,17 @@ RSpec.describe Veri::Events do
       expect(Veri::Session.all).to contain_exactly(other_session)
     end
 
+    it "terminates every session in bulk even if a subscriber raises" do
+      Array.new(3) { create_session }
+      allow(Veri::Session).to(receive(:in_batches).and_wrap_original { |original| original.call(of: 1) })
+      subscriber = ActiveSupport::Notifications.subscribe("terminate_session.veri") { raise "audit log is down" }
+
+      expect { user.sessions.terminate_all(actor: admin) }.to raise_error(RuntimeError, "audit log is down")
+      expect(user.sessions.count).to eq(0)
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+    end
+
     it "publishes switch_tenant with the session and the previous tenant" do
       company = Company.create!
       another_company = Company.create!
