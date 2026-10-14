@@ -5,7 +5,7 @@ module Veri
     included do
       include ActionController::Cookies unless self < ActionController::Cookies
 
-      helper_method(:current_user, :logged_in?, :shapeshifter?, :current_session) if respond_to?(:helper_method)
+      helper_method(:current_user, :logged_in?, :shapeshifter?, :current_session, :current_tenant) if respond_to?(:helper_method)
     end
 
     class_methods do
@@ -23,31 +23,38 @@ module Veri
     end
 
     def current_user
-      @current_user ||= current_session&.authenticatable
+      current_session&.authenticatable
     end
 
     def current_session
-      token = cookies.encrypted["veri_token"]
-
-      @current_session ||= Session.find_active(token, resolved_tenant)
+      @current_session ||= Session.find_active(cookies.encrypted["veri_token"])
     end
 
-    def log_in(authenticatable)
-      processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
+    def current_tenant
+      raise Veri::Error, "No user is logged in" unless current_session
 
-      return false if processed_authenticatable.locked?
+      current_session.tenant
+    rescue ActiveRecord::RecordNotFound
+      raise Veri::Error, "Tenant not found"
+    end
+
+    def log_in(authenticatable, tenant: nil)
+      processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
+      resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
+
+      return false if processed_authenticatable.suspended?
 
       token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
 
       cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true, secure: request.ssl? }
-      reset_memoization
+      reset_memoized_session
       true
     end
 
     def log_out
-      current_session&.terminate
+      current_session&.terminate(actor: current_session.true_identity)
       cookies.delete("veri_token")
-      reset_memoization
+      reset_memoized_session
     end
 
     def logged_in?
@@ -65,7 +72,7 @@ module Veri
     private
 
     def with_authentication
-      if logged_in? && !current_user.locked?
+      if logged_in? && !current_user.suspended?
         current_session.update_info(request)
         return
       end
@@ -81,14 +88,8 @@ module Veri
       request.format.html? ? redirect_back_or_to(root_path) : head(:unauthorized)
     end
 
-    def current_tenant = nil
-
-    def resolved_tenant
-      Veri::Inputs::Tenant.new(current_tenant).resolve
-    end
-
-    def reset_memoization
-      @current_user = @current_session = nil
+    def reset_memoized_session
+      @current_session = nil
     end
   end
 end

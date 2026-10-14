@@ -610,7 +610,7 @@ RSpec.describe Veri::Session do
   end
 
   describe ".find_active" do
-    subject { described_class.find_active(token, tenant) }
+    subject { described_class.find_active(token) }
 
     let(:tenant) { { tenant_type: nil, tenant_id: nil } }
     let(:user) { User.create! }
@@ -630,6 +630,15 @@ RSpec.describe Veri::Session do
     end
 
     context "when the session is active" do
+      it "returns the session" do
+        expect(subject).to eq(user.sessions.take)
+      end
+    end
+
+    context "when the session belongs to a tenant" do
+      let(:company) { Company.create! }
+      let(:tenant) { { tenant_type: "Company", tenant_id: company.id } }
+
       it "returns the session" do
         expect(subject).to eq(user.sessions.take)
       end

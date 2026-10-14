@@ -1,3 +1,27 @@
+<!--TODO: v3-->
+<!--TODO: migration guide-->
+
+## v3.0.0
+
+### Breaking
+
+- Dropped support for Rails 8.0 and earlier
+- Dropped support for Ruby 3.2
+- Changed `user_agent` column in `veri_sessions` table from string to text
+- Renamed account locking to suspension
+- Added algorithm markers to stored password hashes
+- `update_password` now terminates all sessions of the user by default
+- The tenant is now passed to `log_in` and `current_tenant` returns the tenant of the current session
+
+### Features
+
+- Added events for building an audit trail
+
+### Bugs
+
+- Fixed Rails commands failing when the user model cannot be loaded
+- Fixed `lock!` overriding Active Record's row locking method of the same name
+
 ## v2.1.0
 
 ### Features

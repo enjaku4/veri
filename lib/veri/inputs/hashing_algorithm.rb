@@ -3,7 +3,7 @@ module Veri
     class HashingAlgorithm < Veri::Inputs::Base
       private
 
-      def processor = -> { Veri::Configuration::HASHERS.key?(@value) ? @value : raise_error }
+      def validate_and_normalize = Veri::Configuration::HASHERS.key?(@value) ? @value : raise_error
     end
   end
 end

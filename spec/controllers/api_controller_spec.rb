@@ -143,13 +143,13 @@ RSpec.describe ApiController, type: :controller do
     end
   end
 
-  context "when user is logged in but account is locked" do
-    let(:user) { User.create!(locked: true) }
+  context "when user is logged in but account is suspended" do
+    let(:user) { User.create!(suspended: true) }
 
     before do
-      user.update!(locked: false)
+      user.update!(suspended: false)
       controller.log_in(user)
-      user.update!(locked: true)
+      user.update!(suspended: true)
     end
 
     it "does not allow access when request format is HTML" do

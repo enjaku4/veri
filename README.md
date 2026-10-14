@@ -1,3 +1,5 @@
+<!--TODO: v3-->
+
 # Veri: Minimal Authentication for Rails
 
 [![Gem Version](https://badge.fury.io/rb/veri.svg)](http://badge.fury.io/rb/veri)
@@ -11,7 +13,7 @@ Veri supports multi-tenancy, granular session management, multiple password hash
 
 **Example of Usage:**
 
-Consider a multi-tenant SaaS application where users need to manage their active sessions across devices and browsers, terminating specific sessions remotely when needed. Administrators require similar capabilities in their admin panel, with additional powers to lock accounts and temporarily assume user identities for troubleshooting. You can build all this easily with Veri.
+Consider a multi-tenant SaaS application where users need to manage their active sessions across devices and browsers, terminating specific sessions remotely when needed. Administrators require similar capabilities in their admin panel, with additional powers to suspend accounts and temporarily assume user identities for troubleshooting. You can build all this easily with Veri.
 
 ## Table of Contents
 
@@ -21,9 +23,10 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Password Management](#password-management)
   - [Controller Integration](#controller-integration)
   - [Authentication Sessions](#authentication-sessions)
-  - [Account Lockout](#account-lockout)
+  - [Account Suspension](#account-suspension)
   - [User Impersonation](#user-impersonation)
   - [Multi-Tenancy](#multi-tenancy)
+  - [Events](#events)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -78,6 +81,8 @@ Veri.configure do |config|
   config.total_session_lifetime = 14.days
   # Your user model name
   config.user_model_name = "User"
+  # Publish events for building an audit trail
+  config.events_enabled = false
 end
 ```
 
@@ -97,11 +102,16 @@ user.verify_password("password")
 # Check if a password is set
 user.password_set?
 ```
-Changing a password does not automatically terminate existing sessions. If you want to invalidate the user's sessions after a password change, do so explicitly:
+
+Updating a password terminates all of the user's sessions, including the current one. To keep the user signed in, log them in again or opt out of session termination:
 
 ```rb
+# Update a password and keep the user signed in
 user.update_password(new_password)
-user.sessions.terminate_all
+log_in(user)
+
+# Update a password without terminating sessions
+user.update_password(new_password, terminate_sessions: false)
 ```
 
 ## Controller Integration
@@ -178,7 +188,7 @@ current_user
 # Returns true if user is authenticated
 logged_in?
 
-# Authenticates user, returns true on success or false if account is locked
+# Authenticates user, returns true on success or false if account is suspended
 log_in(user)
 
 # Terminates current session
@@ -283,28 +293,30 @@ user.sessions.inactive.terminate_all
 Veri::Session.expired.terminate_all
 ```
 
-## Account Lockout
+When the current session is terminated, the controller still sees it for the rest of the request, so `logged_in?` stays true until the next request unless you call `log_in` or `log_out`. The same applies when a password update or an account suspension terminates it.
 
-Veri provides account lockout functionality to temporarily disable user accounts.
+## Account Suspension
+
+Veri provides account suspension functionality to temporarily disable user accounts.
 
 ```rb
-# Lock a user account
-user.lock!
+# Suspend a user account
+user.suspend!
 
-# Unlock a user account
-user.unlock!
+# Unsuspend a user account
+user.unsuspend!
 
-# Check if account is locked
-user.locked?
+# Check if account is suspended
+user.suspended?
 
-# Fetch locked users
-User.locked
+# Fetch suspended users
+User.suspended
 
-# Fetch unlocked users
-User.unlocked
+# Fetch unsuspended users
+User.unsuspended
 ```
 
-When an account is locked, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
+When an account is suspended, the user cannot log in. If they're already logged in, their sessions are terminated and they are treated as unauthenticated.
 
 ## User Impersonation
 
@@ -353,31 +365,32 @@ shapeshifter?
 
 ## Multi-Tenancy
 
-Veri supports multi-tenancy, allowing you to isolate authentication sessions between different tenants such as organizations, clients, or subdomains.
+Veri supports multi-tenancy, allowing you to tie authentication sessions to tenants such as organizations, clients, or subdomains.
 
 ### Setup
 
-To isolate authentication sessions between different tenants, override the `current_tenant` method:
+Pass the tenant when logging a user in:
 
 ```rb
-class ApplicationController < ActionController::Base
-  include Veri::Authentication
+# Option 1: String-based tenancy (e.g., subdomain)
+log_in(user, tenant: request.subdomain)
 
-  with_authentication
-
-  private
-
-  def current_tenant
-    # Option 1: String-based tenancy (e.g., subdomain)
-    request.subdomain
-
-    # Option 2: Model-based tenancy (e.g., organization)
-    Company.find_by(subdomain: request.subdomain)
-  end
-end
+# Option 2: Model-based tenancy (e.g., organization)
+log_in(user, tenant: company)
 ```
 
-By default, Veri assumes a single-tenant setup where `current_tenant` returns `nil`. Tenants can be represented as either a string or an `ActiveRecord` model instance.
+Tenants can be represented as either a string or an `ActiveRecord` model instance. Without the `tenant:` argument the session has no tenant, which is the single-tenant setup.
+
+Use `current_tenant` in controllers and views to get the tenant of the current session:
+
+```rb
+# Returns the tenant (string, model instance, or nil if the session has no tenant)
+current_tenant
+```
+
+Since `nil` is a valid tenant, `current_tenant` raises an error when no user is logged in.
+
+Veri only stores the tenant in the session and returns it. The session itself is found by its cookie alone, whatever its tenant. How your application uses the tenant, if at all, is entirely up to it, so tenant management and scoping are the application's responsibility.
 
 ### Session Tenant Access
 
@@ -405,35 +418,21 @@ user.sessions.in_tenant(tenant).terminate_all
 
 A session belongs to one tenant, and a browser holds one session per host. A user is therefore logged in to one tenant at a time, unless your tenants live on separate subdomains, where each subdomain keeps its own session.
 
-To move a user to another tenant, call `switch_tenant` on their session and make `current_tenant` return the new tenant from then on:
+To move a user to another tenant, call `switch_tenant` on their session:
 
 ```rb
-class ApplicationController < ActionController::Base
-  include Veri::Authentication
-
-  with_authentication
-
-  private
-
-  def current_tenant
-    # This example keeps the tenant in a cookie; your app can keep it anywhere
-    Company.find_by(id: cookies.signed[:company_id])
-  end
-end
-
 class CompaniesController < ApplicationController
   def switch
     company = current_user.companies.find(params[:id])
 
     current_session.switch_tenant(company)
-    cookies.signed[:company_id] = company.id
 
     redirect_to root_path, notice: "Switched to #{company.name}"
   end
 end
 ```
 
-The user stays logged in and the session keeps its expiration.
+The user stays logged in and the session keeps its expiration. This also covers applications where the tenant is not known at login: log the user in without a tenant and switch once they choose one.
 
 ### User Impersonation with Tenants
 
@@ -453,9 +452,16 @@ All other session methods work the same way in multi-tenant applications as in s
 
 ### Orphaned Sessions
 
-When a tenant object is deleted from your database, its associated sessions become orphaned.
+When a tenant object is deleted from your database, its sessions become orphaned. A user with an orphaned session stays logged in, and `current_tenant` raises `Veri::Error` for them.
 
-Ideally, the application should be designed so that this doesn't happen: whenever a tenant object is deleted, its sessions are terminated as part of the same operation. However, if that wasn't done, you can clean up the orphaned sessions as a fallback:
+Terminate the sessions of a tenant as part of the same operation that deletes it:
+
+```rb
+Veri::Session.in_tenant(company).terminate_all
+company.destroy!
+```
+
+If that wasn't done, clean up the orphaned sessions as a fallback:
 
 ```rb
 Veri::Session.prune
@@ -472,6 +478,49 @@ migrate_authentication_tenant!("Organization", "Company")
 # Remove tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
 ```
+
+## Events
+
+When `events_enabled` is turned on in the configuration, Veri publishes events for security-relevant operations, so that you can build an audit trail. Events are published with `ActiveSupport::Notifications` once the change is committed. Subscribe to the ones you need:
+
+```rb
+ActiveSupport::Notifications.subscribe("establish_session.veri") do |event|
+  session = event.payload[:session]
+  AuditLog.create!(action: "log_in", user: session.identity, ip_address: session.ip_address)
+end
+```
+
+| Event | Payload |
+|---|---|
+| `establish_session.veri` | `session` |
+| `terminate_session.veri` | `session`, `actor` |
+| `switch_tenant.veri` | `session`, `previous_tenant` |
+| `change_password.veri` | `user`, `actor` |
+| `suspend_account.veri` | `user`, `actor` |
+| `unsuspend_account.veri` | `user`, `actor` |
+| `start_impersonation.veri` | `session`, `impersonator`, `impersonated_user` |
+| `end_impersonation.veri` | `session`, `impersonator`, `impersonated_user` |
+
+Operations that can be performed by someone other than the account owner take an actor: whatever your application wants to record as the one who performed them, even a plain string like `"cleanup job"`. When events are enabled, the actor is required:
+
+```rb
+# The user changes their own password
+current_user.update_password(new_password, actor: current_user)
+
+# An administrator suspends an account
+user.suspend!(actor: admin)
+
+# A scheduled job lifts a temporary suspension
+user.unsuspend!(actor: "suspension expiry job")
+
+# The user ends one of their sessions
+session.terminate(actor: current_user)
+
+# A cleanup job removes expired sessions
+Veri::Session.expired.terminate_all(actor: "cleanup job")
+```
+
+When several sessions are terminated at once, for example with `terminate_all`, `suspend!` or `update_password`, Veri publishes one `terminate_session.veri` event per session. Keep this in mind when terminating a large number of sessions, as each of them produces an event.
 
 ## View Helpers
 
@@ -570,4 +619,4 @@ Everyone interacting in the Veri project is expected to follow the [code of cond
 
 Only the latest major version is actively maintained. READMEs for older versions are available here for reference:
 
-[v1.x.x](https://github.com/enjaku4/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
+[v2.x.x](https://github.com/enjaku4/veri/blob/e6909d2689c2ae11919fc3d1f3c50c19b2995a91/README.md) | [v1.x.x](https://github.com/enjaku4/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
