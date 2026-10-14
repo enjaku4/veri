@@ -26,6 +26,7 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Account Suspension](#account-suspension)
   - [User Impersonation](#user-impersonation)
   - [Multi-Tenancy](#multi-tenancy)
+  - [Events](#events)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -80,6 +81,8 @@ Veri.configure do |config|
   config.total_session_lifetime = 14.days
   # Your user model name
   config.user_model_name = "User"
+  # Publish events for building an audit trail
+  config.events_enabled = false
 end
 ```
 
@@ -475,6 +478,49 @@ migrate_authentication_tenant!("Organization", "Company")
 # Remove tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
 ```
+
+## Events
+
+When `events_enabled` is turned on in the configuration, Veri publishes events for security-relevant operations, so that you can build an audit trail. Events are published with `ActiveSupport::Notifications` once the change is committed. Subscribe to the ones you need:
+
+```rb
+ActiveSupport::Notifications.subscribe("establish_session.veri") do |event|
+  session = event.payload[:session]
+  AuditLog.create!(action: "log_in", user: session.identity, ip_address: session.ip_address)
+end
+```
+
+| Event | Payload |
+|---|---|
+| `establish_session.veri` | `session` |
+| `terminate_session.veri` | `session`, `actor` |
+| `switch_tenant.veri` | `session`, `previous_tenant` |
+| `change_password.veri` | `user`, `actor` |
+| `suspend_account.veri` | `user`, `actor` |
+| `unsuspend_account.veri` | `user`, `actor` |
+| `start_impersonation.veri` | `session`, `impersonator`, `impersonated_user` |
+| `end_impersonation.veri` | `session`, `impersonator`, `impersonated_user` |
+
+Operations that can be performed by someone other than the account owner take an actor: whatever your application wants to record as the one who performed them, even a plain string like `"cleanup job"`. When events are enabled, the actor is required:
+
+```rb
+# The user changes their own password
+current_user.update_password(new_password, actor: current_user)
+
+# An administrator suspends an account
+user.suspend!(actor: admin)
+
+# A scheduled job lifts a temporary suspension
+user.unsuspend!(actor: "suspension expiry job")
+
+# The user ends one of their sessions
+session.terminate(actor: current_user)
+
+# A cleanup job removes expired sessions
+Veri::Session.expired.terminate_all(actor: "cleanup job")
+```
+
+When several sessions are terminated at once, for example with `terminate_all`, `suspend!` or `update_password`, Veri publishes one `terminate_session.veri` event per session. Keep this in mind when terminating a large number of sessions, as each of them produces an event.
 
 ## View Helpers
 
