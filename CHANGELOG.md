@@ -13,6 +13,10 @@
 - `update_password` now terminates all sessions of the user by default
 - The tenant is now passed to `log_in` and `current_tenant` returns the tenant of the current session
 
+### Features
+
+- Added events for building an audit trail
+
 ### Bugs
 
 - Fixed Rails commands failing when the user model cannot be loaded
