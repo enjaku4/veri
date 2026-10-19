@@ -38,21 +38,21 @@ module Veri
       raise Veri::Error, "Tenant not found"
     end
 
-    def log_in(authenticatable, tenant: nil)
+    def log_in(authenticatable, tenant: nil, actor: authenticatable)
       processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
 
       return false if processed_authenticatable.suspended?
 
-      token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
+      token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant, actor:)
 
       cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true, secure: request.ssl? }
       reset_memoized_session
       true
     end
 
-    def log_out
-      current_session&.terminate(actor: current_session.true_identity)
+    def log_out(actor: current_session&.true_identity)
+      current_session&.terminate(actor:)
       cookies.delete("veri_token")
       reset_memoized_session
     end

@@ -6,10 +6,6 @@ module Veri
       Veri::Configuration.events_enabled
     end
 
-    def validate_actor(actor)
-      raise Veri::InvalidArgumentError, "Actor is required when events are enabled" if enabled? && actor.nil?
-    end
-
     def publish(event)
       return unless enabled?
 

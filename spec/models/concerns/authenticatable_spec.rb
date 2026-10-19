@@ -125,6 +125,33 @@ RSpec.describe Veri::Authenticatable do
         end
       end
     end
+
+    context "when events are enabled" do
+      before do
+        Veri::Configuration.configure { _1.events_enabled = true }
+        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
+      end
+
+      let(:admin) { User.create! }
+
+      it "publishes change_password and terminate_session for each session it ends" do
+        sessions = user.sessions.to_a
+
+        user.update_password("password", actor: admin)
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("change_password.veri", { identity: user, actor: admin })
+        sessions.each do |session|
+          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: admin, tenant: nil })
+        end
+      end
+
+      it "publishes only change_password with a nil actor when sessions are kept" do
+        user.update_password("password", terminate_sessions: false)
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("change_password.veri", { identity: user, actor: nil })
+        expect(ActiveSupport::Notifications).not_to have_received(:instrument).with("terminate_session.veri", anything)
+      end
+    end
   end
 
   describe "#password_set?" do
@@ -297,6 +324,39 @@ RSpec.describe Veri::Authenticatable do
 
       expect { subject }.to change(user.sessions, :count).from(2).to(0)
     end
+
+    context "when events are enabled" do
+      before do
+        Veri::Configuration.configure { _1.events_enabled = true }
+        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
+      end
+
+      let(:admin) { User.create! }
+
+      it "publishes suspend_account and terminate_session for each session it ends" do
+        sessions = Array.new(2) do
+          Veri::Session.create!(
+            authenticatable: user,
+            hashed_token: SecureRandom.hex,
+            expires_at: 1.hour.from_now,
+            last_seen_at: Time.current
+          )
+        end
+
+        user.suspend!(actor: admin)
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("suspend_account.veri", { identity: user, actor: admin })
+        sessions.each do |session|
+          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: admin, tenant: nil })
+        end
+      end
+
+      it "publishes suspend_account with a nil actor" do
+        user.suspend!
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("suspend_account.veri", { identity: user, actor: nil })
+      end
+    end
   end
 
   describe "#unsuspend!" do
@@ -308,6 +368,27 @@ RSpec.describe Veri::Authenticatable do
       expect { subject }
         .to change(user, :suspended).from(true).to(false)
         .and change(user, :suspended_at).from(be_present).to(nil)
+    end
+
+    context "when events are enabled" do
+      before do
+        Veri::Configuration.configure { _1.events_enabled = true }
+        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
+      end
+
+      let(:admin) { User.create! }
+
+      it "publishes unsuspend_account" do
+        user.unsuspend!(actor: admin)
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("unsuspend_account.veri", { identity: user, actor: admin })
+      end
+
+      it "publishes unsuspend_account with a nil actor" do
+        user.unsuspend!
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("unsuspend_account.veri", { identity: user, actor: nil })
+      end
     end
   end
 

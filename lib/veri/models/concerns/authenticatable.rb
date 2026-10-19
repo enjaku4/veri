@@ -14,8 +14,6 @@ module Veri
     end
 
     def update_password(password, terminate_sessions: true, actor: nil)
-      Veri::Events.validate_actor(actor)
-
       hashed_password = hash_password(Veri::Inputs::NonEmptyString.new(password).process)
 
       transaction do
@@ -23,7 +21,7 @@ module Veri
         update!(hashed_password:, password_updated_at: Time.current)
       end
 
-      Veri::Events.publish("change_password") { { user: self, actor: } }
+      Veri::Events.publish("change_password") { { identity: self, actor: } }
 
       true
     end
@@ -50,24 +48,20 @@ module Veri
     end
 
     def suspend!(actor: nil)
-      Veri::Events.validate_actor(actor)
-
       transaction do
         update!(suspended: true, suspended_at: Time.current)
         sessions.terminate_all(actor:)
       end
 
-      Veri::Events.publish("suspend_account") { { user: self, actor: } }
+      Veri::Events.publish("suspend_account") { { identity: self, actor: } }
 
       true
     end
 
     def unsuspend!(actor: nil)
-      Veri::Events.validate_actor(actor)
-
       update!(suspended: false, suspended_at: nil)
 
-      Veri::Events.publish("unsuspend_account") { { user: self, actor: } }
+      Veri::Events.publish("unsuspend_account") { { identity: self, actor: } }
 
       true
     end
