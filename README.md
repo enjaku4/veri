@@ -511,24 +511,27 @@ delete_authentication_tenant!("Organization")
 When `events_enabled` is turned on in the configuration, Veri publishes events for security-relevant operations, for example to build an audit trail. Events are published with `ActiveSupport::Notifications` once the change is committed. Subscribe to the ones you need:
 
 ```rb
-ActiveSupport::Notifications.subscribe("establish_session.veri") do |event|
-  session = event.payload[:session]
-  AuditLog.create!(action: "log_in", user: session.identity, ip_address: session.ip_address)
+ActiveSupport::Notifications.subscribe("terminate_session.veri") do |event|
+  AuditLog.create!(
+    action: "terminate_session",
+    user: event.payload[:identity],
+    actor: event.payload[:actor]
+  )
 end
 ```
 
 | Event | Payload |
 |---|---|
-| `establish_session.veri` | `session` |
-| `terminate_session.veri` | `session`, `actor` |
-| `switch_tenant.veri` | `session`, `previous_tenant` |
-| `change_password.veri` | `user`, `actor` |
-| `suspend_account.veri` | `user`, `actor` |
-| `unsuspend_account.veri` | `user`, `actor` |
-| `start_impersonation.veri` | `session`, `impersonator`, `impersonated_user` |
-| `end_impersonation.veri` | `session`, `impersonator`, `impersonated_user` |
+| `establish_session.veri` | `session`, `identity`, `actor`, `tenant` |
+| `terminate_session.veri` | `session`, `identity`, `actor`, `tenant` |
+| `switch_tenant.veri` | `session`, `identity`, `actor`, `previous_tenant`, `tenant` |
+| `change_password.veri` | `identity`, `actor` |
+| `suspend_account.veri` | `identity`, `actor` |
+| `unsuspend_account.veri` | `identity`, `actor` |
+| `start_impersonation.veri` | `session`, `actor`, `impersonator`, `impersonated_identity`, `tenant`, `impersonated_tenant` |
+| `end_impersonation.veri` | `session`, `actor`, `impersonator`, `impersonated_identity`, `impersonated_tenant`, `tenant` |
 
-Operations that can be performed by someone other than the account owner take an actor: whatever your application wants to record as the one who performed them, even a plain string like `"cleanup job"`. When events are enabled, the actor is required:
+Every method that emits events takes an optional actor: whatever your application wants to record as the one who performed the operation, even a plain string like `"cleanup job"`. Model methods default to `nil`, `log_in` to the login identity, and `log_out` to the session's `true_identity`. All defaults can be overridden:
 
 ```rb
 # The user changes their own password
@@ -537,11 +540,8 @@ current_user.update_password(new_password, actor: current_user)
 # An administrator suspends an account
 user.suspend!(actor: admin)
 
-# A scheduled job lifts a temporary suspension
-user.unsuspend!(actor: "suspension expiry job")
-
-# The user ends one of their sessions
-session.terminate(actor: current_user)
+# The user logs out; by default, the actor is the user themselves
+log_out
 
 # A cleanup job removes expired sessions
 Veri::Session.expired.terminate_all(actor: "cleanup job")
@@ -607,6 +607,31 @@ end
 # In your spec_helper.rb
 RSpec.configure do |config|
   config.include AuthenticationHelpers, type: :controller
+end
+```
+
+### Sessions as Test Data
+
+Code that receives a session, such as a service object that terminates all sessions but the current one, can be tested without logging in. Create the session directly:
+
+```rb
+module SessionHelpers
+  def create_session(user, expires_at:, last_seen_at:, tenant: nil, ip_address: nil, user_agent: nil)
+    Veri::Session.create!(
+      authenticatable: user,
+      expires_at:,
+      last_seen_at:,
+      hashed_token: SecureRandom.hex,
+      **Veri::Inputs::Tenant.new(tenant).resolve,
+      ip_address:,
+      user_agent:
+    )
+  end
+end
+
+# In your spec_helper.rb
+RSpec.configure do |config|
+  config.include SessionHelpers
 end
 ```
 
