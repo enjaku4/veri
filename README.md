@@ -219,8 +219,6 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-The `when_unauthenticated` method can be overridden in any controller to provide controller-specific handling.
-
 ## Authentication Sessions
 
 Veri stores authentication sessions in the database, providing session management capabilities:
@@ -617,15 +615,16 @@ Code that receives a session, such as a service object that terminates all sessi
 ```rb
 module SessionHelpers
   def create_session(user, expires_at:, last_seen_at:, tenant: nil, ip_address: nil, user_agent: nil)
-    Veri::Session.create!(
+    session = Veri::Session.create!(
       authenticatable: user,
       expires_at:,
       last_seen_at:,
       hashed_token: SecureRandom.hex,
-      **Veri::Inputs::Tenant.new(tenant).resolve,
       ip_address:,
       user_agent:
     )
+    session.switch_tenant(tenant)
+    session
   end
 end
 
