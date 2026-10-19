@@ -614,14 +614,12 @@ Code that receives a session, such as a service object that terminates all sessi
 
 ```rb
 module SessionHelpers
-  def create_session(user, expires_at:, last_seen_at:, tenant: nil, ip_address: nil, user_agent: nil)
+  def create_session_for(user, tenant: nil)
     session = Veri::Session.create!(
       authenticatable: user,
-      expires_at:,
-      last_seen_at:,
       hashed_token: SecureRandom.hex,
-      ip_address:,
-      user_agent:
+      expires_at: 1.day.from_now,
+      last_seen_at: Time.current
     )
     session.switch_tenant(tenant)
     session
@@ -632,6 +630,9 @@ end
 RSpec.configure do |config|
   config.include SessionHelpers
 end
+
+# In a multi-tenant application
+create_session_for(user, tenant: company)
 ```
 
 ## Getting Help and Contributing
