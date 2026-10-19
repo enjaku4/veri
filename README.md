@@ -81,7 +81,7 @@ Veri.configure do |config|
   config.total_session_lifetime = 14.days
   # Your user model name
   config.user_model_name = "User"
-  # Publish events for building an audit trail
+  # Publish events
   config.events_enabled = false
 end
 ```
@@ -233,6 +233,33 @@ user.sessions
 
 # Get current session in controller
 current_session
+
+# Get session from a request
+Veri::Session.from_request(request)
+```
+
+### Sessions Outside Controllers
+
+Code that handles a request outside of controllers, such as Action Cable connections and route constraints, can find the current session from the request:
+
+```rb
+module ApplicationCable
+  class Connection < ActionCable::Connection::Base
+    identified_by :current_user
+
+    # Runs only when the connection opens; disconnecting it after the session is terminated is up to your application
+    def connect
+      self.current_user = Veri::Session.from_request(request)&.identity || reject_unauthorized_connection
+    end
+  end
+end
+```
+
+```rb
+# Only administrators can open the jobs dashboard
+constraints -> (request) { Veri::Session.from_request(request)&.identity&.admin? } do
+  mount Sidekiq::Web => "/jobs"
+end
 ```
 
 ### Session Information
@@ -481,7 +508,7 @@ delete_authentication_tenant!("Organization")
 
 ## Events
 
-When `events_enabled` is turned on in the configuration, Veri publishes events for security-relevant operations, so that you can build an audit trail. Events are published with `ActiveSupport::Notifications` once the change is committed. Subscribe to the ones you need:
+When `events_enabled` is turned on in the configuration, Veri publishes events for security-relevant operations, for example to build an audit trail. Events are published with `ActiveSupport::Notifications` once the change is committed. Subscribe to the ones you need:
 
 ```rb
 ActiveSupport::Notifications.subscribe("establish_session.veri") do |event|
