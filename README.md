@@ -514,22 +514,24 @@ When `events_enabled` is turned on in the configuration, Veri publishes events f
 ActiveSupport::Notifications.subscribe("terminate_session.veri") do |event|
   AuditLog.create!(
     action: "terminate_session",
-    user: event.payload[:identity],
+    user: event.payload[:session].identity,
     actor: event.payload[:actor]
   )
 end
 ```
 
+Event payloads contain live model objects, not snapshots; their attributes may change before the event is delivered.
+
 | Event | Payload |
 |---|---|
-| `establish_session.veri` | `session`, `identity`, `actor`, `tenant` |
-| `terminate_session.veri` | `session`, `identity`, `actor`, `tenant` |
-| `switch_tenant.veri` | `session`, `identity`, `actor`, `previous_tenant`, `tenant` |
+| `establish_session.veri` | `session`, `actor` |
+| `terminate_session.veri` | `session`, `actor` |
+| `switch_tenant.veri` | `session`, `actor`, `previous_tenant` |
 | `change_password.veri` | `identity`, `actor` |
 | `suspend_account.veri` | `identity`, `actor` |
 | `unsuspend_account.veri` | `identity`, `actor` |
-| `start_impersonation.veri` | `session`, `actor`, `impersonator`, `impersonated_identity`, `tenant`, `impersonated_tenant` |
-| `end_impersonation.veri` | `session`, `actor`, `impersonator`, `impersonated_identity`, `impersonated_tenant`, `tenant` |
+| `start_impersonation.veri` | `session`, `actor` |
+| `end_impersonation.veri` | `session`, `actor`, `impersonated_identity`, `impersonated_tenant` |
 
 Every method that emits events takes an optional actor: whatever your application wants to record as the one who performed the operation, even a plain string like `"cleanup job"`. Model methods default to `nil`, `log_in` to the login identity, and `log_out` to the session's `true_identity`. All defaults can be overridden:
 
