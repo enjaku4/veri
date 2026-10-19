@@ -32,7 +32,7 @@ module Veri
 
     def terminate(actor: nil)
       delete.tap do
-        Veri::Events.publish("terminate_session") { { session: self, identity:, actor:, tenant: } }
+        Veri::Events.publish("terminate_session") { { session: self, actor: } }
       end
     end
 
@@ -74,9 +74,7 @@ module Veri
         **resolved_tenant,
         authenticatable: Veri::Inputs::Authenticatable.new(user).process
       ).tap do
-        Veri::Events.publish("start_impersonation") do
-          { session: self, actor:, impersonator: original_authenticatable, impersonated_identity: authenticatable, tenant: original_tenant, impersonated_tenant: self.tenant }
-        end
+        Veri::Events.publish("start_impersonation") { { session: self, actor: } }
       end
     end
 
@@ -93,7 +91,7 @@ module Veri
         original_tenant_id: nil,
         original_authenticatable: nil
       ).tap do
-        Veri::Events.publish("end_impersonation") { { session: self, actor:, impersonator: authenticatable, impersonated_identity:, tenant:, impersonated_tenant: } }
+        Veri::Events.publish("end_impersonation") { { session: self, actor:, impersonated_identity:, impersonated_tenant: } }
       end
     end
 
@@ -102,7 +100,7 @@ module Veri
       previous_tenant = self.tenant if Veri::Events.enabled?
 
       update!(**resolved_tenant).tap do
-        Veri::Events.publish("switch_tenant") { { session: self, identity:, actor:, previous_tenant:, tenant: self.tenant } }
+        Veri::Events.publish("switch_tenant") { { session: self, actor:, previous_tenant: } }
       end
     end
 
@@ -127,7 +125,7 @@ module Veri
         )
         session.update_info(request)
 
-        Veri::Events.publish("establish_session") { { session:, identity: session.identity, actor:, tenant: session.tenant } }
+        Veri::Events.publish("establish_session") { { session:, actor: } }
 
         token
       end
@@ -150,7 +148,7 @@ module Veri
             sessions = batch.to_a
 
             batch.delete_all
-            sessions.each { |session| Veri::Events.publish("terminate_session") { { session:, identity: session.identity, actor:, tenant: session.tenant } } }
+            sessions.each { |session| Veri::Events.publish("terminate_session") { { session:, actor: } } }
             sessions.size
           end
         end

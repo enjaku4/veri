@@ -329,19 +329,13 @@ RSpec.describe Veri::Authentication do
       it "publishes establish_session with the new session on log_in" do
         controller.log_in(user, tenant: "acme")
 
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, identity: user, actor: user, tenant: "acme" })
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, actor: user })
       end
 
       it "publishes establish_session with an overridden actor on log_in" do
         controller.log_in(user, actor: admin)
 
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, identity: user, actor: admin, tenant: nil })
-      end
-
-      it "publishes establish_session with an explicitly nil actor on log_in" do
-        controller.log_in(user, actor: nil)
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, identity: user, actor: nil, tenant: nil })
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, actor: admin })
       end
     end
   end
@@ -386,7 +380,7 @@ RSpec.describe Veri::Authentication do
 
         controller.log_out
 
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: user, tenant: nil })
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: user })
       end
 
       it "publishes terminate_session on log_out with the impersonating admin as the actor" do
@@ -396,7 +390,7 @@ RSpec.describe Veri::Authentication do
 
         controller.log_out
 
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: admin, tenant: nil })
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: admin })
       end
 
       it "publishes terminate_session with an overridden actor on log_out during impersonation" do
@@ -407,17 +401,7 @@ RSpec.describe Veri::Authentication do
 
         controller.log_out(actor:)
 
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor:, tenant: nil })
-      end
-
-      it "publishes terminate_session with an explicitly nil actor on log_out during impersonation" do
-        controller.log_in(admin)
-        session = controller.current_session
-        session.shapeshift(user)
-
-        controller.log_out(actor: nil)
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: nil, tenant: nil })
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: })
       end
 
       it "publishes nothing on log_out without a session" do

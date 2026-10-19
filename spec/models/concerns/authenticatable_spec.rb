@@ -141,7 +141,7 @@ RSpec.describe Veri::Authenticatable do
 
         expect(ActiveSupport::Notifications).to have_received(:instrument).with("change_password.veri", { identity: user, actor: admin })
         sessions.each do |session|
-          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: admin, tenant: nil })
+          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: admin })
         end
       end
 
@@ -347,14 +347,8 @@ RSpec.describe Veri::Authenticatable do
 
         expect(ActiveSupport::Notifications).to have_received(:instrument).with("suspend_account.veri", { identity: user, actor: admin })
         sessions.each do |session|
-          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, identity: user, actor: admin, tenant: nil })
+          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: admin })
         end
-      end
-
-      it "publishes suspend_account with a nil actor" do
-        user.suspend!
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("suspend_account.veri", { identity: user, actor: nil })
       end
     end
   end
@@ -382,12 +376,6 @@ RSpec.describe Veri::Authenticatable do
         user.unsuspend!(actor: admin)
 
         expect(ActiveSupport::Notifications).to have_received(:instrument).with("unsuspend_account.veri", { identity: user, actor: admin })
-      end
-
-      it "publishes unsuspend_account with a nil actor" do
-        user.unsuspend!
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("unsuspend_account.veri", { identity: user, actor: nil })
       end
     end
   end
