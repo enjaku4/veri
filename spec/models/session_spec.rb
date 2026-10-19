@@ -609,27 +609,33 @@ RSpec.describe Veri::Session do
     end
   end
 
-  describe ".find_active" do
-    subject { described_class.find_active(token) }
+  describe ".from_request" do
+    subject { described_class.from_request(request) }
 
     let(:tenant) { { tenant_type: nil, tenant_id: nil } }
     let(:user) { User.create! }
-    let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
+    let(:request) { ActionDispatch::Request.new(Rails.application.env_config.merge("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7")) }
     let(:token) { described_class.establish(user, request, tenant) }
 
-    context "when token is blank" do
-      let(:token) { nil }
+    context "when the request carries no cookie" do
+      it { is_expected.to be_nil }
+    end
+
+    context "when the cookie was not written by Veri" do
+      before { request.cookie_jar["veri_token"] = token }
 
       it { is_expected.to be_nil }
     end
 
     context "when no session matches the token" do
-      let(:token) { "unknown" }
+      before { request.cookie_jar.encrypted["veri_token"] = "unknown" }
 
       it { is_expected.to be_nil }
     end
 
     context "when the session is active" do
+      before { request.cookie_jar.encrypted["veri_token"] = token }
+
       it "returns the session" do
         expect(subject).to eq(user.sessions.take)
       end
@@ -639,13 +645,15 @@ RSpec.describe Veri::Session do
       let(:company) { Company.create! }
       let(:tenant) { { tenant_type: "Company", tenant_id: company.id } }
 
+      before { request.cookie_jar.encrypted["veri_token"] = token }
+
       it "returns the session" do
         expect(subject).to eq(user.sessions.take)
       end
     end
 
     context "when the session is expired" do
-      before { token }
+      before { request.cookie_jar.encrypted["veri_token"] = token }
 
       it "returns nil and keeps the session" do
         travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
@@ -658,7 +666,7 @@ RSpec.describe Veri::Session do
     context "when the session is inactive" do
       before do
         Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
-        token
+        request.cookie_jar.encrypted["veri_token"] = token
       end
 
       it "returns nil and keeps the session" do

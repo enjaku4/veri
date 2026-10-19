@@ -159,7 +159,9 @@ module Veri
         end
       end
 
-      def find_active(token)
+      def from_request(request)
+        token = request.cookie_jar.encrypted["veri_token"]
+
         return nil if token.blank?
 
         session = find_by(hashed_token: digest_token(token))

@@ -27,7 +27,7 @@ module Veri
     end
 
     def current_session
-      @current_session ||= Session.find_active(cookies.encrypted["veri_token"])
+      @current_session ||= Session.from_request(request)
     end
 
     def current_tenant
