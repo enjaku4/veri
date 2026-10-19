@@ -15,7 +15,8 @@
 
 ### Features
 
-- Added events for building an audit trail
+- Added events
+- Added `Veri::Session.from_request` to find the current session outside of controllers
 
 ### Bugs
 
