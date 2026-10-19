@@ -520,8 +520,6 @@ ActiveSupport::Notifications.subscribe("terminate_session.veri") do |event|
 end
 ```
 
-Event payloads contain live model objects, not snapshots; their attributes may change before the event is delivered.
-
 | Event | Payload |
 |---|---|
 | `establish_session.veri` | `session`, `actor` |
