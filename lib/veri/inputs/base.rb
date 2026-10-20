@@ -11,12 +11,12 @@ module Veri
       def process
         return @value if @value.nil? && @optional
 
-        processor.call
+        validate_and_normalize
       end
 
       private
 
-      def processor
+      def validate_and_normalize
         raise NotImplementedError
       end
 

@@ -2,36 +2,18 @@ require "rails/railtie"
 
 module Veri
   class Railtie < Rails::Railtie
-    def self.server_running?
-      !!defined?(Rails::Server)
-    end
-
-    def self.table_exists?
-      ActiveRecord::Base.connection.data_source_exists?("veri_sessions")
-    rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
-      false
+    initializer "veri.include_authenticatable" do
+      Rails.autoloaders.each do |autoloader|
+        autoloader.on_load do |cpath, klass, _abspath|
+          klass.include Veri::Authenticatable if cpath == Veri::Configuration.user_model_name
+        end
+      end
     end
 
     initializer "veri.to_prepare" do |app|
       app.config.to_prepare do
-        if Veri::Railtie.server_running? && Veri::Railtie.table_exists?
-          Veri::Session.where.not(tenant_id: nil).distinct.pluck(:tenant_type).each do |tenant_class|
-            tenant_class.constantize
-          rescue NameError => e
-            raise Veri::Error, "Tenant not found: class `#{e.name}` may have been renamed or deleted"
-          end
-        end
-
-        begin
-          user_model = Veri::Configuration.user_model
-          user_model.include Veri::Authenticatable unless user_model < Veri::Authenticatable
-        rescue Veri::ConfigurationError
-          raise if Veri::Railtie.server_running?
-        end
-
         Veri::Session.belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
-        Veri::Session.belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name,
-                                                            optional: true
+        Veri::Session.belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
       end
     end
 

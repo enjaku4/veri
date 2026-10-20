@@ -50,6 +50,26 @@ RSpec.describe Veri::Authentication do
       it { is_expected.to be_nil }
     end
 
+    context "when the session is shapeshifted within the same request" do
+      let(:user) { User.create! }
+      let(:another_user) { User.create! }
+
+      before do
+        controller.log_in(user)
+        controller.current_user
+        controller.current_session.shapeshift(another_user)
+      end
+
+      it "returns the assumed identity" do
+        expect(subject).to eq(another_user)
+      end
+
+      it "returns the original user after reverting to the true identity" do
+        controller.current_session.to_true_identity
+        expect(subject).to eq(user)
+      end
+    end
+
     context "when the session is expired" do
       let(:user) { User.create! }
 
@@ -98,6 +118,84 @@ RSpec.describe Veri::Authentication do
     context "when user is not logged in" do
       it { is_expected.to be_nil }
     end
+
+    context "when user is logged in to a tenant" do
+      let(:user) { User.create! }
+      let(:company) { Company.create! }
+
+      before { controller.log_in(user, tenant: company) }
+
+      it "returns the current session" do
+        expect(subject).to eq(user.sessions.take)
+      end
+
+      context "when the tenant has been deleted" do
+        before { company.destroy! }
+
+        it "returns the current session" do
+          expect(subject).to eq(user.sessions.take)
+        end
+      end
+    end
+  end
+
+  describe "#current_tenant" do
+    subject { controller.current_tenant }
+
+    let(:controller) { DummyController.new }
+    let(:user) { User.create! }
+
+    before { controller.request = ActionDispatch::TestRequest.create }
+
+    context "when user is not logged in" do
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "No user is logged in")
+      end
+    end
+
+    context "when user is logged in without a tenant" do
+      before { controller.log_in(user) }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when user is logged in to a string tenant" do
+      before { controller.log_in(user, tenant: "subdomain") }
+
+      it { is_expected.to eq("subdomain") }
+    end
+
+    context "when user is logged in to a model tenant" do
+      let(:company) { Company.create! }
+
+      before { controller.log_in(user, tenant: company) }
+
+      it { is_expected.to eq(company) }
+
+      context "when the session is switched to another tenant" do
+        let(:another_company) { Company.create! }
+
+        before { controller.current_session.switch_tenant(another_company) }
+
+        it { is_expected.to eq(another_company) }
+      end
+
+      context "when the tenant has been deleted" do
+        before { company.destroy! }
+
+        it "raises an error" do
+          expect { subject }.to raise_error(Veri::Error, "Tenant not found")
+        end
+      end
+
+      context "when the tenant class no longer exists" do
+        before { user.sessions.update_all(tenant_type: "NonExistentClass") }
+
+        it "raises an error" do
+          expect { subject }.to raise_error(NameError, "uninitialized constant NonExistentClass")
+        end
+      end
+    end
   end
 
   describe "#log_in" do
@@ -121,8 +219,8 @@ RSpec.describe Veri::Authentication do
       end
     end
 
-    context "when the user account is locked" do
-      let(:user) { User.create!(locked: true) }
+    context "when the user account is suspended" do
+      let(:user) { User.create!(suspended: true) }
 
       it "returns false and does not log in the user" do
         expect(subject).to be false
@@ -156,47 +254,89 @@ RSpec.describe Veri::Authentication do
       end
     end
 
-    context "when the tenant changes after logging out within the same request" do
-      let(:company) { Company.create! }
-      let(:another_company) { Company.create! }
+    context "when another user is already logged in within the same request" do
+      let(:another_user) { User.create! }
 
       before do
-        tenant = company
-        allow(controller).to receive(:current_tenant) { tenant }
-
-        controller.log_in(user)
-        controller.log_out
-        tenant = another_company
-      end
-
-      it "logs in the user to the new tenant" do
-        subject
-        expect(controller.current_session.tenant).to eq(another_company)
-      end
-    end
-
-    context "when the tenant changes after it was read within the same request" do
-      let(:company) { Company.create! }
-      let(:another_company) { Company.create! }
-
-      before do
-        tenant = company
-        allow(controller).to receive(:current_tenant) { tenant }
-
+        controller.log_in(another_user)
         controller.current_user
-        tenant = another_company
       end
 
-      it "logs in the user to the new tenant" do
+      it "returns the newly logged in user and their session" do
         subject
-        expect(controller.current_session.tenant).to eq(another_company)
+        expect(controller.current_user).to eq(user)
+        expect(controller.current_session).to eq(user.sessions.take)
       end
     end
 
-    it "reads the current tenant once" do
-      allow(controller).to receive(:current_tenant).and_call_original
+    context "when the user logs in again after updating their password within the same request" do
+      before do
+        controller.log_in(user)
+        controller.current_user
+        user.update_password("new_password")
+      end
+
+      it "returns the new session" do
+        subject
+        expect(controller.current_session).to eq(user.sessions.take)
+        expect(controller.logged_in?).to be true
+      end
+    end
+
+    it "creates a session without a tenant" do
       subject
-      expect(controller).to have_received(:current_tenant).once
+      expect(controller.current_session).to have_attributes(tenant_type: nil, tenant_id: nil)
+    end
+
+    context "when a model tenant is given" do
+      subject { controller.log_in(user, tenant: company) }
+
+      let(:company) { Company.create! }
+
+      it "logs in the user to the tenant" do
+        expect(subject).to be true
+        expect(controller.current_session.tenant).to eq(company)
+      end
+    end
+
+    context "when a string tenant is given" do
+      subject { controller.log_in(user, tenant: "subdomain") }
+
+      it "logs in the user to the tenant" do
+        expect(subject).to be true
+        expect(controller.current_session.tenant).to eq("subdomain")
+      end
+    end
+
+    context "when the tenant is invalid" do
+      subject { controller.log_in(user, tenant: 123) }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(
+          Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`"
+        )
+      end
+    end
+
+    context "when events are enabled" do
+      before do
+        Veri::Configuration.configure { _1.events_enabled = true }
+        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
+      end
+
+      let(:admin) { User.create! }
+
+      it "publishes establish_session with the new session on log_in" do
+        controller.log_in(user, tenant: "acme")
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, actor: user })
+      end
+
+      it "publishes establish_session with an overridden actor on log_in" do
+        controller.log_in(user, actor: admin)
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("establish_session.veri", { session: user.sessions.take, actor: admin })
+      end
     end
   end
 
@@ -225,6 +365,51 @@ RSpec.describe Veri::Authentication do
       expect(controller.current_user).to be_nil
       expect(controller.current_session).to be_nil
       expect(controller.logged_in?).to be false
+    end
+
+    context "when events are enabled" do
+      before do
+        Veri::Configuration.configure { _1.events_enabled = true }
+        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
+      end
+
+      let(:admin) { User.create! }
+
+      it "publishes terminate_session on log_out with the session owner as the actor" do
+        session = user.sessions.take
+
+        controller.log_out
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: user })
+      end
+
+      it "publishes terminate_session on log_out with the impersonating admin as the actor" do
+        controller.log_in(admin)
+        session = controller.current_session
+        session.shapeshift(user)
+
+        controller.log_out
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: admin })
+      end
+
+      it "publishes terminate_session with an overridden actor on log_out during impersonation" do
+        controller.log_in(admin)
+        session = controller.current_session
+        session.shapeshift(user)
+        actor = "security job"
+
+        controller.log_out(actor:)
+
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: })
+      end
+
+      it "publishes nothing on log_out without a session" do
+        controller.log_out
+
+        expect(ActiveSupport::Notifications).not_to receive(:instrument).with("terminate_session.veri", anything)
+        controller.log_out
+      end
     end
   end
 
@@ -352,7 +537,11 @@ RSpec.describe Veri::Authentication do
     let(:user) { User.create! }
     let(:session) { Veri::Session.new }
 
-    before { allow(controller).to receive_messages(current_user: user, logged_in?: true, shapeshifter?: true, current_session: session) }
+    before do
+      allow(controller).to receive_messages(
+        current_user: user, logged_in?: true, shapeshifter?: true, current_session: session, current_tenant: "subdomain"
+      )
+    end
 
     it "provides current_user helper method" do
       expect(view.current_user).to be user
@@ -368,6 +557,10 @@ RSpec.describe Veri::Authentication do
 
     it "provides current_session helper method" do
       expect(view.current_session).to be session
+    end
+
+    it "provides current_tenant helper method" do
+      expect(view.current_tenant).to eq("subdomain")
     end
   end
 end

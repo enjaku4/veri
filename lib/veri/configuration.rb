@@ -5,7 +5,7 @@ module Veri
   class Configuration
     include Singleton
 
-    attr_reader :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime, :user_model_name
+    attr_reader :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime, :user_model_name, :events_enabled
 
     def initialize
       reset_to_defaults!
@@ -51,11 +51,20 @@ module Veri
       ).process
     end
 
+    def events_enabled=(value)
+      @events_enabled = Veri::Inputs::Boolean.new(
+        value,
+        error: Veri::ConfigurationError,
+        message: "Invalid events enabled `#{value.inspect}`, expected true or false"
+      ).process
+    end
+
     def reset_to_defaults!
       self.hashing_algorithm = :argon2
       self.inactive_session_lifetime = nil
       self.total_session_lifetime = 14.days
       self.user_model_name = "User"
+      self.events_enabled = false
     end
 
     def hasher
@@ -75,8 +84,8 @@ module Veri
     end
 
     class << self
-      delegate :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime, :user_model_name,
-               :hashing_algorithm=, :inactive_session_lifetime=, :total_session_lifetime=, :user_model_name=,
+      delegate :hashing_algorithm, :inactive_session_lifetime, :total_session_lifetime, :user_model_name, :events_enabled,
+               :hashing_algorithm=, :inactive_session_lifetime=, :total_session_lifetime=, :user_model_name=, :events_enabled=,
                :hasher, :user_model, :reset_to_defaults!, :configure,
                to: :instance
     end
