@@ -518,16 +518,16 @@ ActiveSupport::Notifications.subscribe("terminate_session.veri") do |event|
 end
 ```
 
-| Event | Payload |
-|---|---|
-| `establish_session.veri` | `session`, `actor` |
-| `terminate_session.veri` | `session`, `actor` |
-| `switch_tenant.veri` | `session`, `actor`, `previous_tenant` |
-| `change_password.veri` | `identity`, `actor` |
-| `suspend_account.veri` | `identity`, `actor` |
-| `unsuspend_account.veri` | `identity`, `actor` |
-| `start_impersonation.veri` | `session`, `actor` |
-| `end_impersonation.veri` | `session`, `actor`, `impersonated_identity`, `impersonated_tenant` |
+| Event | Sent by | Payload |
+|---|---|---|
+| `establish_session.veri` | `log_in` | `session`, `actor` |
+| `terminate_session.veri` | `log_out`, `session.terminate`, `sessions.terminate_all` | `session`, `actor` |
+| `switch_tenant.veri` | `session.switch_tenant` | `session`, `actor`, `previous_tenant` |
+| `change_password.veri` | `user.update_password` | `identity`, `actor` |
+| `suspend_account.veri` | `user.suspend!` | `identity`, `actor` |
+| `unsuspend_account.veri` | `user.unsuspend!` | `identity`, `actor` |
+| `start_impersonation.veri` | `session.shapeshift` | `session`, `actor` |
+| `end_impersonation.veri` | `session.to_true_identity` | `session`, `actor`, `impersonated_identity`, `impersonated_tenant` |
 
 Every method that emits events takes an optional actor: whatever your application wants to record as the one who performed the operation, even a plain string like `"cleanup job"`. Model methods default to `nil`, `log_in` to the login identity, and `log_out` to the session's `true_identity`. All defaults can be overridden:
 
