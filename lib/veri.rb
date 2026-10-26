@@ -10,6 +10,7 @@ require_relative "veri/password/scrypt"
 
 require_relative "veri/inputs/base"
 require_relative "veri/inputs/authenticatable"
+require_relative "veri/inputs/boolean"
 require_relative "veri/inputs/duration"
 require_relative "veri/inputs/hashing_algorithm"
 require_relative "veri/inputs/model"
@@ -27,6 +28,7 @@ module Veri
   module_function :configure
 end
 
+require_relative "veri/events"
 require_relative "veri/models/session"
 require_relative "veri/controllers/concerns/authentication"
 require_relative "veri/models/concerns/authenticatable"

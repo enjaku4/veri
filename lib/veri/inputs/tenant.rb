@@ -20,15 +20,13 @@ module Veri
       def default_error = Veri::InvalidTenantError
       def default_message = "Expected a string, an ActiveRecord model instance, or nil, got `#{@value.inspect}`"
 
-      def processor
-        -> {
-          return @value if @value.nil?
-          return @value if @value.is_a?(String) && @value.present?
-          return @value if @value.is_a?(ActiveRecord::Base)
-          return @value if @value in { tenant_type: String | nil, tenant_id: String | Integer | nil }
+      def validate_and_normalize
+        return @value if @value.nil?
+        return @value if @value.is_a?(String) && @value.present?
+        return @value if @value.is_a?(ActiveRecord::Base)
+        return @value if @value in { tenant_type: String | nil, tenant_id: String | Integer | nil }
 
-          raise_error
-        }
+        raise_error
       end
     end
   end

@@ -9,17 +9,21 @@ module Veri
 
       has_many :sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :destroy
 
-      scope :locked, -> { where(locked: true) }
-      scope :unlocked, -> { where(locked: false) }
+      scope :suspended, -> { where(suspended: true) }
+      scope :unsuspended, -> { where(suspended: false) }
     end
 
-    def update_password(password)
-      update!(
-        hashed_password: hasher.create(
-          Veri::Inputs::NonEmptyString.new(password).process
-        ),
-        password_updated_at: Time.current
-      )
+    def update_password(password, terminate_sessions: true, actor: nil)
+      hashed_password = hash_password(Veri::Inputs::NonEmptyString.new(password).process)
+
+      transaction do
+        sessions.terminate_all(actor:) if terminate_sessions
+        update!(hashed_password:, password_updated_at: Time.current)
+      end
+
+      Veri::Events.publish("change_password") { { identity: self, actor: } }
+
+      true
     end
 
     def password_set?
@@ -31,32 +35,43 @@ module Veri
 
       return false unless password_set?
 
-      stored_hasher = Veri::Configuration::HASHERS.values.find { _1.match?(hashed_password) }
+      algorithm, hash = hashed_password.split(":", 2)
+      stored_hasher = Veri::Configuration::HASHERS[algorithm.to_sym]
 
       raise Veri::Error, "Unrecognized password hash format" unless stored_hasher
 
-      return false unless stored_hasher.verify(processed_password, hashed_password)
+      return false unless stored_hasher.verify(processed_password, hash)
 
-      update_column(:hashed_password, hasher.create(processed_password)) unless stored_hasher == hasher
+      update_column(:hashed_password, hash_password(processed_password)) unless stored_hasher == Veri::Configuration.hasher
 
       true
     end
 
-    def lock!
+    def suspend!(actor: nil)
       transaction do
-        update!(locked: true, locked_at: Time.current)
-        sessions.terminate_all
+        update!(suspended: true, suspended_at: Time.current)
+        sessions.terminate_all(actor:)
       end
+
+      Veri::Events.publish("suspend_account") { { identity: self, actor: } }
+
+      true
     end
 
-    def unlock!
-      update!(locked: false, locked_at: nil)
+    def unsuspend!(actor: nil)
+      update!(suspended: false, suspended_at: nil)
+
+      Veri::Events.publish("unsuspend_account") { { identity: self, actor: } }
+
+      true
     end
 
     private
 
-    def hasher
-      @hasher ||= Veri::Configuration.hasher
+    def hash_password(password)
+      algorithm = Veri::Configuration.hashing_algorithm
+
+      "#{algorithm}:#{Veri::Configuration::HASHERS.fetch(algorithm).create(password)}"
     end
   end
 end
