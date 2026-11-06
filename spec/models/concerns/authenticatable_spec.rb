@@ -267,6 +267,12 @@ RSpec.describe Veri::Authenticatable do
           expect { subject }.not_to(change { user.reload.password_updated_at })
         end
 
+        it "re-hashes regardless of scopes applied to the user model" do
+          User.where(id: nil).scoping { subject }
+
+          expect(user.reload.hashed_password).to start_with("pbkdf2:sha512$")
+        end
+
         it "keeps a password that was changed after the user was loaded" do
           User.find(user.id).update_password("new_password", terminate_sessions: false)
 
