@@ -52,6 +52,7 @@ module Veri
 
       return false unless token
 
+      current_session&.terminate
       cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true, secure: request.ssl? }
       reset_memoized_session
       true

@@ -228,6 +228,18 @@ RSpec.describe Veri::Authentication do
       expect(controller.current_user).to eq(user)
     end
 
+    context "when the browser is already logged in" do
+      let(:previous_user) { User.create! }
+
+      before { controller.log_in(previous_user) }
+
+      it "ends the previous session" do
+        subject
+        expect(previous_user.sessions).to be_empty
+        expect(Veri::Session.all).to contain_exactly(user.sessions.sole)
+      end
+    end
+
     context "when the user is not an instance of the configured user model" do
       let(:user) { 123 }
 
