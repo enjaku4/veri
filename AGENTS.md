@@ -23,7 +23,6 @@ A high-level picture of the gem for anyone working on it, including AI agents. W
 - `Veri::Session`: an Active Record model, one record per login. It lives in the engine's `app/models`, so Rails reloads it together with the app's models. Everything about a session lives here: lifetime, tenant, impersonation, termination.
 - `Veri::Authentication`: the controller concern: the session cookie, logging in and out, the `current_*` helpers, and the check that requires a login.
 - `Veri::Password`: one adapter per hashing algorithm, all with the same interface.
-- `Veri::Events`: publishes events when they are enabled.
 - `Veri::Inputs`: check arguments and configuration values where they enter Veri, and raise Veri errors.
 - `Veri::MigrationHelpers` and the generator: database setup and data migrations in the app.
 
@@ -39,11 +38,10 @@ The specs run against a dummy Rails app in `spec/support` that really boots and 
 - Impersonation happens inside the impersonator's own session: it takes on the other user and tenant and keeps the original ones to return to. An impersonating session can't impersonate again.
 - The session is the only source of the tenant.
 - Every stored password hash names its algorithm, so the configured algorithm can change at any time.
-- Events are published only after the change is committed.
 
 ## Boundaries
 
-- Veri provides building blocks, not a finished flow. Whatever depends on how an app works stays in the app: tenant scoping, what happens after login or a password change, what to do with events, test helpers.
+- Veri provides building blocks, not a finished flow. Whatever depends on how an app works stays in the app: tenant scoping, what happens after login or a password change, audit logging, test helpers.
 
 ## Coding rules
 
