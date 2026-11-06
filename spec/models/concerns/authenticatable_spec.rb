@@ -106,6 +106,20 @@ RSpec.describe Veri::Authenticatable do
       end
     end
 
+    context "when terminate_sessions is not a boolean" do
+      subject { user.update_password("new_password", terminate_sessions: "false") }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected true or false, got `\"false\"`")
+      end
+
+      it "does not change the password or terminate sessions" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError)
+        expect(user.reload.hashed_password).to be_nil
+        expect(Veri::Session.count).to eq(3)
+      end
+    end
+
     context "when the password is valid" do
       let(:password) { "new_password" }
 

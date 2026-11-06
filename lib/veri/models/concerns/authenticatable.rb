@@ -15,10 +15,13 @@ module Veri
     end
 
     def update_password(password, terminate_sessions: true, actor: nil)
-      hashed_password = hash_password(Veri::Inputs::NonEmptyString.new(password).process)
+      processed_password = Veri::Inputs::NonEmptyString.new(password).process
+      processed_terminate_sessions = Veri::Inputs::Boolean.new(terminate_sessions).process
+
+      hashed_password = hash_password(processed_password)
 
       transaction do
-        if terminate_sessions
+        if processed_terminate_sessions
           sessions.terminate_all(actor:)
           impersonating_sessions.terminate_all(actor:)
         end
