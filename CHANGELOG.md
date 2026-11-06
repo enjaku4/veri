@@ -17,6 +17,7 @@
 
 - Added `Veri::Session.from_request` method to fetch the session from a request object
 - Added `impersonating_sessions` association to fetch sessions impersonating a user
+- Added `Veri::Session.in_original_tenant` to fetch impersonating sessions that return to a tenant
 
 ### Bugs
 
@@ -28,6 +29,8 @@
 - Fixed migration helpers ignoring the tenant that impersonating sessions return to
 - Fixed `true_tenant` returning the impersonated tenant when the impersonator had no tenant
 - Fixed the generated migration failing when the user table's primary key is not `id`
+- Fixed `prune` keeping impersonating sessions whose original tenant was deleted
+- Fixed `log_in` leaving the browser's previous session active
 
 ## v2.1.0
 
