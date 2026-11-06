@@ -34,7 +34,7 @@ The specs run against a dummy Rails app in `spec/support` that really boots and 
 - An app has one user model.
 - A session is found by its cookie alone. The cookie holds a random token and the database stores only its digest, so a leaked database gives no working cookies.
 - Only active sessions authenticate.
-- A suspended user can't log in and has no sessions left.
+- A suspended user can't log in and has no sessions left; `log_in` and `shapeshift` lock the user so a concurrent suspension can't leave one behind. A session of a suspended user means Veri has a bug, so `from_request` raises instead of treating it as logged out.
 - Impersonation happens inside the impersonator's own session: it takes on the other user and tenant and keeps the original ones to return to. An impersonating session can't impersonate again.
 - The session is the only source of the tenant.
 - Every stored password hash names its algorithm, so the configured algorithm can change at any time.
