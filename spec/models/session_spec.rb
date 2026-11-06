@@ -413,7 +413,7 @@ RSpec.describe Veri::Session do
       let(:user) { nil }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `nil`")
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected a persisted instance of User, got `nil`")
       end
     end
 

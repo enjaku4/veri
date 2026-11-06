@@ -215,7 +215,7 @@ RSpec.describe Veri::Authentication do
       let(:user) { 123 }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `123`")
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected a persisted instance of User, got `123`")
       end
     end
 
