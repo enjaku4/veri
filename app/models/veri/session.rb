@@ -11,6 +11,11 @@ module Veri
     belongs_to :original_tenant, polymorphic: true, optional: true
 
     scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
+    scope :shapeshifted, -> { where.not(original_authenticatable_id: nil) }
+    scope :in_original_tenant, -> (tenant) do
+      resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
+      shapeshifted.where(original_tenant_type: resolved_tenant[:tenant_type], original_tenant_id: resolved_tenant[:tenant_id])
+    end
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
     scope :expired, -> { where(expires_at: ...Time.current) }
     scope :inactive, -> do

@@ -1,4 +1,72 @@
 RSpec.describe Veri::Session do
+  describe ".shapeshifted" do
+    subject { described_class.shapeshifted }
+
+    let!(:shapeshifted_session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        last_seen_at: Time.current,
+        hashed_token: "shapeshifted",
+        authenticatable: User.create!,
+        original_authenticatable: User.create!
+      )
+    end
+
+    before do
+      described_class.create!(expires_at: 1.hour.from_now, last_seen_at: Time.current, hashed_token: "own", authenticatable: User.create!)
+    end
+
+    it "returns only sessions in which someone is impersonating another user" do
+      expect(subject).to contain_exactly(shapeshifted_session)
+    end
+  end
+
+  describe ".in_original_tenant" do
+    subject { described_class.in_original_tenant(tenant) }
+
+    let(:company) { Company.create! }
+    let(:session_attributes) { { expires_at: 1.hour.from_now, last_seen_at: Time.current } }
+    let!(:returning_session) do
+      described_class.create!(
+        **session_attributes,
+        hashed_token: "returning",
+        authenticatable: User.create!,
+        original_authenticatable: User.create!,
+        original_tenant: company,
+        tenant: Company.create!
+      )
+    end
+
+    before do
+      described_class.create!(**session_attributes, hashed_token: "own", authenticatable: User.create!, tenant: company)
+      described_class.create!(**session_attributes, hashed_token: "untenanted", authenticatable: User.create!)
+    end
+
+    context "when tenant is invalid" do
+      let(:tenant) { 123 }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`")
+      end
+    end
+
+    context "when tenant is an ActiveRecord model" do
+      let(:tenant) { company }
+
+      it "returns only impersonating sessions that return to the tenant" do
+        expect(subject).to contain_exactly(returning_session)
+      end
+    end
+
+    context "when tenant is nil" do
+      let(:tenant) { nil }
+
+      it "returns no sessions that are not impersonating" do
+        expect(subject).to be_empty
+      end
+    end
+  end
+
   describe ".in_tenant" do
     subject { described_class.in_tenant(tenant) }
 
