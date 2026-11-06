@@ -23,10 +23,7 @@ module Veri
       transaction do
         update!(hashed_password:, password_updated_at: Time.current)
 
-        if processed_terminate_sessions
-          sessions.terminate_all
-          impersonating_sessions.terminate_all
-        end
+        sessions.or(impersonating_sessions).terminate_all if processed_terminate_sessions
       end
 
       true
@@ -56,8 +53,7 @@ module Veri
     def suspend!
       transaction do
         update!(suspended: true, suspended_at: Time.current)
-        sessions.terminate_all
-        impersonating_sessions.terminate_all
+        sessions.or(impersonating_sessions).terminate_all
       end
 
       true
