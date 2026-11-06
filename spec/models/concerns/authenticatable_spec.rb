@@ -43,6 +43,39 @@ RSpec.describe Veri::Authenticatable do
     end
   end
 
+  describe "#impersonating_sessions" do
+    let(:user) { User.create! }
+    let(:other_user) { User.create! }
+    let!(:impersonating_session) do
+      Veri::Session.create!(
+        authenticatable: other_user,
+        original_authenticatable: user,
+        shapeshifted_at: Time.current,
+        expires_at: 1.hour.from_now,
+        hashed_token: SecureRandom.hex,
+        last_seen_at: Time.current
+      )
+    end
+
+    before do
+      Veri::Session.create!(
+        authenticatable: user,
+        expires_at: 1.hour.from_now,
+        hashed_token: SecureRandom.hex,
+        last_seen_at: Time.current
+      )
+    end
+
+    it "returns the sessions in which the user impersonates someone" do
+      expect(user.impersonating_sessions).to contain_exactly(impersonating_session)
+    end
+
+    it "destroys them together with the user" do
+      user.destroy!
+      expect(Veri::Session.exists?(impersonating_session.id)).to be false
+    end
+  end
+
   describe "#update_password" do
     subject { user.update_password(password) }
 
@@ -91,6 +124,19 @@ RSpec.describe Veri::Authenticatable do
       it "terminates all sessions of the user and no one else's" do
         expect { subject }.to change(user.sessions, :count).from(2).to(0)
         expect(other_user.sessions.count).to eq(1)
+      end
+
+      it "terminates the sessions in which the user impersonates someone" do
+        Veri::Session.create!(
+          hashed_token: SecureRandom.hex,
+          expires_at: 1.hour.from_now,
+          last_seen_at: Time.current,
+          authenticatable: other_user,
+          original_authenticatable: user,
+          shapeshifted_at: Time.current
+        )
+
+        expect { subject }.to change(user.impersonating_sessions, :count).from(1).to(0)
       end
 
       context "when terminate_sessions is false" do
@@ -323,6 +369,19 @@ RSpec.describe Veri::Authenticatable do
       end
 
       expect { subject }.to change(user.sessions, :count).from(2).to(0)
+    end
+
+    it "terminates the sessions in which the user impersonates someone" do
+      Veri::Session.create!(
+        hashed_token: SecureRandom.hex,
+        expires_at: 1.hour.from_now,
+        last_seen_at: Time.current,
+        authenticatable: User.create!,
+        original_authenticatable: user,
+        shapeshifted_at: Time.current
+      )
+
+      expect { subject }.to change(user.impersonating_sessions, :count).from(1).to(0)
     end
 
     context "when events are enabled" do

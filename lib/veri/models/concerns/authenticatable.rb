@@ -8,6 +8,7 @@ module Veri
       @@included = name
 
       has_many :sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :destroy
+      has_many :impersonating_sessions, class_name: "Veri::Session", foreign_key: :original_authenticatable_id, dependent: :destroy
 
       scope :suspended, -> { where(suspended: true) }
       scope :unsuspended, -> { where(suspended: false) }
@@ -17,7 +18,11 @@ module Veri
       hashed_password = hash_password(Veri::Inputs::NonEmptyString.new(password).process)
 
       transaction do
-        sessions.terminate_all(actor:) if terminate_sessions
+        if terminate_sessions
+          sessions.terminate_all(actor:)
+          impersonating_sessions.terminate_all(actor:)
+        end
+
         update!(hashed_password:, password_updated_at: Time.current)
       end
 
@@ -51,6 +56,7 @@ module Veri
       transaction do
         update!(suspended: true, suspended_at: Time.current)
         sessions.terminate_all(actor:)
+        impersonating_sessions.terminate_all(actor:)
       end
 
       Veri::Events.publish("suspend_account") { { identity: self, actor: } }
