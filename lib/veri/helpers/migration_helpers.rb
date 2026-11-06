@@ -1,20 +1,14 @@
 module Veri
   module MigrationHelpers
     def migrate_authentication_tenant!(old_tenant, new_tenant)
-      sessions = Veri::Session.where(tenant_type: old_tenant.to_s)
+      old_tenant_type = Veri::Inputs::NonEmptyString.new(old_tenant).process
+      new_tenant_type = Veri::Inputs::NonEmptyString.new(new_tenant).process
 
-      raise Veri::InvalidArgumentError, "No sessions exist in tenant #{old_tenant.inspect}" unless sessions.exists?
-      raise Veri::InvalidArgumentError, "Cannot migrate tenant to #{new_tenant.inspect}: class does not exist" unless new_tenant.to_s.safe_constantize
-
-      sessions.update_all(tenant_type: new_tenant.to_s)
+      Veri::Session.where(tenant_type: old_tenant_type).update_all(tenant_type: new_tenant_type)
     end
 
     def delete_authentication_tenant!(tenant)
-      sessions = Veri::Session.where(tenant_type: tenant.to_s)
-
-      raise Veri::InvalidArgumentError, "No sessions exist in tenant #{tenant.inspect}" unless sessions.exists?
-
-      sessions.delete_all
+      Veri::Session.where(tenant_type: Veri::Inputs::NonEmptyString.new(tenant).process).delete_all
     end
   end
 end
