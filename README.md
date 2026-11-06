@@ -445,8 +445,8 @@ user.sessions.in_tenant(tenant)
 # Terminate all sessions for a specific user within a tenant
 user.sessions.in_tenant(tenant).terminate_all
 
-# If you use impersonation, fetch the impersonating sessions that return to a given tenant
-user.sessions.in_original_tenant(tenant)
+# If you use impersonation, fetch a user's impersonating sessions that return to a given tenant
+user.impersonating_sessions.in_original_tenant(tenant)
 ```
 
 ### Switching Tenants
