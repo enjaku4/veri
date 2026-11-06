@@ -25,6 +25,7 @@
 - Fixed session validations piling up with each code reload in development
 - Fixed suspending or deleting a user leaving the sessions in which they impersonate someone
 - Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
+- Fixed migration helpers ignoring the tenant that impersonating sessions return to
 
 ## v2.1.0
 
