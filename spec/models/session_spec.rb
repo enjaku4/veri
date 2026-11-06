@@ -781,6 +781,13 @@ RSpec.describe Veri::Session do
         .to change { described_class.exists?(id: session.id) }.from(true).to(false)
         .and change(described_class, :count).from(2).to(1)
     end
+
+    it "deletes impersonating sessions whose original tenant was deleted" do
+      session.shapeshift(User.create!, tenant: Company.create!)
+      tenant.destroy!
+
+      expect { subject }.to change { described_class.exists?(id: session.id) }.from(true).to(false)
+    end
   end
 
   describe ".terminate_all" do

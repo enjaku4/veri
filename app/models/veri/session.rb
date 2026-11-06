@@ -122,13 +122,15 @@ module Veri
       end
 
       def prune
-        orphaned_tenant_sessions = where.not(tenant_id: nil).includes(:tenant).filter_map do |session|
-          !session.tenant
+        orphaned_sessions = where.not(tenant_id: nil).or(where.not(original_tenant_id: nil)).includes(:tenant, :original_tenant).select do |session|
+          session.tenant
+          session.original_tenant
+          false
         rescue ActiveRecord::RecordNotFound
-          session.id
+          true
         end
 
-        where(id: orphaned_tenant_sessions).delete_all if orphaned_tenant_sessions.any?
+        where(id: orphaned_sessions).delete_all if orphaned_sessions.any?
       end
 
       alias terminate_all delete_all
