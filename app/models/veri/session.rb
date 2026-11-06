@@ -132,7 +132,7 @@ module Veri
       alias terminate_all delete_all
 
       def from_request(request)
-        token = request.cookie_jar.encrypted["veri_token"]
+        token = Veri::Inputs::Request.new(request).process.cookie_jar.encrypted["veri_token"]
 
         return nil if token.blank?
 

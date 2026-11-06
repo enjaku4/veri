@@ -648,6 +648,14 @@ RSpec.describe Veri::Session do
     let(:request) { ActionDispatch::Request.new(Rails.application.env_config.merge("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7")) }
     let(:token) { described_class.establish(user, request, tenant) }
 
+    context "when the argument is not a request" do
+      subject { described_class.from_request(nil) }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of ActionDispatch::Request, got `nil`")
+      end
+    end
+
     context "when the request carries no cookie" do
       it { is_expected.to be_nil }
     end
