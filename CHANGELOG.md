@@ -27,6 +27,7 @@
 - Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
 - Fixed migration helpers ignoring the tenant that impersonating sessions return to
 - Fixed `true_tenant` returning the impersonated tenant when the impersonator had no tenant
+- Fixed the generated migration failing when the user table's primary key is not `id`
 
 ## v2.1.0
 
