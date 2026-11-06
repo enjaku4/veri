@@ -226,9 +226,6 @@ Veri stores authentication sessions in the database, providing session managemen
 # Get all sessions for a user
 user.sessions
 
-# Get sessions in which a user is impersonating someone
-user.impersonating_sessions
-
 # Get current session in controller
 current_session
 
@@ -311,17 +308,12 @@ Veri::Session.terminate_all
 # Terminate all sessions for a specific user
 user.sessions.terminate_all
 
-# Terminate the sessions in which a user is impersonating someone
-user.impersonating_sessions.terminate_all
-
 # Clean up inactive sessions for a specific user
 user.sessions.inactive.terminate_all
 
 # Clean up expired sessions globally
 Veri::Session.expired.terminate_all
 ```
-
-While a user impersonates someone, their session belongs to the impersonated user, so it is listed in `user.impersonating_sessions` rather than `user.sessions`. If your app uses impersonation, terminate both to end all of a user's sessions.
 
 When the current session is terminated, the controller still sees it for the rest of the request, so `logged_in?` stays true until the next request unless you call `log_in` or `log_out`. The same applies when a password update or an account suspension terminates it.
 
@@ -386,6 +378,13 @@ session.shapeshifted?
 session.true_identity
 ```
 
+User method:
+
+```rb
+# Returns the sessions in which a user is impersonating someone
+user.impersonating_sessions
+```
+
 Controller helper:
 
 ```rb
@@ -442,6 +441,9 @@ user.sessions.in_tenant(tenant)
 
 # Terminate all sessions for a specific user within a tenant
 user.sessions.in_tenant(tenant).terminate_all
+
+# If you use impersonation, fetch the impersonating sessions that return to a given tenant
+user.sessions.in_original_tenant(tenant)
 ```
 
 ### Switching Tenants
@@ -488,6 +490,8 @@ Terminate the sessions of a tenant as part of the same operation that deletes it
 
 ```rb
 Veri::Session.in_tenant(company).terminate_all
+# If you use impersonation, also terminate the sessions that return to this tenant
+Veri::Session.in_original_tenant(company).terminate_all
 company.destroy!
 ```
 
