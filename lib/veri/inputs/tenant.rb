@@ -9,7 +9,7 @@ module Veri
           { tenant_type: tenant, tenant_id: nil }
         when ActiveRecord::Base
           raise_error unless tenant.persisted?
-          { tenant_type: tenant.class.to_s, tenant_id: tenant.public_send(tenant.class.primary_key) }
+          { tenant_type: tenant.class.to_s, tenant_id: tenant.id }
         else
           tenant
         end
