@@ -376,6 +376,9 @@ session.shapeshifted?
 
 # Returns original user when shapeshifted, otherwise current user
 session.true_identity
+
+# Fetch all shapeshifted sessions
+user.sessions.shapeshifted
 ```
 
 User method:
