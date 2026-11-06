@@ -42,8 +42,10 @@ module Veri
       processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
 
-      token = processed_authenticatable.with_lock do
-        Veri::Session.establish(processed_authenticatable, request, resolved_tenant) unless processed_authenticatable.suspended?
+      token = processed_authenticatable.transaction do
+        locked_authenticatable = processed_authenticatable.class.unscoped.lock.find(processed_authenticatable.id)
+
+        Veri::Session.establish(processed_authenticatable, request, resolved_tenant) unless locked_authenticatable.suspended?
       end
 
       return false unless token

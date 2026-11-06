@@ -65,8 +65,10 @@ module Veri
       processed_authenticatable = Veri::Inputs::Authenticatable.new(user).process
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
 
-      processed_authenticatable.with_lock do
-        raise Veri::Error, "Cannot shapeshift into a suspended user" if processed_authenticatable.suspended?
+      processed_authenticatable.transaction do
+        locked_authenticatable = processed_authenticatable.class.unscoped.lock.find(processed_authenticatable.id)
+
+        raise Veri::Error, "Cannot shapeshift into a suspended user" if locked_authenticatable.suspended?
 
         update!(
           shapeshifted_at: Time.current,

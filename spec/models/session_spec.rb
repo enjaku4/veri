@@ -456,6 +456,17 @@ RSpec.describe Veri::Session do
       end
     end
 
+    context "when user has unsaved changes" do
+      let(:tenant) { nil }
+      let(:user) { User.create!.tap { _1.password_updated_at = 1.day.ago } }
+
+      it "shapeshifts and keeps the changes unsaved" do
+        subject
+        expect(session.reload.authenticatable).to eq(user)
+        expect(user.password_updated_at_changed?).to be true
+      end
+    end
+
     context "when user was suspended after being loaded" do
       let(:tenant) { nil }
       let(:user) { User.create! }

@@ -228,6 +228,15 @@ RSpec.describe Veri::Authentication do
       end
     end
 
+    context "when the user has unsaved changes" do
+      before { user.password_updated_at = 1.day.ago }
+
+      it "logs in the user and keeps the changes unsaved" do
+        expect(subject).to be true
+        expect(user.password_updated_at_changed?).to be true
+      end
+    end
+
     context "when the user account was suspended after the user was loaded" do
       before { User.find(user.id).suspend! }
 
