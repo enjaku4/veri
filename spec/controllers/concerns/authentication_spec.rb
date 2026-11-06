@@ -119,6 +119,23 @@ RSpec.describe Veri::Authentication do
       it { is_expected.to be_nil }
     end
 
+    context "when the cookie points to an expired session" do
+      before do
+        DummyController.new.tap { _1.request = controller.request }.log_in(User.create!)
+        travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute)
+      end
+
+      it "looks the session up only once" do
+        queries = []
+
+        ActiveSupport::Notifications.subscribed(-> (*, payload) { queries << payload[:sql] }, "sql.active_record") do
+          2.times { controller.current_session }
+        end
+
+        expect(queries.grep(/veri_sessions/).size).to eq(1)
+      end
+    end
+
     context "when user is logged in to a tenant" do
       let(:user) { User.create! }
       let(:company) { Company.create! }

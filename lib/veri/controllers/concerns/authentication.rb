@@ -27,7 +27,9 @@ module Veri
     end
 
     def current_session
-      @current_session ||= Session.from_request(request)
+      return @current_session if defined?(@current_session)
+
+      @current_session = Session.from_request(request)
     end
 
     def current_tenant
@@ -93,7 +95,7 @@ module Veri
     end
 
     def reset_memoized_session
-      @current_session = nil
+      remove_instance_variable(:@current_session) if defined?(@current_session)
     end
   end
 end
