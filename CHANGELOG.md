@@ -16,13 +16,15 @@
 ### Features
 
 - Added events
-- Added `Veri::Session.from_request` to find the current session outside of controllers
+- Added `Veri::Session.from_request` method to fetch the session from a request object
+- Added `impersonating_sessions` scope to fetch sessions that are impersonating a user
 
 ### Bugs
 
 - Fixed Rails commands failing when the user model cannot be loaded
 - Fixed `lock!` overriding Active Record's row locking method of the same name
 - Fixed session validations piling up with each code reload in development
+- Fixed suspending or deleting a user leaving the sessions in which they impersonate someone
 
 ## v2.1.0
 
