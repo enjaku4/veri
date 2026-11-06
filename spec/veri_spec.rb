@@ -14,7 +14,6 @@ RSpec.describe Veri do
         expect(config.inactive_session_lifetime).to be_nil
         expect(config.total_session_lifetime).to eq(14.days)
         expect(config.user_model_name).to eq("User")
-        expect(config.events_enabled).to be false
         expect(config.hasher).to eq(Veri::Password::Argon2)
         expect(config.user_model).to eq(User)
       end
@@ -27,7 +26,6 @@ RSpec.describe Veri do
           config.inactive_session_lifetime = 30.minutes
           config.total_session_lifetime = 7.days
           config.user_model_name = "Client"
-          config.events_enabled = true
         end
       end
 
@@ -36,7 +34,6 @@ RSpec.describe Veri do
         expect(config.inactive_session_lifetime).to eq(30.minutes)
         expect(config.total_session_lifetime).to eq(7.days)
         expect(config.user_model_name).to eq("Client")
-        expect(config.events_enabled).to be true
         expect(config.hasher).to eq(Veri::Password::BCrypt)
         expect(config.user_model).to eq(Client)
       end
@@ -57,15 +54,6 @@ RSpec.describe Veri do
           expect { described_class.configure { _1.inactive_session_lifetime = "invalid" } }.to raise_error(
             Veri::ConfigurationError,
             "Invalid inactive session lifetime `\"invalid\"`, expected an instance of ActiveSupport::Duration or nil"
-          )
-        end
-      end
-
-      context "events enabled" do
-        it "raises an error" do
-          expect { described_class.configure { _1.events_enabled = "yes" } }.to raise_error(
-            Veri::ConfigurationError,
-            "Invalid events enabled `\"yes\"`, expected true or false"
           )
         end
       end

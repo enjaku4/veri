@@ -28,7 +28,6 @@ module Veri
   module_function :configure
 end
 
-require_relative "veri/events"
 require_relative "veri/controllers/concerns/authentication"
 require_relative "veri/models/concerns/authenticatable"
 require_relative "veri/helpers/migration_helpers"

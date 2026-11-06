@@ -32,11 +32,7 @@ module Veri
       last_seen_at < Time.current - inactive_session_lifetime
     end
 
-    def terminate(actor: nil)
-      delete.tap do
-        Veri::Events.publish("terminate_session") { { session: self, actor: } }
-      end
-    end
+    alias terminate delete
 
     def update_info(request)
       update!(
@@ -63,7 +59,7 @@ module Veri
     def true_identity = original_authenticatable || authenticatable
     def true_tenant = original_tenant || tenant
 
-    def shapeshift(user, tenant: nil, actor: nil)
+    def shapeshift(user, tenant: nil)
       raise Veri::Error, "Cannot shapeshift from a shapeshifted session" if shapeshifted?
 
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
@@ -75,15 +71,10 @@ module Veri
         original_tenant_id: tenant_id,
         **resolved_tenant,
         authenticatable: Veri::Inputs::Authenticatable.new(user).process
-      ).tap do
-        Veri::Events.publish("start_impersonation") { { session: self, actor: } }
-      end
+      )
     end
 
-    def to_true_identity(actor: nil)
-      impersonated_identity = authenticatable if Veri::Events.enabled?
-      impersonated_tenant = tenant if Veri::Events.enabled?
-
+    def to_true_identity
       update!(
         shapeshifted_at: nil,
         authenticatable: original_authenticatable,
@@ -92,18 +83,11 @@ module Veri
         original_tenant_type: nil,
         original_tenant_id: nil,
         original_authenticatable: nil
-      ).tap do
-        Veri::Events.publish("end_impersonation") { { session: self, actor:, impersonated_identity:, impersonated_tenant: } }
-      end
+      )
     end
 
-    def switch_tenant(tenant, actor: nil)
-      resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
-      previous_tenant = self.tenant if Veri::Events.enabled?
-
-      update!(**resolved_tenant).tap do
-        Veri::Events.publish("switch_tenant") { { session: self, actor:, previous_tenant: } }
-      end
+    def switch_tenant(tenant)
+      update!(**Veri::Inputs::Tenant.new(tenant).resolve)
     end
 
     def tenant
@@ -115,7 +99,7 @@ module Veri
     end
 
     class << self
-      def establish(user, request, resolved_tenant, actor: nil)
+      def establish(user, request, resolved_tenant)
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
@@ -126,8 +110,6 @@ module Veri
           **resolved_tenant
         )
         session.update_info(request)
-
-        Veri::Events.publish("establish_session") { { session:, actor: } }
 
         token
       end
@@ -142,19 +124,7 @@ module Veri
         where(id: orphaned_tenant_sessions).delete_all if orphaned_tenant_sessions.any?
       end
 
-      def terminate_all(actor: nil)
-        return delete_all unless Veri::Events.enabled?
-
-        transaction do
-          in_batches.sum do |batch|
-            sessions = batch.to_a
-
-            batch.delete_all
-            sessions.each { |session| Veri::Events.publish("terminate_session") { { session:, actor: } } }
-            sessions.size
-          end
-        end
-      end
+      alias terminate_all delete_all
 
       def from_request(request)
         token = request.cookie_jar.encrypted["veri_token"]

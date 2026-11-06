@@ -228,21 +228,6 @@ RSpec.describe Veri::Session do
       expect { session.terminate }.to change(described_class, :count).from(1).to(0)
       expect(session).to be_destroyed
     end
-
-    context "when events are enabled" do
-      before do
-        Veri::Configuration.configure { _1.events_enabled = true }
-        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
-      end
-
-      let(:admin) { User.create! }
-
-      it "publishes terminate_session with the session and the actor" do
-        session.terminate(actor: admin)
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: admin })
-      end
-    end
   end
 
   describe "#update_info" do
@@ -409,32 +394,6 @@ RSpec.describe Veri::Session do
         expect(session.reload).to have_attributes(tenant:, true_tenant: original_tenant, true_identity: original_user)
       end
     end
-
-    context "when events are enabled" do
-      before do
-        Veri::Configuration.configure { _1.events_enabled = true }
-        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
-      end
-
-      let(:user) { User.create! }
-      let(:admin) { User.create! }
-
-      it "publishes switch_tenant with the session and the previous tenant" do
-        company = Company.create!
-        another_company = Company.create!
-        session = described_class.create!(
-          authenticatable: user,
-          hashed_token: SecureRandom.hex,
-          expires_at: 1.hour.from_now,
-          last_seen_at: Time.current,
-          tenant: company
-        )
-
-        session.switch_tenant(another_company, actor: admin)
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("switch_tenant.veri", { session:, actor: admin, previous_tenant: company })
-      end
-    end
   end
 
   describe "#shapeshift" do
@@ -528,29 +487,6 @@ RSpec.describe Veri::Session do
           .and change(session, :tenant_id).from(nil).to(tenant.id)
       end
     end
-
-    context "when events are enabled" do
-      before do
-        Veri::Configuration.configure { _1.events_enabled = true }
-        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
-      end
-
-      let(:user) { User.create! }
-      let(:admin) { User.create! }
-
-      it "publishes start_impersonation with the session and the actor" do
-        session = described_class.create!(
-          authenticatable: admin,
-          hashed_token: SecureRandom.hex,
-          expires_at: 1.hour.from_now,
-          last_seen_at: Time.current
-        )
-
-        session.shapeshift(user, actor: admin)
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("start_impersonation.veri", { session:, actor: admin })
-      end
-    end
   end
 
   describe "#to_true_identity" do
@@ -585,19 +521,6 @@ RSpec.describe Veri::Session do
 
       expect(session.tenant).to eq(original_tenant)
       expect(session.original_tenant).to be_nil
-    end
-
-    context "when events are enabled" do
-      before do
-        Veri::Configuration.configure { _1.events_enabled = true }
-        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
-      end
-
-      it "publishes end_impersonation with the actor and the impersonated identity and tenant" do
-        session.to_true_identity(actor: "support job")
-
-        expect(ActiveSupport::Notifications).to have_received(:instrument).with("end_impersonation.veri", { session:, actor: "support job", impersonated_identity: user, impersonated_tenant: tenant })
-      end
     end
   end
 
@@ -804,50 +727,6 @@ RSpec.describe Veri::Session do
     it "deletes all sessions" do
       expect { subject }.to change(described_class, :count).from(3).to(0)
       expect(described_class.where(id: sessions)).to all(be_destroyed)
-    end
-
-    context "when events are enabled" do
-      before do
-        Veri::Configuration.configure { _1.events_enabled = true }
-        allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
-      end
-
-      let(:user) { User.create! }
-      let(:admin) { User.create! }
-      let!(:sessions) do
-        Array.new(3) do
-          described_class.create!(
-            authenticatable: user,
-            hashed_token: SecureRandom.hex,
-            expires_at: 1.hour.from_now,
-            last_seen_at: Time.current
-          )
-        end
-      end
-
-      it "publishes terminate_session for each session terminated in bulk" do
-        other_session = described_class.create!(
-          authenticatable: admin,
-          hashed_token: SecureRandom.hex,
-          expires_at: 1.hour.from_now,
-          last_seen_at: Time.current
-        )
-        result = user.sessions.terminate_all(actor: admin)
-
-        sessions.each do |session|
-          expect(ActiveSupport::Notifications).to have_received(:instrument).with("terminate_session.veri", { session:, actor: admin })
-        end
-        expect(result).to eq(3)
-        expect(described_class.all).to contain_exactly(other_session)
-      end
-
-      it "terminates every session in bulk even if a subscriber raises" do
-        allow(described_class).to(receive(:in_batches).and_wrap_original { |original| original.call(of: 1) })
-        allow(ActiveSupport::Notifications).to receive(:instrument).with("terminate_session.veri", anything).and_raise("audit log is down")
-
-        expect { user.sessions.terminate_all(actor: admin) }.to raise_error(RuntimeError, "audit log is down")
-        expect(user.sessions.count).to eq(0)
-      end
     end
   end
 end
