@@ -26,7 +26,6 @@ Consider a multi-tenant SaaS application where users need to manage their active
   - [Account Suspension](#account-suspension)
   - [User Impersonation](#user-impersonation)
   - [Multi-Tenancy](#multi-tenancy)
-  - [Events](#events)
   - [View Helpers](#view-helpers)
   - [Testing](#testing)
 
@@ -81,8 +80,6 @@ Veri.configure do |config|
   config.total_session_lifetime = 14.days
   # Your user model name
   config.user_model_name = "User"
-  # Publish events
-  config.events_enabled = false
 end
 ```
 
@@ -511,49 +508,6 @@ migrate_authentication_tenant!("Organization", "Company")
 # Remove tenant data (e.g., when you delete the Organization model entirely)
 delete_authentication_tenant!("Organization")
 ```
-
-## Events
-
-When `events_enabled` is turned on in the configuration, Veri publishes events for security-relevant operations, for example to build an audit trail. Events are published with `ActiveSupport::Notifications` once the change is committed. Subscribe to the ones you need:
-
-```rb
-ActiveSupport::Notifications.subscribe("terminate_session.veri") do |event|
-  AuditLog.create!(
-    action: "terminate_session",
-    user: event.payload[:session].identity,
-    actor: event.payload[:actor]
-  )
-end
-```
-
-| Event | Sent by | Payload |
-|---|---|---|
-| `establish_session.veri` | `log_in` | `session`, `actor` |
-| `terminate_session.veri` | `log_out`, `session.terminate`, `sessions.terminate_all` | `session`, `actor` |
-| `switch_tenant.veri` | `session.switch_tenant` | `session`, `actor`, `previous_tenant` |
-| `change_password.veri` | `user.update_password` | `identity`, `actor` |
-| `suspend_account.veri` | `user.suspend!` | `identity`, `actor` |
-| `unsuspend_account.veri` | `user.unsuspend!` | `identity`, `actor` |
-| `start_impersonation.veri` | `session.shapeshift` | `session`, `actor` |
-| `end_impersonation.veri` | `session.to_true_identity` | `session`, `actor`, `impersonated_identity`, `impersonated_tenant` |
-
-Every method that emits events takes an optional actor: whatever your application wants to record as the one who performed the operation, even a plain string like `"cleanup job"`. Model methods default to `nil`, `log_in` to the login identity, and `log_out` to the session's `true_identity`. All defaults can be overridden:
-
-```rb
-# The user changes their own password
-current_user.update_password(new_password, actor: current_user)
-
-# An administrator suspends an account
-user.suspend!(actor: admin)
-
-# The user logs out; by default, the actor is the user themselves
-log_out
-
-# A cleanup job removes expired sessions
-Veri::Session.expired.terminate_all(actor: "cleanup job")
-```
-
-When several sessions are terminated at once, for example with `terminate_all`, `suspend!` or `update_password`, Veri publishes one `terminate_session.veri` event per session. Keep this in mind when terminating a large number of sessions, as each of them produces an event.
 
 ## View Helpers
 
