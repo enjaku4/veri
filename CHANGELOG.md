@@ -15,23 +15,17 @@
 
 ### Features
 
-- Added `Veri::Session.from_request` method to fetch the session from a request object
 - Added `impersonating_sessions` association to fetch sessions impersonating a user
+- Added `Veri::Session.from_request` method to fetch the session from a request object
 - Added `Veri::Session.shapeshifted` to fetch impersonating sessions
 - Added `Veri::Session.in_original_tenant` to fetch impersonating sessions that return to a tenant
 
 ### Bugs
 
 - Fixed Rails commands failing when the user model cannot be loaded
-- Fixed `lock!` overriding Active Record's row locking method of the same name
-- Fixed session validations piling up with each code reload in development
-- Fixed suspending or deleting a user leaving the sessions in which they impersonate someone
 - Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
-- Fixed migration helpers ignoring the tenant that impersonating sessions return to
 - Fixed `true_tenant` returning the impersonated tenant when the impersonator had no tenant
 - Fixed the generated migration failing when the user table's primary key is not `id`
-- Fixed `prune` keeping impersonating sessions whose original tenant was deleted
-- Fixed `log_in` leaving the browser's previous session active
 
 ## v2.1.0
 
