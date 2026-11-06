@@ -26,6 +26,7 @@
 - Fixed suspending or deleting a user leaving the sessions in which they impersonate someone
 - Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
 - Fixed migration helpers ignoring the tenant that impersonating sessions return to
+- Fixed `true_tenant` returning the impersonated tenant when the impersonator had no tenant
 
 ## v2.1.0
 
