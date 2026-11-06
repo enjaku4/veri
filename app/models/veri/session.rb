@@ -142,7 +142,7 @@ module Veri
 
         return nil if token.blank?
 
-        session = find_by(hashed_token: digest_token(token))
+        session = eager_load(:authenticatable, :original_authenticatable).find_by(hashed_token: digest_token(token))
 
         return nil unless session&.active?
 
