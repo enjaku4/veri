@@ -21,12 +21,12 @@ module Veri
       hashed_password = hash_password(processed_password)
 
       transaction do
+        update!(hashed_password:, password_updated_at: Time.current)
+
         if processed_terminate_sessions
           sessions.terminate_all
           impersonating_sessions.terminate_all
         end
-
-        update!(hashed_password:, password_updated_at: Time.current)
       end
 
       true
