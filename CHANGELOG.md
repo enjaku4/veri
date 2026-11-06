@@ -17,7 +17,7 @@
 
 - Added events
 - Added `Veri::Session.from_request` method to fetch the session from a request object
-- Added `impersonating_sessions` scope to fetch sessions that are impersonating a user
+- Added `impersonating_sessions` association to fetch sessions impersonating a user
 
 ### Bugs
 
@@ -25,6 +25,7 @@
 - Fixed `lock!` overriding Active Record's row locking method of the same name
 - Fixed session validations piling up with each code reload in development
 - Fixed suspending or deleting a user leaving the sessions in which they impersonate someone
+- Fixed a suspended user staying logged in while impersonating someone
 
 ## v2.1.0
 
