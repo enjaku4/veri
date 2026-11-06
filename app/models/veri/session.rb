@@ -138,7 +138,11 @@ module Veri
 
         session = find_by(hashed_token: digest_token(token))
 
-        session if session&.active? && !session.identity.suspended? && !session.true_identity.suspended?
+        return nil unless session&.active?
+
+        raise Veri::Error, "Session belongs to a suspended user" if session.identity.suspended? || session.true_identity.suspended?
+
+        session
       end
 
       private

@@ -674,23 +674,27 @@ RSpec.describe Veri::Session do
       end
     end
 
-    context "when the user is suspended" do
+    context "when the session belongs to a suspended user" do
       before do
         request.cookie_jar.encrypted["veri_token"] = token
         user.update!(suspended: true)
       end
 
-      it { is_expected.to be_nil }
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Session belongs to a suspended user")
+      end
     end
 
-    context "when the user impersonating someone is suspended" do
+    context "when the session's impersonator is suspended" do
       before do
         request.cookie_jar.encrypted["veri_token"] = token
         user.sessions.sole.shapeshift(User.create!)
         user.update!(suspended: true)
       end
 
-      it { is_expected.to be_nil }
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Session belongs to a suspended user")
+      end
     end
 
     context "when the session is expired" do

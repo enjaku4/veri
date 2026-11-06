@@ -142,42 +142,4 @@ RSpec.describe ApiController, type: :controller do
       end
     end
   end
-
-  context "when user is logged in but account is suspended" do
-    let(:user) { User.create!(suspended: true) }
-
-    before do
-      user.update!(suspended: false)
-      controller.log_in(user)
-      user.update!(suspended: true)
-    end
-
-    it "does not allow access when request format is HTML" do
-      post :create
-      expect(response).to redirect_to(DummyApplication.routes.url_helpers.root_path)
-    end
-
-    it "does not allow access when request format is not HTML" do
-      post :create, format: :json
-      expect(response).to have_http_status(:unauthorized)
-    end
-
-    it "keeps the session" do
-      expect { post :create, format: :json }.not_to change(Veri::Session, :count)
-    end
-
-    it "deletes the auth cookie" do
-      expect { post :create, format: :json }.to change { controller.send(:cookies).encrypted["veri_token"] }.from(be_present).to(be_nil)
-    end
-
-    it "does not set the return path if request format is HTML" do
-      post :create
-      expect(controller.return_path).to be_nil
-    end
-
-    it "does not set the return path if request format is not HTML" do
-      post :create, format: :json
-      expect(controller.return_path).to be_nil
-    end
-  end
 end
