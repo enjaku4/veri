@@ -1,6 +1,3 @@
-<!--TODO: v3-->
-<!--TODO: migration guide-->
-
 ## v3.0.0
 
 ### Breaking
@@ -26,6 +23,8 @@
 - Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
 - Fixed `true_tenant` returning the impersonated tenant when the impersonator had no tenant
 - Fixed the generated migration failing when the user table's primary key is not `id`
+
+To upgrade to v3.0.0, please refer to the [migration guide](https://github.com/enjaku4/veri/discussions/28)
 
 ## v2.1.0
 
