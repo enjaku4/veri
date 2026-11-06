@@ -162,8 +162,8 @@ RSpec.describe ApiController, type: :controller do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    it "terminates the session" do
-      expect { post :create, format: :json }.to change(Veri::Session, :count).from(1).to(0)
+    it "keeps the session" do
+      expect { post :create, format: :json }.not_to change(Veri::Session, :count)
     end
 
     it "deletes the auth cookie" do

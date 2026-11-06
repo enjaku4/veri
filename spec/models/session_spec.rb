@@ -437,6 +437,16 @@ RSpec.describe Veri::Session do
       end
     end
 
+    context "when user is suspended" do
+      let(:tenant) { nil }
+      let(:user) { User.create!(suspended: true) }
+
+      it "raises an error and keeps the session unchanged" do
+        expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift into a suspended user")
+        expect(session.reload).not_to be_shapeshifted
+      end
+    end
+
     context "when tenant is nil" do
       let(:tenant) { nil }
       let(:user) { User.create! }
@@ -650,6 +660,25 @@ RSpec.describe Veri::Session do
       it "returns the session" do
         expect(subject).to eq(user.sessions.take)
       end
+    end
+
+    context "when the user is suspended" do
+      before do
+        request.cookie_jar.encrypted["veri_token"] = token
+        user.update!(suspended: true)
+      end
+
+      it { is_expected.to be_nil }
+    end
+
+    context "when the user impersonating someone is suspended" do
+      before do
+        request.cookie_jar.encrypted["veri_token"] = token
+        user.sessions.sole.shapeshift(User.create!)
+        user.update!(suspended: true)
+      end
+
+      it { is_expected.to be_nil }
     end
 
     context "when the session is expired" do

@@ -62,7 +62,10 @@ module Veri
     def shapeshift(user, tenant: nil)
       raise Veri::Error, "Cannot shapeshift from a shapeshifted session" if shapeshifted?
 
+      processed_authenticatable = Veri::Inputs::Authenticatable.new(user).process
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
+
+      raise Veri::Error, "Cannot shapeshift into a suspended user" if processed_authenticatable.suspended?
 
       update!(
         shapeshifted_at: Time.current,
@@ -70,7 +73,7 @@ module Veri
         original_tenant_type: tenant_type,
         original_tenant_id: tenant_id,
         **resolved_tenant,
-        authenticatable: Veri::Inputs::Authenticatable.new(user).process
+        authenticatable: processed_authenticatable
       )
     end
 
@@ -133,7 +136,7 @@ module Veri
 
         session = find_by(hashed_token: digest_token(token))
 
-        session&.active? ? session : nil
+        session if session&.active? && !session.identity.suspended? && !session.true_identity.suspended?
       end
 
       private

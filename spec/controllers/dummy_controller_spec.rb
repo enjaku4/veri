@@ -155,8 +155,8 @@ RSpec.describe DummyController, type: :controller do
       expect(response).to redirect_to(DummyApplication.routes.url_helpers.root_path)
     end
 
-    it "terminates the session" do
-      expect { get :index }.to change(Veri::Session, :count).from(1).to(0)
+    it "keeps the session" do
+      expect { get :index }.not_to change(Veri::Session, :count)
     end
   end
 
@@ -179,8 +179,8 @@ RSpec.describe DummyController, type: :controller do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    it "terminates the session" do
-      expect { get :index }.to change(Veri::Session, :count).from(1).to(0)
+    it "keeps the session" do
+      expect { get :index }.not_to change(Veri::Session, :count)
     end
 
     it "deletes the auth cookie" do
