@@ -17,8 +17,8 @@ RSpec.describe Veri::AuthenticationGenerator do
           create_table :veri_sessions#{", id: :uuid" if args.include?("--uuid")} do |t|
             t.string :hashed_token, null: false, index: { unique: true }
             t.datetime :expires_at, null: false
-            t.belongs_to :authenticatable, null: false, foreign_key: { to_table: :my_users }, index: true#{", type: :uuid" if args.include?("--uuid")}
-            t.belongs_to :original_authenticatable, foreign_key: { to_table: :my_users }, index: true#{", type: :uuid" if args.include?("--uuid")}
+            t.belongs_to :authenticatable, null: false, foreign_key: { to_table: :my_users, primary_key: primary_key(:my_users) }, index: true#{", type: :uuid" if args.include?("--uuid")}
+            t.belongs_to :original_authenticatable, foreign_key: { to_table: :my_users, primary_key: primary_key(:my_users) }, index: true#{", type: :uuid" if args.include?("--uuid")}
             t.belongs_to :tenant, polymorphic: true, index: true#{", type: :uuid" if args.include?("--uuid")}
             t.belongs_to :original_tenant, polymorphic: true, index: true#{", type: :uuid" if args.include?("--uuid")}
             t.datetime :shapeshifted_at
