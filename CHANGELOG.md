@@ -24,7 +24,7 @@
 - Fixed `lock!` overriding Active Record's row locking method of the same name
 - Fixed session validations piling up with each code reload in development
 - Fixed suspending or deleting a user leaving the sessions in which they impersonate someone
-- Fixed a suspended user staying logged in while impersonating someone
+- Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
 
 ## v2.1.0
 
