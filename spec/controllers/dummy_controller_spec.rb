@@ -143,6 +143,23 @@ RSpec.describe DummyController, type: :controller do
     end
   end
 
+  context "when user is impersonating someone but their own account is suspended" do
+    before do
+      controller.log_in(user)
+      user.sessions.sole.shapeshift(User.create!)
+      user.update!(suspended: true)
+    end
+
+    it "does not allow access" do
+      get :index
+      expect(response).to redirect_to(DummyApplication.routes.url_helpers.root_path)
+    end
+
+    it "terminates the session" do
+      expect { get :index }.to change(Veri::Session, :count).from(1).to(0)
+    end
+  end
+
   context "when user is logged in but account is suspended" do
     let(:user) { User.create!(suspended: true) }
 

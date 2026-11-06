@@ -72,7 +72,7 @@ module Veri
     private
 
     def with_authentication
-      if logged_in? && !current_user.suspended?
+      if logged_in? && !current_user.suspended? && !current_session.true_identity.suspended?
         current_session.update_info(request)
         return
       end
