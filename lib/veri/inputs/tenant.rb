@@ -10,8 +10,6 @@ module Veri
         when ActiveRecord::Base
           raise_error unless tenant.persisted?
           { tenant_type: tenant.class.to_s, tenant_id: tenant.id }
-        else
-          tenant
         end
       end
 
@@ -24,7 +22,6 @@ module Veri
         return @value if @value.nil?
         return @value if @value.is_a?(String) && @value.present?
         return @value if @value.is_a?(ActiveRecord::Base)
-        return @value if @value in { tenant_type: String | nil, tenant_id: String | Integer | nil }
 
         raise_error
       end
