@@ -78,9 +78,7 @@ module Veri
     private
 
     def hash_password(password)
-      algorithm = Veri::Configuration.hashing_algorithm
-
-      "#{algorithm}:#{Veri::Configuration::HASHERS.fetch(algorithm).create(password)}"
+      "#{Veri::Configuration.hashing_algorithm}:#{Veri::Configuration.hasher.create(password)}"
     end
   end
 end
