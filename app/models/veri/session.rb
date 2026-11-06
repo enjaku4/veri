@@ -127,15 +127,12 @@ module Veri
       end
 
       def prune
-        orphaned_sessions = where.not(tenant_id: nil).or(where.not(original_tenant_id: nil)).includes(:tenant, :original_tenant).select do |session|
-          session.tenant
-          session.original_tenant
-          false
-        rescue ActiveRecord::RecordNotFound
-          true
+        { tenant_type: :tenant_id, original_tenant_type: :original_tenant_id }.each do |type_column, id_column|
+          where.not(id_column => nil).distinct.pluck(type_column).each do |tenant_type|
+            tenant_class = tenant_type.constantize
+            where(type_column => tenant_type).where.not(id_column => tenant_class.select(tenant_class.primary_key)).delete_all
+          end
         end
-
-        where(id: orphaned_sessions).delete_all if orphaned_sessions.any?
       end
 
       alias terminate_all delete_all
