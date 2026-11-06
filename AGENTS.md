@@ -18,16 +18,16 @@ A high-level picture of the gem for anyone working on it, including AI agents. W
 ## Code map
 
 - `Veri::Configuration`: the app's settings.
-- `Veri::Railtie`: connects Veri to the app. It adds `Veri::Authenticatable` to the configured user model when that model loads, points the session's user associations at it, and makes the migration helpers available.
+- `Veri::Engine`: connects Veri to the app. It adds `Veri::Authenticatable` to the configured user model when that model loads and makes the migration helpers available.
 - `Veri::Authenticatable`: what the user model gets: passwords, suspension and the user's sessions.
-- `Veri::Session`: an Active Record model, one record per login. Everything about a session lives here: lifetime, tenant, impersonation, termination.
+- `Veri::Session`: an Active Record model, one record per login. It lives in the engine's `app/models`, so Rails reloads it together with the app's models. Everything about a session lives here: lifetime, tenant, impersonation, termination.
 - `Veri::Authentication`: the controller concern: the session cookie, logging in and out, the `current_*` helpers, and the check that requires a login.
 - `Veri::Password`: one adapter per hashing algorithm, all with the same interface.
 - `Veri::Events`: publishes events when they are enabled.
 - `Veri::Inputs`: check arguments and configuration values where they enter Veri, and raise Veri errors.
 - `Veri::MigrationHelpers` and the generator: database setup and data migrations in the app.
 
-The specs run against a dummy Rails app in `spec/support` that really boots and autoloads, so the Railtie is tested the way it runs in an app.
+The specs run against a dummy Rails app in `spec/support` that really boots and autoloads, so the engine is tested the way it runs in an app.
 
 ## Invariants
 
