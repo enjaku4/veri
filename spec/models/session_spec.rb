@@ -310,17 +310,26 @@ RSpec.describe Veri::Session do
   describe "#true_tenant" do
     subject { session.true_tenant }
 
-    let(:session) { described_class.new(original_tenant:, tenant:) }
     let(:tenant) { Company.create! }
 
-    context "when original_tenant is present" do
-      let(:original_tenant) { Company.create! }
+    context "when shapeshifted" do
+      let(:session) { described_class.new(original_authenticatable: User.create!, original_tenant:, tenant:) }
 
-      it { is_expected.to eq(original_tenant) }
+      context "and the original tenant is present" do
+        let(:original_tenant) { Company.create! }
+
+        it { is_expected.to eq(original_tenant) }
+      end
+
+      context "and the original tenant is nil" do
+        let(:original_tenant) { nil }
+
+        it { is_expected.to be_nil }
+      end
     end
 
-    context "when original_tenant is nil" do
-      let(:original_tenant) { nil }
+    context "when not shapeshifted" do
+      let(:session) { described_class.new(tenant:) }
 
       it { is_expected.to eq(tenant) }
     end

@@ -57,7 +57,7 @@ module Veri
     def identity = authenticatable
     def shapeshifted? = original_authenticatable.present?
     def true_identity = original_authenticatable || authenticatable
-    def true_tenant = original_tenant || tenant
+    def true_tenant = shapeshifted? ? original_tenant : tenant
 
     def shapeshift(user, tenant: nil)
       raise Veri::Error, "Cannot shapeshift from a shapeshifted session" if shapeshifted?
