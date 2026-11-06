@@ -343,13 +343,13 @@ RSpec.describe Veri::Session do
 
     let(:session) { described_class.new(original_authenticatable:) }
 
-    context "when shapeshifted_at is present" do
-      let(:original_authenticatable) { User.new }
+    context "when the session has an original user" do
+      let(:original_authenticatable) { User.create! }
 
       it { is_expected.to be true }
     end
 
-    context "when shapeshifted_at is nil" do
+    context "when the session has no original user" do
       let(:original_authenticatable) { nil }
 
       it { is_expected.to be false }

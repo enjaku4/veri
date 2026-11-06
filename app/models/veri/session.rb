@@ -60,7 +60,7 @@ module Veri
     end
 
     def identity = authenticatable
-    def shapeshifted? = original_authenticatable.present?
+    def shapeshifted? = original_authenticatable_id.present?
     def true_identity = original_authenticatable || authenticatable
     def true_tenant = shapeshifted? ? original_tenant : tenant
 
