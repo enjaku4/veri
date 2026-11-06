@@ -228,6 +228,15 @@ RSpec.describe Veri::Authentication do
       end
     end
 
+    context "when the user account was suspended after the user was loaded" do
+      before { User.find(user.id).suspend! }
+
+      it "returns false and does not create a session" do
+        expect(subject).to be false
+        expect(Veri::Session.count).to eq(0)
+      end
+    end
+
     context "when the request is over HTTPS" do
       before { controller.request = ActionDispatch::TestRequest.create("HTTPS" => "on") }
 

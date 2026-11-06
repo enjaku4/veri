@@ -447,6 +447,18 @@ RSpec.describe Veri::Session do
       end
     end
 
+    context "when user was suspended after being loaded" do
+      let(:tenant) { nil }
+      let(:user) { User.create! }
+
+      before { User.find(user.id).suspend! }
+
+      it "raises an error and keeps the session unchanged" do
+        expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift into a suspended user")
+        expect(session.reload).not_to be_shapeshifted
+      end
+    end
+
     context "when tenant is nil" do
       let(:tenant) { nil }
       let(:user) { User.create! }

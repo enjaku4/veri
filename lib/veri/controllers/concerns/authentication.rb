@@ -42,9 +42,11 @@ module Veri
       processed_authenticatable = Veri::Inputs::Authenticatable.new(authenticatable).process
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
 
-      return false if processed_authenticatable.suspended?
+      token = processed_authenticatable.with_lock do
+        Veri::Session.establish(processed_authenticatable, request, resolved_tenant) unless processed_authenticatable.suspended?
+      end
 
-      token = Veri::Session.establish(processed_authenticatable, request, resolved_tenant)
+      return false unless token
 
       cookies.encrypted.permanent["veri_token"] = { value: token, httponly: true, secure: request.ssl? }
       reset_memoized_session
