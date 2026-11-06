@@ -15,7 +15,6 @@
 
 ### Features
 
-- Added events
 - Added `Veri::Session.from_request` method to fetch the session from a request object
 - Added `impersonating_sessions` association to fetch sessions impersonating a user
 
