@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
 
   spec.files = [
     "veri.gemspec", "README.md", "CHANGELOG.md", "LICENSE.txt"
-  ] + Dir.glob("lib/**/*")
+  ] + Dir.glob("{app,lib}/**/*")
 
   spec.require_paths = ["lib"]
 

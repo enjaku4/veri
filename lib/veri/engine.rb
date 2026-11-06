@@ -1,19 +1,12 @@
-require "rails/railtie"
+require "rails/engine"
 
 module Veri
-  class Railtie < Rails::Railtie
+  class Engine < Rails::Engine
     initializer "veri.include_authenticatable" do
       Rails.autoloaders.each do |autoloader|
         autoloader.on_load do |cpath, klass, _abspath|
           klass.include Veri::Authenticatable if cpath == Veri::Configuration.user_model_name
         end
-      end
-    end
-
-    initializer "veri.to_prepare" do |app|
-      app.config.to_prepare do
-        Veri::Session.belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
-        Veri::Session.belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
       end
     end
 

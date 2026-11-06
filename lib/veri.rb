@@ -29,9 +29,8 @@ module Veri
 end
 
 require_relative "veri/events"
-require_relative "veri/models/session"
 require_relative "veri/controllers/concerns/authentication"
 require_relative "veri/models/concerns/authenticatable"
 require_relative "veri/helpers/migration_helpers"
 
-require_relative "veri/railtie"
+require_relative "veri/engine"
