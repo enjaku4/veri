@@ -22,6 +22,7 @@
 
 - Fixed Rails commands failing when the user model cannot be loaded
 - Fixed `lock!` overriding Active Record's row locking method of the same name
+- Fixed session validations piling up with each code reload in development
 
 ## v2.1.0
 
