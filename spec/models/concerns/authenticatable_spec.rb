@@ -267,12 +267,20 @@ RSpec.describe Veri::Authenticatable do
           expect { subject }.not_to(change { user.reload.password_updated_at })
         end
 
+        it "keeps a password that was changed after the user was loaded" do
+          User.find(user.id).update_password("new_password", terminate_sessions: false)
+
+          expect(subject).to be true
+          expect(User.find(user.id).verify_password("new_password")).to be true
+          expect(User.find(user.id).verify_password(password)).to be false
+        end
+
         it "re-hashes with the algorithm configured after the user has already verified a password" do
           subject
           Veri::Configuration.configure { _1.hashing_algorithm = :scrypt }
 
-          expect(user.verify_password(password)).to be true
-          expect(user.hashed_password).to start_with("scrypt:")
+          expect(user.reload.verify_password(password)).to be true
+          expect(user.reload.hashed_password).to start_with("scrypt:")
           expect(user.verify_password(password)).to be true
         end
 
