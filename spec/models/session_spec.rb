@@ -362,13 +362,13 @@ RSpec.describe Veri::Session do
     let(:session) { described_class.new(original_authenticatable:, authenticatable:) }
     let(:authenticatable) { User.new }
 
-    context "original_authenticatable is present" do
-      let(:original_authenticatable) { User.new }
+    context "when the session has an original user" do
+      let(:original_authenticatable) { User.create! }
 
       it { is_expected.to be original_authenticatable }
     end
 
-    context "when original_authenticatable is nil" do
+    context "when the session has no original user" do
       let(:original_authenticatable) { nil }
 
       it { is_expected.to be authenticatable }

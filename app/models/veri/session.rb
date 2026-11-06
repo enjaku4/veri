@@ -10,8 +10,8 @@ module Veri
     belongs_to :tenant, polymorphic: true, optional: true
     belongs_to :original_tenant, polymorphic: true, optional: true
 
-    scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
     scope :shapeshifted, -> { where.not(original_authenticatable_id: nil) }
+    scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
     scope :in_original_tenant, -> (tenant) do
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
       shapeshifted.where(original_tenant_type: resolved_tenant[:tenant_type], original_tenant_id: resolved_tenant[:tenant_id])
@@ -61,7 +61,7 @@ module Veri
 
     def identity = authenticatable
     def shapeshifted? = original_authenticatable_id.present?
-    def true_identity = original_authenticatable || authenticatable
+    def true_identity = shapeshifted? ? original_authenticatable : authenticatable
     def true_tenant = shapeshifted? ? original_tenant : tenant
 
     def shapeshift(user, tenant: nil)
