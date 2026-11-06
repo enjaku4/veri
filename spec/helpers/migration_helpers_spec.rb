@@ -36,6 +36,23 @@ RSpec.describe Veri::MigrationHelpers do
       expect(Veri::Session.where(id: sessions.pluck(:id)).pluck(:tenant_type)).to all(eq("Company"))
     end
 
+    it "migrates the tenant that impersonating sessions return to" do
+      session = Veri::Session.create!(
+        tenant: Company.create!,
+        original_tenant: Client.create!,
+        original_authenticatable: User.create!,
+        shapeshifted_at: Time.current,
+        hashed_token: "qux",
+        expires_at: 1.hour.ago,
+        authenticatable: User.create!,
+        last_seen_at: 1.week.ago
+      )
+
+      dummy_migration.migrate_authentication_tenant!("Client", "Company")
+
+      expect(session.reload.original_tenant_type).to eq("Company")
+    end
+
     it "does nothing when no sessions exist in the old tenant" do
       expect { dummy_migration.migrate_authentication_tenant!("Organization", "Company") }.not_to(change { Veri::Session.pluck(:tenant_type) })
     end
@@ -66,6 +83,23 @@ RSpec.describe Veri::MigrationHelpers do
       dummy_migration.delete_authentication_tenant!("Company")
 
       expect(Veri::Session.exists?(id: sessions.pluck(:id))).to be false
+    end
+
+    it "deletes impersonating sessions that would return to the given tenant" do
+      session = Veri::Session.create!(
+        tenant: Client.create!,
+        original_tenant: Company.create!,
+        original_authenticatable: User.create!,
+        shapeshifted_at: Time.current,
+        hashed_token: "qux",
+        expires_at: 1.hour.ago,
+        authenticatable: User.create!,
+        last_seen_at: 1.week.ago
+      )
+
+      dummy_migration.delete_authentication_tenant!("Company")
+
+      expect(Veri::Session.exists?(session.id)).to be false
     end
 
     it "does nothing when no sessions exist in the tenant" do
