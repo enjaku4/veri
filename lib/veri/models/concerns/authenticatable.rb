@@ -7,8 +7,8 @@ module Veri
 
       @@included = name
 
-      has_many :sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :destroy
-      has_many :impersonating_sessions, class_name: "Veri::Session", foreign_key: :original_authenticatable_id, dependent: :destroy
+      has_many :sessions, class_name: "Veri::Session", foreign_key: :authenticatable_id, dependent: :delete_all
+      has_many :impersonating_sessions, class_name: "Veri::Session", foreign_key: :original_authenticatable_id, dependent: :delete_all
 
       scope :suspended, -> { where(suspended: true) }
       scope :unsuspended, -> { where(suspended: false) }
