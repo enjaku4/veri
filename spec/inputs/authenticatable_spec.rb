@@ -1,14 +1,4 @@
 RSpec.describe Veri::Inputs::Authenticatable do
-  shared_examples_for "successful input processing" do |input, output = input|
-    it "processes #{input}" do
-      expect(described_class.new(input).process).to eq(output)
-    end
-
-    it "processes #{input} as optional" do
-      expect(described_class.new(nil, optional: true).process).to be_nil
-    end
-  end
-
   shared_examples_for "failed input processing" do |input|
     it "raises an error for invalid input #{input}" do
       expect { described_class.new(input).process }.to raise_error(Veri::InvalidArgumentError)
@@ -16,11 +6,18 @@ RSpec.describe Veri::Inputs::Authenticatable do
   end
 
   describe "valid inputs" do
-    it_behaves_like "successful input processing", User.new
+    it "processes a persisted user" do
+      user = User.create!
+      expect(described_class.new(user).process).to eq(user)
+    end
+
+    it "processes nil as optional" do
+      expect(described_class.new(nil, optional: true).process).to be_nil
+    end
   end
 
   describe "invalid inputs" do
-    [Client.new, User, "User", :user, 123, [], {}].each do |invalid_input|
+    [User.new, Client.new, User, "User", :user, 123, [], {}].each do |invalid_input|
       it_behaves_like "failed input processing", invalid_input
     end
   end

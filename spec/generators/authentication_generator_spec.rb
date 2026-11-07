@@ -11,20 +11,20 @@ RSpec.describe Veri::AuthenticationGenerator do
         def change
           add_column :my_users, :hashed_password, :text
           add_column :my_users, :password_updated_at, :datetime
-          add_column :my_users, :locked, :boolean, default: false, null: false
-          add_column :my_users, :locked_at, :datetime
+          add_column :my_users, :suspended, :boolean, default: false, null: false
+          add_column :my_users, :suspended_at, :datetime
 
           create_table :veri_sessions#{", id: :uuid" if args.include?("--uuid")} do |t|
             t.string :hashed_token, null: false, index: { unique: true }
             t.datetime :expires_at, null: false
-            t.belongs_to :authenticatable, null: false, foreign_key: { to_table: :my_users }, index: true#{", type: :uuid" if args.include?("--uuid")}
-            t.belongs_to :original_authenticatable, foreign_key: { to_table: :my_users }, index: true#{", type: :uuid" if args.include?("--uuid")}
+            t.belongs_to :authenticatable, null: false, foreign_key: { to_table: :my_users, primary_key: primary_key(:my_users) }, index: true#{", type: :uuid" if args.include?("--uuid")}
+            t.belongs_to :original_authenticatable, foreign_key: { to_table: :my_users, primary_key: primary_key(:my_users) }, index: true#{", type: :uuid" if args.include?("--uuid")}
             t.belongs_to :tenant, polymorphic: true, index: true#{", type: :uuid" if args.include?("--uuid")}
             t.belongs_to :original_tenant, polymorphic: true, index: true#{", type: :uuid" if args.include?("--uuid")}
             t.datetime :shapeshifted_at
             t.datetime :last_seen_at, null: false
             t.string :ip_address
-            t.string :user_agent
+            t.text :user_agent
 
             t.timestamps
           end

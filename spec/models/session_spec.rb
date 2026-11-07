@@ -1,4 +1,72 @@
 RSpec.describe Veri::Session do
+  describe ".shapeshifted" do
+    subject { described_class.shapeshifted }
+
+    let!(:shapeshifted_session) do
+      described_class.create!(
+        expires_at: 1.hour.from_now,
+        last_seen_at: Time.current,
+        hashed_token: "shapeshifted",
+        authenticatable: User.create!,
+        original_authenticatable: User.create!
+      )
+    end
+
+    before do
+      described_class.create!(expires_at: 1.hour.from_now, last_seen_at: Time.current, hashed_token: "own", authenticatable: User.create!)
+    end
+
+    it "returns only sessions in which someone is impersonating another user" do
+      expect(subject).to contain_exactly(shapeshifted_session)
+    end
+  end
+
+  describe ".in_original_tenant" do
+    subject { described_class.in_original_tenant(tenant) }
+
+    let(:company) { Company.create! }
+    let(:session_attributes) { { expires_at: 1.hour.from_now, last_seen_at: Time.current } }
+    let!(:returning_session) do
+      described_class.create!(
+        **session_attributes,
+        hashed_token: "returning",
+        authenticatable: User.create!,
+        original_authenticatable: User.create!,
+        original_tenant: company,
+        tenant: Company.create!
+      )
+    end
+
+    before do
+      described_class.create!(**session_attributes, hashed_token: "own", authenticatable: User.create!, tenant: company)
+      described_class.create!(**session_attributes, hashed_token: "untenanted", authenticatable: User.create!)
+    end
+
+    context "when tenant is invalid" do
+      let(:tenant) { 123 }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidTenantError, "Expected a string, an ActiveRecord model instance, or nil, got `123`")
+      end
+    end
+
+    context "when tenant is an ActiveRecord model" do
+      let(:tenant) { company }
+
+      it "returns only impersonating sessions that return to the tenant" do
+        expect(subject).to contain_exactly(returning_session)
+      end
+    end
+
+    context "when tenant is nil" do
+      let(:tenant) { nil }
+
+      it "returns no sessions that are not impersonating" do
+        expect(subject).to be_empty
+      end
+    end
+  end
+
   describe ".in_tenant" do
     subject { described_class.in_tenant(tenant) }
 
@@ -275,13 +343,13 @@ RSpec.describe Veri::Session do
 
     let(:session) { described_class.new(original_authenticatable:) }
 
-    context "when shapeshifted_at is present" do
-      let(:original_authenticatable) { User.new }
+    context "when the session has an original user" do
+      let(:original_authenticatable) { User.create! }
 
       it { is_expected.to be true }
     end
 
-    context "when shapeshifted_at is nil" do
+    context "when the session has no original user" do
       let(:original_authenticatable) { nil }
 
       it { is_expected.to be false }
@@ -294,13 +362,13 @@ RSpec.describe Veri::Session do
     let(:session) { described_class.new(original_authenticatable:, authenticatable:) }
     let(:authenticatable) { User.new }
 
-    context "original_authenticatable is present" do
-      let(:original_authenticatable) { User.new }
+    context "when the session has an original user" do
+      let(:original_authenticatable) { User.create! }
 
       it { is_expected.to be original_authenticatable }
     end
 
-    context "when original_authenticatable is nil" do
+    context "when the session has no original user" do
       let(:original_authenticatable) { nil }
 
       it { is_expected.to be authenticatable }
@@ -310,17 +378,26 @@ RSpec.describe Veri::Session do
   describe "#true_tenant" do
     subject { session.true_tenant }
 
-    let(:session) { described_class.new(original_tenant:, tenant:) }
     let(:tenant) { Company.create! }
 
-    context "when original_tenant is present" do
-      let(:original_tenant) { Company.create! }
+    context "when shapeshifted" do
+      let(:session) { described_class.new(original_authenticatable: User.create!, original_tenant:, tenant:) }
 
-      it { is_expected.to eq(original_tenant) }
+      context "and the original tenant is present" do
+        let(:original_tenant) { Company.create! }
+
+        it { is_expected.to eq(original_tenant) }
+      end
+
+      context "and the original tenant is nil" do
+        let(:original_tenant) { nil }
+
+        it { is_expected.to be_nil }
+      end
     end
 
-    context "when original_tenant is nil" do
-      let(:original_tenant) { nil }
+    context "when not shapeshifted" do
+      let(:session) { described_class.new(tenant:) }
 
       it { is_expected.to eq(tenant) }
     end
@@ -413,7 +490,7 @@ RSpec.describe Veri::Session do
       let(:user) { nil }
 
       it "raises an error" do
-        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of User, got `nil`")
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected a persisted instance of User, got `nil`")
       end
     end
 
@@ -434,6 +511,39 @@ RSpec.describe Veri::Session do
 
       it "raises an error" do
         expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift from a shapeshifted session")
+      end
+    end
+
+    context "when user is suspended" do
+      let(:tenant) { nil }
+      let(:user) { User.create!(suspended: true) }
+
+      it "raises an error and keeps the session unchanged" do
+        expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift into a suspended user")
+        expect(session.reload).not_to be_shapeshifted
+      end
+    end
+
+    context "when user has unsaved changes" do
+      let(:tenant) { nil }
+      let(:user) { User.create!.tap { _1.password_updated_at = 1.day.ago } }
+
+      it "shapeshifts and keeps the changes unsaved" do
+        subject
+        expect(session.reload.authenticatable).to eq(user)
+        expect(user.password_updated_at_changed?).to be true
+      end
+    end
+
+    context "when user was suspended after being loaded" do
+      let(:tenant) { nil }
+      let(:user) { User.create! }
+
+      before { User.find(user.id).suspend! }
+
+      it "raises an error and keeps the session unchanged" do
+        expect { subject }.to raise_error(Veri::Error, "Cannot shapeshift into a suspended user")
+        expect(session.reload).not_to be_shapeshifted
       end
     end
 
@@ -609,34 +719,82 @@ RSpec.describe Veri::Session do
     end
   end
 
-  describe ".find_active" do
-    subject { described_class.find_active(token, tenant) }
+  describe ".from_request" do
+    subject { described_class.from_request(request) }
 
     let(:tenant) { { tenant_type: nil, tenant_id: nil } }
     let(:user) { User.create! }
-    let(:request) { ActionDispatch::Request.new("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7") }
+    let(:request) { ActionDispatch::Request.new(Rails.application.env_config.merge("REMOTE_ADDR" => "1.2.3.4", "HTTP_USER_AGENT" => "IE7")) }
     let(:token) { described_class.establish(user, request, tenant) }
 
-    context "when token is blank" do
-      let(:token) { nil }
+    context "when the argument is not a request" do
+      subject { described_class.from_request(nil) }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::InvalidArgumentError, "Expected an instance of ActionDispatch::Request, got `nil`")
+      end
+    end
+
+    context "when the request carries no cookie" do
+      it { is_expected.to be_nil }
+    end
+
+    context "when the cookie was not written by Veri" do
+      before { request.cookie_jar["veri_token"] = token }
 
       it { is_expected.to be_nil }
     end
 
     context "when no session matches the token" do
-      let(:token) { "unknown" }
+      before { request.cookie_jar.encrypted["veri_token"] = "unknown" }
 
       it { is_expected.to be_nil }
     end
 
     context "when the session is active" do
+      before { request.cookie_jar.encrypted["veri_token"] = token }
+
       it "returns the session" do
         expect(subject).to eq(user.sessions.take)
       end
     end
 
+    context "when the session belongs to a tenant" do
+      let(:company) { Company.create! }
+      let(:tenant) { { tenant_type: "Company", tenant_id: company.id } }
+
+      before { request.cookie_jar.encrypted["veri_token"] = token }
+
+      it "returns the session" do
+        expect(subject).to eq(user.sessions.take)
+      end
+    end
+
+    context "when the session belongs to a suspended user" do
+      before do
+        request.cookie_jar.encrypted["veri_token"] = token
+        user.update!(suspended: true)
+      end
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Session belongs to a suspended user")
+      end
+    end
+
+    context "when the session's impersonator is suspended" do
+      before do
+        request.cookie_jar.encrypted["veri_token"] = token
+        user.sessions.sole.shapeshift(User.create!)
+        user.update!(suspended: true)
+      end
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Veri::Error, "Session belongs to a suspended user")
+      end
+    end
+
     context "when the session is expired" do
-      before { token }
+      before { request.cookie_jar.encrypted["veri_token"] = token }
 
       it "returns nil and keeps the session" do
         travel_to(Veri::Configuration.total_session_lifetime.from_now + 1.minute) do
@@ -649,7 +807,7 @@ RSpec.describe Veri::Session do
     context "when the session is inactive" do
       before do
         Veri::Configuration.configure { _1.inactive_session_lifetime = 1.hour }
-        token
+        request.cookie_jar.encrypted["veri_token"] = token
       end
 
       it "returns nil and keeps the session" do
@@ -690,6 +848,26 @@ RSpec.describe Veri::Session do
       expect { subject }
         .to change { described_class.exists?(id: session.id) }.from(true).to(false)
         .and change(described_class, :count).from(2).to(1)
+    end
+
+    it "deletes impersonating sessions with a string tenant whose original tenant was deleted" do
+      session.update!(tenant_type: "acme", tenant_id: nil, original_tenant: tenant, original_authenticatable: User.create!)
+      tenant.destroy!
+
+      expect { subject }.to change { described_class.exists?(id: session.id) }.from(true).to(false)
+    end
+
+    it "deletes impersonating sessions whose original tenant was deleted" do
+      session.shapeshift(User.create!, tenant: Company.create!)
+      tenant.destroy!
+
+      expect { subject }.to change { described_class.exists?(id: session.id) }.from(true).to(false)
+    end
+
+    it "raises when the class of a tenant no longer exists" do
+      session.update!(tenant_type: "Foo")
+
+      expect { subject }.to raise_error(Veri::Error, "Tenant not found: class `Foo` may have been renamed or deleted")
     end
   end
 

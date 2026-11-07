@@ -1,3 +1,31 @@
+## v3.0.0
+
+### Breaking
+
+- Dropped support for Rails 8.0 and earlier
+- Dropped support for Ruby 3.2
+- Changed `user_agent` column in `veri_sessions` table from string to text
+- Renamed account locking to suspension
+- Added algorithm markers to stored password hashes
+- `update_password` now terminates all sessions of the user by default
+- The tenant is now passed to `log_in` and `current_tenant` returns the tenant of the current session
+
+### Features
+
+- Added `impersonating_sessions` association to fetch the sessions in which a user is impersonating someone
+- Added `Veri::Session.from_request` method to fetch the session from a request object
+- Added `Veri::Session.shapeshifted` to fetch impersonating sessions
+- Added `Veri::Session.in_original_tenant` to fetch impersonating sessions that return to a tenant
+
+### Bugs
+
+- Fixed Rails commands failing when the user model cannot be loaded
+- Fixed migration helpers raising when the tenant has no sessions, which broke migrations on fresh databases
+- Fixed `true_tenant` returning the impersonated tenant when the impersonator had no tenant
+- Fixed the generated migration failing when the user table's primary key is not `id`
+
+To upgrade to v3.0.0, please refer to the [migration guide](https://github.com/enjaku4/veri/discussions/28)
+
 ## v2.1.0
 
 ### Features
