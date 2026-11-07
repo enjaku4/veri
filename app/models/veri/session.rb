@@ -129,7 +129,10 @@ module Veri
       def prune
         { tenant_type: :tenant_id, original_tenant_type: :original_tenant_id }.each do |type_column, id_column|
           where.not(id_column => nil).distinct.pluck(type_column).each do |tenant_type|
-            tenant_class = tenant_type.constantize
+            tenant_class = tenant_type.safe_constantize
+
+            raise Veri::Error, "Tenant not found: class `#{tenant_type}` may have been renamed or deleted" unless tenant_class
+
             where(type_column => tenant_type).where.not(id_column => tenant_class.select(tenant_class.primary_key)).delete_all
           end
         end

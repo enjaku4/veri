@@ -863,6 +863,12 @@ RSpec.describe Veri::Session do
 
       expect { subject }.to change { described_class.exists?(id: session.id) }.from(true).to(false)
     end
+
+    it "raises when the class of a tenant no longer exists" do
+      session.update!(tenant_type: "Foo")
+
+      expect { subject }.to raise_error(Veri::Error, "Tenant not found: class `Foo` may have been renamed or deleted")
+    end
   end
 
   describe ".terminate_all" do
