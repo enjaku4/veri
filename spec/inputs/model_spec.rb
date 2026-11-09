@@ -22,7 +22,7 @@ RSpec.describe Veri::Inputs::Model do
   end
 
   describe "invalid inputs" do
-    ["NonExistentModel", "Veri", Veri, 123, [], {}, :foo].each do |invalid_input|
+    ["NonExistentModel", "Veri", Veri, User, 123, [], {}, :foo].each do |invalid_input|
       it_behaves_like "failed input processing", invalid_input
     end
   end

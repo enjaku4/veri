@@ -3,12 +3,10 @@ module Veri
     class Model < Veri::Inputs::Base
       private
 
-      def processor
-        -> {
-          model = @value.try(:safe_constantize) || @value
-          raise_error unless model.is_a?(Class) && model < ActiveRecord::Base
-          model
-        }
+      def validate_and_normalize
+        model = @value.try(:safe_constantize)
+        raise_error unless model.is_a?(Class) && model < ActiveRecord::Base
+        model
       end
     end
   end

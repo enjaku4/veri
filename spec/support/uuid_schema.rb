@@ -5,8 +5,8 @@ ActiveRecord::Schema.define do
     t.string "id", primary_key: true, null: false, limit: 36
     t.text "hashed_password"
     t.datetime "password_updated_at"
-    t.boolean "locked", default: false, null: false
-    t.datetime "locked_at"
+    t.boolean "suspended", default: false, null: false
+    t.datetime "suspended_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -32,7 +32,7 @@ ActiveRecord::Schema.define do
     t.datetime "shapeshifted_at"
     t.datetime "last_seen_at", null: false
     t.string "ip_address"
-    t.string "user_agent"
+    t.text "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "tenant_type"

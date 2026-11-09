@@ -5,10 +5,17 @@ module Veri
   class Session < ActiveRecord::Base
     self.table_name = "veri_sessions"
 
+    belongs_to :authenticatable, class_name: Veri::Configuration.user_model_name
+    belongs_to :original_authenticatable, class_name: Veri::Configuration.user_model_name, optional: true
     belongs_to :tenant, polymorphic: true, optional: true
     belongs_to :original_tenant, polymorphic: true, optional: true
 
+    scope :shapeshifted, -> { where.not(original_authenticatable_id: nil) }
     scope :in_tenant, -> (tenant) { where(**Veri::Inputs::Tenant.new(tenant).resolve) }
+    scope :in_original_tenant, -> (tenant) do
+      resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
+      shapeshifted.where(original_tenant_type: resolved_tenant[:tenant_type], original_tenant_id: resolved_tenant[:tenant_id])
+    end
     scope :active, -> { where.not(id: expired.select(:id)).where.not(id: inactive.select(:id)) }
     scope :expired, -> { where(expires_at: ...Time.current) }
     scope :inactive, -> do
@@ -53,23 +60,30 @@ module Veri
     end
 
     def identity = authenticatable
-    def shapeshifted? = original_authenticatable.present?
-    def true_identity = original_authenticatable || authenticatable
-    def true_tenant = original_tenant || tenant
+    def shapeshifted? = original_authenticatable_id.present?
+    def true_identity = shapeshifted? ? original_authenticatable : authenticatable
+    def true_tenant = shapeshifted? ? original_tenant : tenant
 
     def shapeshift(user, tenant: nil)
       raise Veri::Error, "Cannot shapeshift from a shapeshifted session" if shapeshifted?
 
+      processed_authenticatable = Veri::Inputs::Authenticatable.new(user).process
       resolved_tenant = Veri::Inputs::Tenant.new(tenant).resolve
 
-      update!(
-        shapeshifted_at: Time.current,
-        original_authenticatable: authenticatable,
-        original_tenant_type: tenant_type,
-        original_tenant_id: tenant_id,
-        **resolved_tenant,
-        authenticatable: Veri::Inputs::Authenticatable.new(user).process
-      )
+      processed_authenticatable.transaction do
+        locked_authenticatable = processed_authenticatable.class.unscoped.lock.find(processed_authenticatable.id)
+
+        raise Veri::Error, "Cannot shapeshift into a suspended user" if locked_authenticatable.suspended?
+
+        update!(
+          shapeshifted_at: Time.current,
+          original_authenticatable: authenticatable,
+          original_tenant_type: tenant_type,
+          original_tenant_id: tenant_id,
+          **resolved_tenant,
+          authenticatable: processed_authenticatable
+        )
+      end
     end
 
     def to_true_identity
@@ -101,34 +115,43 @@ module Veri
         token = SecureRandom.hex(32)
         expires_at = Time.current + Veri::Configuration.total_session_lifetime
 
-        new(
+        session = new(
           hashed_token: digest_token(token),
           expires_at:,
           authenticatable: user,
           **resolved_tenant
-        ).update_info(request)
+        )
+        session.update_info(request)
 
         token
       end
 
       def prune
-        orphaned_tenant_sessions = where.not(tenant_id: nil).includes(:tenant).filter_map do |session|
-          !session.tenant
-        rescue ActiveRecord::RecordNotFound
-          session.id
-        end
+        { tenant_type: :tenant_id, original_tenant_type: :original_tenant_id }.each do |type_column, id_column|
+          where.not(id_column => nil).distinct.pluck(type_column).each do |tenant_type|
+            tenant_class = tenant_type.safe_constantize
 
-        where(id: orphaned_tenant_sessions).delete_all if orphaned_tenant_sessions.any?
+            raise Veri::Error, "Tenant not found: class `#{tenant_type}` may have been renamed or deleted" unless tenant_class
+
+            where(type_column => tenant_type).where.not(id_column => tenant_class.select(tenant_class.primary_key)).delete_all
+          end
+        end
       end
 
       alias terminate_all delete_all
 
-      def find_active(token, resolved_tenant)
+      def from_request(request)
+        token = Veri::Inputs::Request.new(request).process.cookie_jar.encrypted["veri_token"]
+
         return nil if token.blank?
 
-        session = find_by(hashed_token: digest_token(token), **resolved_tenant)
+        session = eager_load(:authenticatable, :original_authenticatable).find_by(hashed_token: digest_token(token))
 
-        session&.active? ? session : nil
+        return nil unless session&.active?
+
+        raise Veri::Error, "Session belongs to a suspended user" if session.identity.suspended? || session.true_identity.suspended?
+
+        session
       end
 
       private
