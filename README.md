@@ -554,7 +554,7 @@ Have a question or need assistance? Open a discussion in the [discussions sectio
 
 ### Contributing Code
 
-Any open issue is free to pick up or discuss. Check the [project board](https://github.com/users/enjaku4/projects/13) or [issues tab](https://github.com/enjaku4/veri/issues).
+Any open issue is free to pick up or discuss. Check the [issues tab](https://github.com/enjaku4/veri/issues).
 
 Before contributing, please read the [contributing guidelines](https://github.com/enjaku4/veri/blob/main/CONTRIBUTING.md).
 
