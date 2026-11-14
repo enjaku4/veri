@@ -2,8 +2,8 @@
 
 [![Gem Version](https://badge.fury.io/rb/veri.svg)](http://badge.fury.io/rb/veri)
 [![Downloads](https://img.shields.io/gem/dt/veri.svg)](https://rubygems.org/gems/veri)
-[![Github Actions badge](https://github.com/brownboxdev/veri/actions/workflows/ci.yml/badge.svg)](https://github.com/brownboxdev/veri/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/brownboxdev/veri.svg)](LICENSE)
+[![Github Actions badge](https://github.com/brownboxdev/veri-authentication/actions/workflows/ci.yml/badge.svg)](https://github.com/brownboxdev/veri-authentication/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/brownboxdev/veri-authentication.svg)](LICENSE)
 
 Veri is a cookie-based authentication library for Ruby on Rails. It provides only essential building blocks for secure user authentication without cluttering your app with generated controllers, views, and mailers. This makes it ideal for building custom authentication flows.
 
@@ -538,7 +538,7 @@ end
 
 ### Getting Help
 
-Have a question or need assistance? Open a discussion in the [discussions section](https://github.com/brownboxdev/veri/discussions) for:
+Have a question or need assistance? Open a discussion in the [discussions section](https://github.com/brownboxdev/veri-authentication/discussions) for:
 
 - Usage questions
 - Implementation guidance
@@ -546,7 +546,7 @@ Have a question or need assistance? Open a discussion in the [discussions sectio
 
 ### Issues
 
-[Issues](https://github.com/brownboxdev/veri/issues) track bugs, planned features, and other work. When reporting a bug, please include:
+[Issues](https://github.com/brownboxdev/veri-authentication/issues) track bugs, planned features, and other work. When reporting a bug, please include:
 
 - A clear description of the problem
 - Steps to reproduce the issue
@@ -554,20 +554,20 @@ Have a question or need assistance? Open a discussion in the [discussions sectio
 
 ### Contributing Code
 
-Any open issue is free to pick up or discuss. Check the [issues tab](https://github.com/brownboxdev/veri/issues).
+Any open issue is free to pick up or discuss. Check the [issues tab](https://github.com/brownboxdev/veri-authentication/issues).
 
-Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/veri/blob/main/CONTRIBUTING.md).
+Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/veri-authentication/blob/main/CONTRIBUTING.md).
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://github.com/brownboxdev/veri/blob/main/LICENSE.txt).
+The gem is available as open source under the terms of the [MIT License](https://github.com/brownboxdev/veri-authentication/blob/main/LICENSE.txt).
 
 ## Code of Conduct
 
-Everyone interacting in the Veri project is expected to follow the [code of conduct](https://github.com/brownboxdev/veri/blob/main/CODE_OF_CONDUCT.md).
+Everyone interacting in the Veri project is expected to follow the [code of conduct](https://github.com/brownboxdev/veri-authentication/blob/main/CODE_OF_CONDUCT.md).
 
 ## Old Versions
 
 Only the latest major version is actively maintained. READMEs for older versions are available here for reference:
 
-[v1.x.x](https://github.com/brownboxdev/veri/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
+[v1.x.x](https://github.com/brownboxdev/veri-authentication/blob/9c188e16a703141b7cd89dd31d5cd49a557f143d/README.md)
